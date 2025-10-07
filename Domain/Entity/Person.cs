@@ -13,8 +13,8 @@ namespace Domain.Entity
         public int ID { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        public long JMBG { get; set; }
-        public DateTime DateOfBirth { get; set; }
+        public string JMBG { get; set; }
+        public DateOnly DateOfBirth { get; set; }
         public int Age { get; private set; }
         
     }

@@ -1,5 +1,14 @@
 using Microsoft.EntityFrameworkCore;
-using Infrastructure; 
+using Infrastructure;
+using Application.Services;
+using Domain.Interfaces;
+using Infrastructure.Repositories;
+using Application.DTO.Students;
+using FluentValidation;
+using Application.Common;
+using FluentValidation.AspNetCore;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,9 +19,28 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateStudentValidator>();
+
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+builder.Services.AddScoped<IStudentService, StudentService>();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.MapType<DateOnly>(() => new Microsoft.OpenApi.Models.OpenApiSchema
+    {
+        Type = "string",
+        Format = "date"
+    });
+    c.MapType<DateOnly?>(() => new Microsoft.OpenApi.Models.OpenApiSchema
+    {
+        Type = "string",
+        Format = "date",
+        Nullable = true
+    });
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

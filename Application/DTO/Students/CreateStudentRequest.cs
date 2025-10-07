@@ -1,0 +1,31 @@
+﻿using Domain.Validation;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using FluentValidation;
+using Application.Common;
+
+namespace Application.DTO.Students
+{
+    public sealed class CreateStudentRequest: IPersonCreate
+    {
+        public string JMBG { get; set; } = "";
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
+        public DateOnly DateOfBirth { get; set; }
+        public string IndexNumber { get; set; } = "" ;
+    }
+
+    public sealed class CreateStudentValidator : AbstractValidator<CreateStudentRequest>
+    {
+        public CreateStudentValidator()
+        {
+            Include(new PersonCommonValidator<CreateStudentRequest>());
+
+            RuleFor(x => x.IndexNumber).NotEmpty().MaximumLength(20);
+        }
+    }
+
+}
