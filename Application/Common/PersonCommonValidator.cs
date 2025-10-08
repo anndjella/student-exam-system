@@ -22,6 +22,11 @@ namespace Application.Common
                 .WithMessage("Last name is required.")
                 .MaximumLength(100);
 
+            var minYear = 1900;
+            var maxYear = 2008;
+            var minDate = new DateOnly(minYear, 1, 1);
+            var maxDate = new DateOnly(maxYear, 12, 31);
+
             RuleFor(x => x.JMBG)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty().WithMessage("JMBG is required.")

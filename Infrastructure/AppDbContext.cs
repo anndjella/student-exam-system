@@ -44,6 +44,15 @@ namespace Infrastructure
                     )
                 .ValueGeneratedOnAddOrUpdate();
 
+                var min = new DateOnly(1900, 1, 1);
+                var max = new DateOnly(2008, 12, 31);
+
+                modelBuilder.Entity<Person>()
+                    .HasCheckConstraint(
+                        "CK_Person_DateOfBirth_Range",
+                        $"[DateOfBirth] >= '{min:yyyy-MM-dd}' AND [DateOfBirth] <= '{max:yyyy-MM-dd}'"
+                    );
+
             });
 
             modelBuilder.Entity<Student>(b =>
