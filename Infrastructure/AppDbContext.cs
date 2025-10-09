@@ -21,6 +21,7 @@ namespace Infrastructure
         public DbSet<Subject> Subjects => Set<Subject>();
         public DbSet<Exam> Exams => Set<Exam>();
 
+        [Obsolete]
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Person>(b =>
@@ -36,6 +37,14 @@ namespace Infrastructure
                 b.HasCheckConstraint(
                     "CK_Person_JMBG_13Digits",
                     "LEN([JMBG]) = 13 AND PATINDEX('%[^0-9]%', [JMBG]) = 0");
+
+                b.HasCheckConstraint(
+                    "CK_Person_JMBG_DateOfBirth",
+                    "LEFT([JMBG], 7) = " +
+                    "    RIGHT('00' + CAST(DATEPART(DAY, [DateOfBirth]) AS varchar(2)), 2) +" +
+                    "    RIGHT('00' + CAST(DATEPART(MONTH, [DateOfBirth]) AS varchar(2)), 2) +" +
+                    "    RIGHT('000' + CAST(DATEPART(YEAR, [DateOfBirth]) AS varchar(4)), 3)"
+    );
 
                 b.Property(p => p.Age)
                 .HasComputedColumnSql(
@@ -60,8 +69,16 @@ namespace Infrastructure
                 b.ToTable("Student");
                 b.Property(s => s.IndexNumber).HasMaxLength(20).IsRequired();
                 b.HasIndex(s => s.IndexNumber).IsUnique();
+                b.HasCheckConstraint(
+                    "CK_Student_IndexNumber_Format",
+                    "[IndexNumber] NOT LIKE '%[^0-9/]%' " +
+                    "AND CHARINDEX('/', [IndexNumber]) = 5 " +
+                    "AND LEN([IndexNumber]) BETWEEN 6 AND 10 " +
+                    "AND RIGHT([IndexNumber], LEN([IndexNumber]) - 5) NOT LIKE '%[^0-9]%'"
 
+   );
                 b.Ignore(s => s.GPA);
+
             });
 
             modelBuilder.Entity<Teacher>(b =>

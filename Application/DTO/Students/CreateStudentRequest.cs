@@ -17,15 +17,6 @@ namespace Application.DTO.Students
         public DateOnly DateOfBirth { get; set; }
         public string IndexNumber { get; set; } = "" ;
     }
-
-    public sealed class CreateStudentValidator : AbstractValidator<CreateStudentRequest>
-    {
-        public CreateStudentValidator()
-        {
-            Include(new PersonCommonValidator<CreateStudentRequest>());
-
-            RuleFor(x => x.IndexNumber).NotEmpty().MaximumLength(20);
-        }
     }
 
-}
+

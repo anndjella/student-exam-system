@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Infrastructure;
 using Application.Services;
 using Domain.Interfaces;
@@ -7,6 +7,7 @@ using Application.DTO.Students;
 using FluentValidation;
 using Application.Common;
 using FluentValidation.AspNetCore;
+using Api.Filter;
 
 
 
@@ -21,10 +22,16 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
 builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateStudentValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<StudentValidator>();
 
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddControllers(o =>
+{
+    o.Filters.Add<ApiExceptionFilter>();
+});
+
+builder.Services.AddProblemDetails();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

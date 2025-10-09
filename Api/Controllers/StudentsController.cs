@@ -1,5 +1,6 @@
 ﻿using Application.DTO.Students;
 using Application.Services;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
@@ -13,7 +14,7 @@ namespace Api.Controllers
         public StudentsController(IStudentService svc) => _svc = svc;
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateStudentRequest req, CancellationToken ct)
+        public async Task<IActionResult> Create([FromBody, CustomizeValidator(RuleSet = "Create")] CreateStudentRequest req, CancellationToken ct)
         {
             try
             {
@@ -36,10 +37,12 @@ namespace Api.Controllers
             => Ok(await _svc.ListAsync(ct));
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateStudentRequest req, CancellationToken ct)
+        public async Task<IActionResult> Update(int id, [FromBody, CustomizeValidator(RuleSet = "Update")] UpdateStudentRequest req, CancellationToken ct)
         {
             try { await _svc.UpdateAsync(id, req, ct); return NoContent(); }
-            catch (KeyNotFoundException) { return NotFound(); }
+            catch (KeyNotFoundException) { 
+                return NotFound($"Person with id {id} does not exist.");
+            }
             catch (InvalidOperationException ex) { return Conflict(ex.Message); }
         }
 
