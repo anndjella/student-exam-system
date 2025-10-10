@@ -45,5 +45,19 @@ namespace Tests.Application
             var r = v.TestValidate(mock.Object);
             r.ShouldHaveValidationErrorFor(x => x.FirstName);
         }
+        [Fact]
+        public void JMBG_NotMatching_DateOfBirth_HasError()
+        {
+            var v = MakeValidator();
+
+            var mock = new Mock<IPersonCreate>();
+            mock.SetupGet(x => x.FirstName).Returns("Milica");
+            mock.SetupGet(x => x.LastName).Returns("Petrović");
+            mock.SetupGet(x => x.JMBG).Returns("0101000710006");
+            mock.SetupGet(x => x.DateOfBirth).Returns(new DateOnly(2000, 1, 10));
+
+            var r = v.TestValidate(mock.Object);
+            r.ShouldHaveValidationErrorFor(x => x.JMBG);
+        }
     }
 }
