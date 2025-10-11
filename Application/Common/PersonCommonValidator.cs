@@ -14,11 +14,13 @@ namespace Application.Common
         {
             RuleFor(x => x.FirstName)
                 .NotEmpty()
+                .NotEqual("")
                 .WithMessage("First name is required.")
                 .MaximumLength(100);
 
             RuleFor(x => x.LastName)
                 .NotEmpty()
+                .NotEqual("")
                 .WithMessage("Last name is required.")
                 .MaximumLength(100);
 

@@ -11,7 +11,7 @@ using System.Reflection.Emit;
 
 namespace Infrastructure
 {
-    public class AppDbContext : DbContext 
+    public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -24,59 +24,66 @@ namespace Infrastructure
         [Obsolete]
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            var isSqlite = Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite";
+
             modelBuilder.Entity<Person>(b =>
             {
                 b.ToTable("Person");
                 b.HasKey(p => p.ID);
 
-                b.Property(p => p.FirstName).HasMaxLength(50).IsRequired(); 
+                b.Property(p => p.FirstName).HasMaxLength(50).IsRequired();
                 b.Property(p => p.LastName).HasMaxLength(50).IsRequired();
                 b.Property(p => p.DateOfBirth).HasColumnType("date").IsRequired();
                 b.Property(p => p.JMBG).HasColumnType("char(13)").IsUnicode(false).IsRequired();
                 b.HasIndex(p => p.JMBG).IsUnique();
-                b.HasCheckConstraint(
-                    "CK_Person_JMBG_13Digits",
-                    "LEN([JMBG]) = 13 AND PATINDEX('%[^0-9]%', [JMBG]) = 0");
+                if (!isSqlite)
+                {
+                    b.HasCheckConstraint(
+                                "CK_Person_JMBG_13Digits",
+                                "LEN([JMBG]) = 13 AND PATINDEX('%[^0-9]%', [JMBG]) = 0");
 
-                b.HasCheckConstraint(
-                    "CK_Person_JMBG_DateOfBirth",
-                    "LEFT([JMBG], 7) = " +
-                    "    RIGHT('00' + CAST(DATEPART(DAY, [DateOfBirth]) AS varchar(2)), 2) +" +
-                    "    RIGHT('00' + CAST(DATEPART(MONTH, [DateOfBirth]) AS varchar(2)), 2) +" +
-                    "    RIGHT('000' + CAST(DATEPART(YEAR, [DateOfBirth]) AS varchar(4)), 3)"
-    );
+                    b.HasCheckConstraint(
+                        "CK_Person_JMBG_DateOfBirth",
+                        "LEFT([JMBG], 7) = " +
+                        "    RIGHT('00' + CAST(DATEPART(DAY, [DateOfBirth]) AS varchar(2)), 2) +" +
+                        "    RIGHT('00' + CAST(DATEPART(MONTH, [DateOfBirth]) AS varchar(2)), 2) +" +
+                        "    RIGHT('000' + CAST(DATEPART(YEAR, [DateOfBirth]) AS varchar(4)), 3)" );
 
-                b.Property(p => p.Age)
-                .HasComputedColumnSql(
-                     "DATEDIFF(YEAR, [DateOfBirth], GETDATE()) - CASE WHEN FORMAT(GETDATE(),'MMdd') < FORMAT([DateOfBirth],'MMdd') THEN 1 ELSE 0 END",
-                     stored: false
-                    )
-                .ValueGeneratedOnAddOrUpdate();
+                    b.Property(p => p.Age)
+                    .HasComputedColumnSql(
+                         "DATEDIFF(YEAR, [DateOfBirth], GETDATE()) - CASE WHEN FORMAT(GETDATE(),'MMdd') < FORMAT([DateOfBirth],'MMdd') THEN 1 ELSE 0 END",
+                         stored: false )
+                    .ValueGeneratedOnAddOrUpdate();
+                }
 
                 var min = new DateOnly(1900, 1, 1);
                 var max = new DateOnly(2008, 12, 31);
 
-                modelBuilder.Entity<Person>()
-                    .HasCheckConstraint(
-                        "CK_Person_DateOfBirth_Range",
-                        $"[DateOfBirth] >= '{min:yyyy-MM-dd}' AND [DateOfBirth] <= '{max:yyyy-MM-dd}'"
-                    );
-
-            });
+                if (!isSqlite)
+                {
+                    modelBuilder.Entity<Person>()
+                                .HasCheckConstraint(
+                                    "CK_Person_DateOfBirth_Range",
+                                    $"[DateOfBirth] >= '{min:yyyy-MM-dd}' AND [DateOfBirth] <= '{max:yyyy-MM-dd}'"
+                                );
+                }});
 
             modelBuilder.Entity<Student>(b =>
             {
                 b.ToTable("Student");
                 b.Property(s => s.IndexNumber).HasMaxLength(20).IsRequired();
                 b.HasIndex(s => s.IndexNumber).IsUnique();
-                b.HasCheckConstraint(
-                    "CK_Student_IndexNumber_Format",
-                    "[IndexNumber] NOT LIKE '%[^0-9/]%' " +
-                    "AND CHARINDEX('/', [IndexNumber]) = 5 " +
-                    "AND LEN([IndexNumber]) BETWEEN 6 AND 10 " +
-                    "AND RIGHT([IndexNumber], LEN([IndexNumber]) - 5) NOT LIKE '%[^0-9]%'"
+                if (!isSqlite)
+                {
+                    b.HasCheckConstraint(
+                               "CK_Student_IndexNumber_Format",
+                               "[IndexNumber] NOT LIKE '%[^0-9/]%' " +
+                               "AND CHARINDEX('/', [IndexNumber]) = 5 " +
+                               "AND LEN([IndexNumber]) BETWEEN 6 AND 10 " +
+                               "AND RIGHT([IndexNumber], LEN([IndexNumber]) - 5) NOT LIKE '%[^0-9]%'"
 
-   );
+              );
+                }
                 b.Ignore(s => s.GPA);
 
             });

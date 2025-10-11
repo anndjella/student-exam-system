@@ -20,7 +20,7 @@ namespace Application.DTO.Students
                             .NotEmpty()
                             .MaximumLength(20)
                             .Matches(@"^[0-9]{4}/[0-9]{1,6}$")
-                            .WithMessage("Format must be YYYY/Number, e.g., 2024/1234.");
+                            .WithMessage("Format of an Index Number must be YYYY/Number, e.g., 2024/1234.");
 
             });
 
@@ -41,7 +41,7 @@ namespace Application.DTO.Students
                             .NotEmpty()
                             .MaximumLength(20)
                             .Matches(@"^[0-9]{4}/[0-9]{1,6}$")
-                            .WithMessage("Format must be YYYY/Number, e.g., 2024/1234.")); ;
+                            .WithMessage("Format of an Index Number must be YYYY/Number, e.g., 2024/1234.")); ;
             });
         }
 
