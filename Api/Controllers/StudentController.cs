@@ -8,13 +8,13 @@ namespace Api.Controllers
 
     [ApiController]
     [Route("api/students")]
-    public sealed class StudentsController : ControllerBase
+    public sealed class StudentController : ControllerBase
     {
         private readonly IStudentService _svc;
-        public StudentsController(IStudentService svc) => _svc = svc;
+        public StudentController(IStudentService svc) => _svc = svc;
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody, CustomizeValidator(RuleSet = "Create")] CreateStudentRequest req, CancellationToken ct)
+        public async Task<IActionResult> Create([FromBody] CreateStudentRequest req, CancellationToken ct)
         {
             try
             {
@@ -37,7 +37,7 @@ namespace Api.Controllers
             => Ok(await _svc.ListAsync(ct));
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody, CustomizeValidator(RuleSet = "Update")] UpdateStudentRequest req, CancellationToken ct)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateStudentRequest req, CancellationToken ct)
         {
             try { await _svc.UpdateAsync(id, req, ct); return NoContent(); }
             catch (KeyNotFoundException) { 

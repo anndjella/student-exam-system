@@ -52,7 +52,6 @@ public sealed class StudentService : IStudentService
 
         if (req.FirstName is not null) s.FirstName = req.FirstName;
         if (req.LastName is not null) s.LastName = req.LastName;
-        if (req.DateOfBirth.HasValue) s.DateOfBirth =req.DateOfBirth.Value;
         if (req.IndexNumber is not null)
         {
             if (s.IndexNumber != req.IndexNumber && await _repo.ExistsByIndexAsync(req.IndexNumber, ct))
