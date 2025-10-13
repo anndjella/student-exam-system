@@ -18,7 +18,7 @@ namespace Application.ServicesImplementation
         public async Task<TeacherResponse> CreateAsync(CreateTeacherRequest req, CancellationToken ct = default)
         {
             if (await _repo.ExistsByJmbgAsync(req.JMBG, ct))
-                throw new InvalidOperationException("Student with this JMBG already exists.");
+                throw new InvalidOperationException("Teacher with this JMBG already exists.");
 
             var teacher = new Teacher
             {
@@ -60,7 +60,6 @@ namespace Application.ServicesImplementation
 
             if (req.FirstName is not null) s.FirstName = req.FirstName;
             if (req.LastName is not null) s.LastName = req.LastName;
-            if (req.DateOfBirth.HasValue) s.DateOfBirth = req.DateOfBirth.Value;
             if (req.Title is not null) s.Title = req.Title.Value;
 
             await _repo.UpdateAsync(s, ct);

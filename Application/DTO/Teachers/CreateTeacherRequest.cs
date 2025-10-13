@@ -18,14 +18,4 @@ namespace Application.DTO.Teachers
         public DateOnly DateOfBirth { get; set; }
         public Title Title { get; set; }
     }
-    public sealed class CreateTeacherValidator : AbstractValidator<CreateTeacherRequest>
-    {
-        public CreateTeacherValidator()
-        {
-            Include(new PersonCommonValidator<CreateTeacherRequest>());
-            RuleFor(x => x.Title)
-                        .IsInEnum()
-                        .WithMessage("Title is required and must be a valid value.");
-        }
-    }
 }
