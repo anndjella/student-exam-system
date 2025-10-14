@@ -12,6 +12,7 @@ using Application.ServicesImplementation;
 using Application.Validators.Student;
 using Application.Validators.Teacher;
 using Application.Validators.Subject;
+using Application.Validators.Exam;
 
 
 
@@ -30,6 +31,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateTeacherValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateTeacherValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateSubjectValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateSubjectValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateExamValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateExamValidator>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -43,6 +46,8 @@ builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
 builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
+builder.Services.AddScoped<IExamRepository, ExamRepository>();
+builder.Services.AddScoped<IExamService, ExamService>();
 builder.Services.AddControllers(o =>
 {
     o.Filters.Add<ApiExceptionFilter>();

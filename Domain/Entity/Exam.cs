@@ -9,20 +9,21 @@ namespace Domain.Entity
     public sealed class Exam : IEntity
     {
         public int ID { get; set; }
-        public int StudentID { get; private set; }
+        public int StudentID { get; set; }
 
-        public byte Grade { get; private set; }
-        public DateTime Date { get; private set; }
+        public byte Grade { get;  set; }
+        public DateOnly Date { get; set; }
+        public string? Note { get; set; }
 
-        public Student Student { get; private set; }
+        public Student Student { get; set; }
 
-        public int ExaminerID { get; private set; }
-        public Teacher Examiner { get; private set; }
+        public int ExaminerID { get;  set; }
+        public Teacher Examiner { get;  set; }
 
-        public int? SupervisorID { get; private set; }
-        public Teacher? Supervisor { get; private set; }
-        public int SubjectID { get; private set; }
-        public Subject Subject { get; private set; }
+        public int? SupervisorID { get;  set; }
+        public Teacher? Supervisor { get;  set; }
+        public int SubjectID { get;  set; }
+        public Subject Subject { get;  set; }
 
     }
 }

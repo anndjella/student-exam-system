@@ -8,6 +8,7 @@ using Domain.Entity;
 using System.ComponentModel;
 using System.Security.Cryptography;
 using System.Reflection.Emit;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure
 {
@@ -97,16 +98,36 @@ namespace Infrastructure
 
             modelBuilder.Entity<Exam>(b =>
             {
+                b.ToTable("Exam", tb =>
+                {
+                    tb.HasTrigger("trg_Exam_UpdateGpa");
+                });
+
                 b.ToTable("Exam");
                 b.HasKey(e => e.ID);
+
+                b.Property(e => e.ID)
+                   .UseIdentityColumn();
 
                 b.Property(e => e.Date)
                    .HasColumnType("date")
                    .IsRequired();
 
+                b.Property(e => e.Note)
+                    .HasMaxLength(500);
+
                 b.Property(e => e.Grade)
                  .IsRequired();
                 b.HasCheckConstraint("CK_Exam_Grade", "[Grade] BETWEEN 5 AND 10");
+
+                b.HasIndex(e => new { e.StudentID, e.SubjectID, e.Date })
+                  .IsUnique()
+                  .HasDatabaseName("UX_Exam_Student_Subject_Date");
+
+                b.HasIndex(e => new { e.StudentID, e.SubjectID })
+                 .IsUnique()
+                 .HasFilter("[Grade] >= 6")
+                 .HasDatabaseName("UX_Exam_PassOnce");
 
                 b.HasOne(e => e.Student)
                  .WithMany(s => s.Exams)

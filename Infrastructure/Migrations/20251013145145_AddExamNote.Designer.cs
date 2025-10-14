@@ -4,6 +4,7 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251013145145_AddExamNote")]
+    partial class AddExamNote
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,7 +33,7 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
 
-                    b.Property<DateOnly>("Date")
+                    b.Property<DateTime>("Date")
                         .HasColumnType("date");
 
                     b.Property<int>("ExaminerID")
@@ -56,27 +59,16 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("ExaminerID");
 
+                    b.HasIndex("StudentID");
+
                     b.HasIndex("SubjectID");
 
                     b.HasIndex("SupervisorID");
 
-                    b.HasIndex("StudentID", "SubjectID")
-                        .IsUnique()
-                        .HasDatabaseName("UX_Exam_PassOnce")
-                        .HasFilter("[Grade] >= 6");
-
-                    b.HasIndex("StudentID", "SubjectID", "Date")
-                        .IsUnique()
-                        .HasDatabaseName("UX_Exam_Student_Subject_Date");
-
                     b.ToTable("Exam", null, t =>
                         {
-                            t.HasTrigger("trg_Exam_UpdateGpa");
-
                             t.HasCheckConstraint("CK_Exam_Grade", "[Grade] BETWEEN 5 AND 10");
                         });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("Domain.Entity.Person", b =>

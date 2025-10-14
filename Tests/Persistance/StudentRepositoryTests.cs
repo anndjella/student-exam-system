@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Tests.Persistance
 {
-    public class StudentRepositoryTests : IClassFixture<SqliteDbFixture>
+    public class StudentRepositoryTests : IClassFixture<SqliteDbFixture>,IAsyncLifetime
     {
         private readonly AppDbContext _db;
 
@@ -17,6 +17,13 @@ namespace Tests.Persistance
         {
             _db = fx.Db;
         }
+        public async Task InitializeAsync()
+        {
+            _db.Database.ExecuteSqlRaw("PRAGMA foreign_keys=ON;");
+            await SqliteDbFixture.ClearAsync(_db);
+        }
+
+        public Task DisposeAsync() => Task.CompletedTask;
 
         [Fact]
         public async Task Insert_Then_GetById_ReturnsSameData()
@@ -27,7 +34,7 @@ namespace Tests.Persistance
                 FirstName = "Ana",
                 LastName = "Anić",
                 DateOfBirth = new DateOnly(1990, 1, 1),
-                IndexNumber = "2024/5"
+                IndexNumber = "2024/15"
             };
 
             _db.Students.Add(s);
@@ -37,7 +44,7 @@ namespace Tests.Persistance
 
             Assert.Equal("Ana", fromDb.FirstName);
             Assert.Equal("Anić", fromDb.LastName);
-            Assert.Equal("2024/5", fromDb.IndexNumber);
+            Assert.Equal("2024/15", fromDb.IndexNumber);
         }
         [Fact]
         public async Task Insert_Duplicate_IndexNumber_Throws_DbUpdateException()
@@ -65,7 +72,7 @@ namespace Tests.Persistance
         }
         [Fact]
         public async Task Insert_Null_Jmbg_Throws_DbUpdateException()
-        {
+        { 
             Student s = new Student
             {
                 JMBG = null!,

@@ -27,7 +27,12 @@ namespace Tests.Persistance
 
             Db.Database.EnsureCreated();
         }
-
+        public static Task ClearAsync(AppDbContext db) 
+            => db.Database.ExecuteSqlRawAsync(@" DELETE FROM Exam;
+                    DELETE FROM Student; 
+                    DELETE FROM Teacher;
+                    DELETE FROM Subject;
+                    DELETE FROM Person;");
         public void Dispose()
         {
             Db.Dispose();
