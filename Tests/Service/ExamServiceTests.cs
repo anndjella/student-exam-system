@@ -10,22 +10,29 @@ using Xunit;
 
 public class ExamServiceTests
 {
+    private readonly Mock<IExamRepository> _repo;
+    private readonly Mock<IStudentRepository> _students;
+    private readonly Mock<ITeacherRepository> _teachers;
+    private readonly Mock<ISubjectRepository> _subjects;
+    public ExamServiceTests()
+    {
+        _repo = new Mock<IExamRepository>();
+        _students = new Mock<IStudentRepository>();
+        _teachers = new Mock<ITeacherRepository>();
+        _subjects = new Mock<ISubjectRepository>();
+    }
     [Fact]
     public async Task Create_WhenAlreadyPassed_Throws()
     {
-        var repo = new Mock<IExamRepository>();
-        var students = new Mock<IStudentRepository>();
-        var teachers = new Mock<ITeacherRepository>();
-        var subjects = new Mock<ISubjectRepository>();
 
-        students.Setup(x => x.GetByIdAsync(1, default)).ReturnsAsync(new Student { ID = 1 });
-        subjects.Setup(x => x.GetByIdAsync(2, default)).ReturnsAsync(new Subject { ID = 2, ESPB = 8, Name = "Math" });
-        teachers.Setup(x => x.GetByIdAsync(3, default)).ReturnsAsync(new Teacher { ID = 3, Title = Title.FullProfessor });
-        repo.Setup(x => x.HasPassedAsync(1, 2, default)).ReturnsAsync(true);
+        _students.Setup(x => x.GetByIdAsync(1, default)).ReturnsAsync(new Student { ID = 1 });
+        _subjects.Setup(x => x.GetByIdAsync(2, default)).ReturnsAsync(new Subject { ID = 2, ESPB = 8, Name = "Math" });
+        _teachers.Setup(x => x.GetByIdAsync(3, default)).ReturnsAsync(new Teacher { ID = 3, Title = Title.FullProfessor });
+        _repo.Setup(x => x.HasPassedAsync(1, 2, default)).ReturnsAsync(true);
 
-        var sut = new ExamService(repo.Object, students.Object, teachers.Object, subjects.Object);
+        ExamService sut = new ExamService(_repo.Object, _students.Object, _teachers.Object, _subjects.Object);
 
-        var req = new CreateExamRequest
+        CreateExamRequest req = new CreateExamRequest
         {
             StudentID = 1,
             SubjectID = 2,

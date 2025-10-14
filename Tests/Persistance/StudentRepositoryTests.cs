@@ -1,4 +1,5 @@
 ﻿using Domain.Entity;
+using FluentAssertions;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Tests.Persistance
 {
-    public class StudentRepositoryTests : IClassFixture<SqliteDbFixture>,IAsyncLifetime
+    public class StudentRepositoryTests : IClassFixture<SqliteDbFixture>
     {
         private readonly AppDbContext _db;
 
@@ -17,13 +18,6 @@ namespace Tests.Persistance
         {
             _db = fx.Db;
         }
-        public async Task InitializeAsync()
-        {
-            _db.Database.ExecuteSqlRaw("PRAGMA foreign_keys=ON;");
-            await SqliteDbFixture.ClearAsync(_db);
-        }
-
-        public Task DisposeAsync() => Task.CompletedTask;
 
         [Fact]
         public async Task Insert_Then_GetById_ReturnsSameData()
@@ -71,19 +65,72 @@ namespace Tests.Persistance
             await Assert.ThrowsAsync<DbUpdateException>(() => _db.SaveChangesAsync());
         }
         [Fact]
-        public async Task Insert_Null_Jmbg_Throws_DbUpdateException()
-        { 
-            Student s = new Student
+        public async Task Deleting_Student_cascades_to_Exams()
+        {
+            _db.Database.ExecuteSqlRaw("PRAGMA foreign_keys=ON;");
+            await SqliteDbFixture.ClearAsync(_db);
+
+            Student student = new Student
             {
-                JMBG = null!,
                 FirstName = "Ana",
                 LastName = "Anić",
                 DateOfBirth = new DateOnly(1990, 1, 1),
-                IndexNumber = "2024/7"
+                JMBG = "0101990123456",
+                IndexNumber = "2024/5"
             };
+            _db.Students.Add(student);
 
-            _db.Students.Add(s);
-            await Assert.ThrowsAsync<DbUpdateException>(() => _db.SaveChangesAsync());
+            Teacher examiner = new Teacher
+            {
+                FirstName = "A",
+                LastName = "B",
+                DateOfBirth = new DateOnly(1970, 1, 1),
+                JMBG = "0101970123456",
+                Title = Title.AssistantProfessor
+            };
+            Teacher supervisor = new Teacher
+            {
+                FirstName = "X",
+                LastName = "Y",
+                DateOfBirth = new DateOnly(1975, 1, 1),
+                JMBG = "0101975123456",
+                Title = Title.FullProfessor
+            };
+            _db.Teachers.AddRange(examiner, supervisor);
+
+            var subject = new Subject
+            {
+                Name = "Math",
+                ESPB = 8
+            };
+            _db.Subjects.Add(subject);
+
+            await _db.SaveChangesAsync();
+
+            Exam exam = new Exam
+            {
+                StudentID = student.ID,
+                SubjectID = subject.ID,
+                ExaminerID = examiner.ID,
+                SupervisorID = supervisor.ID,
+                Grade = 8,
+                Date = new DateOnly(2024, 1, 10),
+                Note = "ok"
+            };
+            _db.Exams.Add(exam);
+            await _db.SaveChangesAsync();
+
+            Assert.Equal(1, await _db.Exams.CountAsync(e => e.StudentID == student.ID));
+
+            _db.Students.Remove(student);
+            await _db.SaveChangesAsync();
+
+            Assert.Null(await _db.Students.FindAsync(student.ID));
+            Assert.Equal(0, await _db.Exams.CountAsync(e => e.StudentID == student.ID));
+
+            Assert.NotNull(await _db.Subjects.FindAsync(subject.ID));
+            Assert.NotNull(await _db.Teachers.FindAsync(examiner.ID));
+            Assert.NotNull(await _db.Teachers.FindAsync(supervisor.ID));
         }
 
     }
