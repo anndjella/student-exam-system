@@ -10,7 +10,7 @@ namespace Domain.Entity
 {
     public sealed class Student : Person
     {
-        public string IndexNumber { get; set; }
+        public string IndexNumber { get; set; } = "";
         public double? GPA { get; set; }
         public ICollection<Exam> Exams { get; private set; } = new List<Exam>();
     }

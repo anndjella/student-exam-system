@@ -10,7 +10,7 @@ namespace Domain.Entity
     public sealed class Subject : IEntity
     {
         public int ID { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = "";
         public int ESPB { get; set; }
         public ICollection<Exam> Exams { get; private set; } = new List<Exam>();
     }

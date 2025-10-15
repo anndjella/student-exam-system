@@ -11,11 +11,11 @@ namespace Domain.Entity
     public abstract class Person : IEntity
     {
         public int ID { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string JMBG { get; set; }
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
+        public string JMBG { get; set; } = "";
         public DateOnly DateOfBirth { get; set; }
-        public int Age { get; private set; }
+        public int Age { get; set; }
         
     }
 }

@@ -8,7 +8,7 @@ namespace Api.Controllers
 {
     [ApiController]
     [Route("api/subjects")]
-    public class SubjectsController : Controller
+    public class SubjectsController : ControllerBase
     {
         private readonly ISubjectService _svc;
         public SubjectsController(ISubjectService svc)

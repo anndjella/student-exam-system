@@ -8,7 +8,7 @@ namespace Api.Controllers
 {
     [ApiController]
     [Route("api/teachers")]
-    public class TeacherController : Controller
+    public class TeacherController : ControllerBase
     {
         private readonly ITeacherService _svc;
         public TeacherController(ITeacherService svc) => _svc = svc;

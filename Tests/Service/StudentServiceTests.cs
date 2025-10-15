@@ -41,7 +41,7 @@ namespace Tests.Service
                  .ReturnsAsync(student); //student exists
 
             // act
-            StudentResponse resp = _svc.GetAsync(id).Result;
+            StudentResponse? resp = _svc.GetAsync(id).Result;
 
             // assert (state)
             Assert.NotNull(resp);
@@ -64,7 +64,7 @@ namespace Tests.Service
                  .ReturnsAsync((Student?)null); //student with id=26 does not exists
 
             // act
-            StudentResponse resp = _svc.GetAsync(id).Result;
+            StudentResponse? resp = _svc.GetAsync(id).Result;
 
             // assert (state)
             Assert.Null(resp);
@@ -94,6 +94,8 @@ namespace Tests.Service
             var resp = _svc.CreateAsync(student);
 
             //assert 
+            resp.Should().NotBeNull();
+            resp.Id.Should().Be(123);
             _repo.Verify(r => r.CreateAsync(
                          It.Is<Student>(s =>
                              s.FirstName == "Milica" &&

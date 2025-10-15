@@ -11,7 +11,7 @@ namespace Domain.Interfaces
     {
         Task<bool> ExistsByJmbgAsync(string jmbg, CancellationToken ct = default);
 
-        Task<Teacher> GetByIdAsync(int id, CancellationToken ct = default);
+        Task<Teacher?> GetByIdAsync(int id, CancellationToken ct = default);
         Task<IReadOnlyList<Teacher>> ListAsync(CancellationToken ct = default);
         Task<int> CreateAsync(Teacher teacher, CancellationToken ct = default);
         Task UpdateAsync(Teacher teacher, CancellationToken ct = default);

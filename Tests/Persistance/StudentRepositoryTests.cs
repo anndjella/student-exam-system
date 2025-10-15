@@ -22,6 +22,8 @@ namespace Tests.Persistance
         [Fact]
         public async Task Insert_Then_GetById_ReturnsSameData()
         {
+            await SqliteDbFixture.ClearAsync(_db);
+
             Student s = new Student
             {
                 JMBG = "0101990123456",
@@ -39,10 +41,13 @@ namespace Tests.Persistance
             Assert.Equal("Ana", fromDb.FirstName);
             Assert.Equal("Anić", fromDb.LastName);
             Assert.Equal("2024/15", fromDb.IndexNumber);
+
         }
         [Fact]
         public async Task Insert_Duplicate_IndexNumber_Throws_DbUpdateException()
         {
+            await SqliteDbFixture.ClearAsync(_db);
+
             _db.Students.Add(new Student
             {
                 JMBG = "1111990123456",
@@ -63,11 +68,12 @@ namespace Tests.Persistance
             });
 
             await Assert.ThrowsAsync<DbUpdateException>(() => _db.SaveChangesAsync());
+
+
         }
         [Fact]
         public async Task Deleting_Student_cascades_to_Exams()
         {
-            _db.Database.ExecuteSqlRaw("PRAGMA foreign_keys=ON;");
             await SqliteDbFixture.ClearAsync(_db);
 
             Student student = new Student
@@ -76,7 +82,7 @@ namespace Tests.Persistance
                 LastName = "Anić",
                 DateOfBirth = new DateOnly(1990, 1, 1),
                 JMBG = "0101990123456",
-                IndexNumber = "2024/5"
+                IndexNumber = "2024/57"
             };
             _db.Students.Add(student);
 
@@ -131,7 +137,7 @@ namespace Tests.Persistance
             Assert.NotNull(await _db.Subjects.FindAsync(subject.ID));
             Assert.NotNull(await _db.Teachers.FindAsync(examiner.ID));
             Assert.NotNull(await _db.Teachers.FindAsync(supervisor.ID));
-        }
 
+        }
     }
 }

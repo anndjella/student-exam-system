@@ -24,7 +24,6 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 
 
 builder.Services.AddFluentValidationAutoValidation();
-//builder.Services.AddValidatorsFromAssemblyContaining<StudentValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateStudentValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateStudentValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateTeacherValidator>();
@@ -35,10 +34,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateExamValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateExamValidator>();
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
-//builder.Services.AddFluentValidationAutoValidation();
-//builder.Services.AddValidatorsFromAssemblyContaining<StudentValidator>();
 
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<IStudentService, StudentService>();
@@ -90,8 +86,7 @@ if (app.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    //db.Database.EnsureCreated();
-    db.Database.Migrate();
+    await db.Database.MigrateAsync();
 }
 app.UseCors("FrontDev");
 app.UseHttpsRedirection();
@@ -100,4 +95,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

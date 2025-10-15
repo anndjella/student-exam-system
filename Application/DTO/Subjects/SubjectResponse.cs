@@ -8,8 +8,8 @@ namespace Application.DTO.Subjects
 {
     public class SubjectResponse
     {
-        public int Id {  get; set; }
-        public string Name { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
         public int ESPB { get; set; }
     }
 }

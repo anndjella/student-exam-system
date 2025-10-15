@@ -2,11 +2,6 @@
 using Application.Services;
 using Domain.Entity;
 using Domain.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.ServicesImplementation
 {
@@ -38,11 +33,9 @@ namespace Application.ServicesImplementation
             if (await _teachers.GetByIdAsync(req.ExaminerID, ct) is null)
                 throw new InvalidOperationException("Examiner does not exist.");
 
-            if (req.SupervisorID is not null)
-            {
-                if (await _teachers.GetByIdAsync(req.SupervisorID.Value, ct) is null)
-                    throw new InvalidOperationException("Supervisor does not exist.");
-            }
+            if (req.SupervisorID is not null && await _teachers.GetByIdAsync(req.SupervisorID.Value, ct) is null)
+                throw new InvalidOperationException("Supervisor does not exist.");
+
             if (await _repo.ExistsOnDateAsync(req.StudentID, req.SubjectID, req.Date, ct))
                 throw new InvalidOperationException("A student cannot take the same subject exam more than once on the same day.");
 
@@ -57,7 +50,7 @@ namespace Application.ServicesImplementation
                 SupervisorID = req.SupervisorID,
                 Date = req.Date,
                 Note = req.Note,
-                Grade=req.Grade
+                Grade = req.Grade
             };
 
             var id = await _repo.CreateAsync(exam, ct);
@@ -70,14 +63,17 @@ namespace Application.ServicesImplementation
         public async Task DeleteAsync(int id, CancellationToken ct = default)
         {
             var s = await _repo.GetByIdAsync(id, ct);
-            if (s is null) return;
+            if (s is null)
+                throw new InvalidOperationException($"Exam with id {id} does not exist.");
             await _repo.DeleteAsync(s, ct);
         }
 
         public async Task<ExamResponse?> GetAsync(int id, CancellationToken ct = default)
         {
             var e = await _repo.GetByIdWithDetailsAsync(id, ct);
-            return e is null ? null : Map(e);
+            return e is null
+                ? throw new InvalidOperationException($"Exam with id {id} does not exist.")
+                : Map(e);
         }
 
         public async Task<IReadOnlyList<ExamResponse>> ListAsync(CancellationToken ct = default)
@@ -90,11 +86,11 @@ namespace Application.ServicesImplementation
         {
             var e = await _repo.GetByIdAsync(id, ct) ?? throw new KeyNotFoundException("Exam does not exist.");
 
-            if (req.Grade != e.Grade)
+            if (req.Grade is byte newGrade && newGrade != e.Grade)
             {
                 if (string.IsNullOrWhiteSpace(req.Note))
                     throw new InvalidOperationException("Note is required when changing the grade.");
-                e.Grade = req.Grade.Value;
+                e.Grade = newGrade;
                 e.Note = req.Note;
             }
             else
