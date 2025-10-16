@@ -13,6 +13,7 @@ using Application.Validators.Student;
 using Application.Validators.Teacher;
 using Application.Validators.Subject;
 using Application.Validators.Exam;
+using Api.Middleware;
 
 
 
@@ -44,10 +45,11 @@ builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
 builder.Services.AddScoped<IExamRepository, ExamRepository>();
 builder.Services.AddScoped<IExamService, ExamService>();
-builder.Services.AddControllers(o =>
-{
-    o.Filters.Add<ApiExceptionFilter>();
-});
+//builder.Services.AddControllers(o =>
+//{
+//    o.Filters.Add<ApiExceptionFilter>();
+//});
+builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
 builder.Services.AddProblemDetails();
 
@@ -75,6 +77,7 @@ builder.Services.AddCors(options =>
     );
 });
 var app = builder.Build();
+app.UseRouting();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -90,7 +93,8 @@ using (var scope = app.Services.CreateScope())
 }
 app.UseCors("FrontDev");
 app.UseHttpsRedirection();
-
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

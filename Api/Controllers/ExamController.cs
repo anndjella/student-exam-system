@@ -17,13 +17,8 @@ namespace Api.Controllers
             [FromBody, CustomizeValidator(RuleSet = "Create")] CreateExamRequest req,
             CancellationToken ct)
         {
-            try
-            {
                 var resp = await _svc.CreateAsync(req, ct);
                 return CreatedAtAction(nameof(GetOne), new { id = resp.ID }, resp);
-            }
-            catch (ArgumentException ex) { return BadRequest(ex.Message); }
-            catch (InvalidOperationException ex) { return Conflict(ex.Message); }
         }
 
         [HttpGet("{id:int}")]
@@ -43,19 +38,8 @@ namespace Api.Controllers
             [FromBody, CustomizeValidator(RuleSet = "Update")] UpdateExamRequest req,
             CancellationToken ct)
         {
-            try
-            {
                 await _svc.UpdateAsync(id, req, ct);
                 return NoContent();
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound($"Exam with id {id} does not exist.");
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(ex.Message);
-            }
         }
 
         [HttpDelete("{id:int}")]

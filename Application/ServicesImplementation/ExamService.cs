@@ -1,7 +1,9 @@
-﻿using Application.DTO.Exams;
+﻿using Application.Common;
+using Application.DTO.Exams;
 using Application.Services;
 using Domain.Entity;
 using Domain.Interfaces;
+using System.Linq.Expressions;
 
 namespace Application.ServicesImplementation
 {
@@ -25,22 +27,22 @@ namespace Application.ServicesImplementation
         public async Task<ExamResponse> CreateAsync(CreateExamRequest req, CancellationToken ct = default)
         {
             if (await _students.GetByIdAsync(req.StudentID, ct) is null)
-                throw new InvalidOperationException("Student does not exist.");
+                throw new AppException(AppErrorCode.BadRequest, $"Student with id {req.StudentID} does not exist.");
 
             if (await _subjects.GetByIdAsync(req.SubjectID, ct) is null)
-                throw new InvalidOperationException("Subject does not exist.");
+                throw new AppException(AppErrorCode.BadRequest, $"Subject with id {req.SubjectID} does not exist.");
 
             if (await _teachers.GetByIdAsync(req.ExaminerID, ct) is null)
-                throw new InvalidOperationException("Examiner does not exist.");
+                throw new AppException(AppErrorCode.BadRequest, $"Examiner with id {req.ExaminerID} does not exist.");
 
             if (req.SupervisorID is not null && await _teachers.GetByIdAsync(req.SupervisorID.Value, ct) is null)
-                throw new InvalidOperationException("Supervisor does not exist.");
+                throw new AppException(AppErrorCode.BadRequest, $"Supervisor with id {req.SupervisorID} does not exist.");
 
             if (await _repo.ExistsOnDateAsync(req.StudentID, req.SubjectID, req.Date, ct))
-                throw new InvalidOperationException("A student cannot take the same subject exam more than once on the same day.");
+                throw new AppException(AppErrorCode.Conflict, "A student cannot take the same subject exam more than once on the same day.");
 
             if (req.Grade >= 6 && await _repo.HasPassedAsync(req.StudentID, req.SubjectID, ct))
-                throw new InvalidOperationException("Student already passed this subject.");
+                throw new AppException(AppErrorCode.Conflict, "Student already passed this subject.");
 
             Exam exam = new Exam
             {
@@ -55,7 +57,7 @@ namespace Application.ServicesImplementation
 
             var id = await _repo.CreateAsync(exam, ct);
             var created = await _repo.GetByIdWithDetailsAsync(id, ct)
-                          ?? throw new InvalidOperationException("Unexpected error in creating.");
+                          ?? throw new AppException(AppErrorCode.Unexpected, "Unexpected error in creating.");
 
             return Map(created);
         }
@@ -63,17 +65,15 @@ namespace Application.ServicesImplementation
         public async Task DeleteAsync(int id, CancellationToken ct = default)
         {
             var s = await _repo.GetByIdAsync(id, ct);
-            if (s is null)
-                throw new InvalidOperationException($"Exam with id {id} does not exist.");
+            if (s is null) 
+                throw new AppException(AppErrorCode.NotFound, "Exam not found.");
             await _repo.DeleteAsync(s, ct);
         }
 
         public async Task<ExamResponse?> GetAsync(int id, CancellationToken ct = default)
         {
             var e = await _repo.GetByIdWithDetailsAsync(id, ct);
-            return e is null
-                ? throw new InvalidOperationException($"Exam with id {id} does not exist.")
-                : Map(e);
+            return e is null ? null : Map(e);
         }
 
         public async Task<IReadOnlyList<ExamResponse>> ListAsync(CancellationToken ct = default)
@@ -84,12 +84,13 @@ namespace Application.ServicesImplementation
 
         public async Task UpdateAsync(int id, UpdateExamRequest req, CancellationToken ct = default)
         {
-            var e = await _repo.GetByIdAsync(id, ct) ?? throw new KeyNotFoundException("Exam does not exist.");
+            var e = await _repo.GetByIdAsync(id, ct) ??
+                throw new AppException(AppErrorCode.NotFound, "Exam not found.");
 
             if (req.Grade is byte newGrade && newGrade != e.Grade)
             {
                 if (string.IsNullOrWhiteSpace(req.Note))
-                    throw new InvalidOperationException("Note is required when changing the grade.");
+                    throw new AppException(AppErrorCode.BadRequest,"Note is required when changing the grade.");
                 e.Grade = newGrade;
                 e.Note = req.Note;
             }

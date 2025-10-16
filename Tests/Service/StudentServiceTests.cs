@@ -75,10 +75,10 @@ namespace Tests.Service
         }
 
         [Fact]
-        public void CreateAsync_ReturnsStudentResponse_WhenCreateIsOK()
+        public async Task CreateAsync_ReturnsStudentResponse_WhenCreateIsOK()
         {
-            //arrange
-            CreateStudentRequest student = new CreateStudentRequest
+            // arrange
+            CreateStudentRequest req = new CreateStudentRequest
             {
                 JMBG = "0211995701236",
                 FirstName = "Milica",
@@ -86,26 +86,44 @@ namespace Tests.Service
                 DateOfBirth = new DateOnly(1995, 11, 2),
                 IndexNumber = "2020/1234"
             };
-            _repo.Setup(r => r.CreateAsync(It.IsAny<Student>(),It.IsAny<CancellationToken>()))
-                .ReturnsAsync(13);
-            _repo.Setup(r => r.GetByIdAsync(13, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Student {});
-            //act
-            var resp = _svc.CreateAsync(student);
 
-            //assert 
+            _repo.Setup(r => r.CreateAsync(It.IsAny<Student>(), It.IsAny<CancellationToken>()))
+                 .ReturnsAsync(13);
+
+            Student entity = new Student
+            {
+                ID = 13,
+                JMBG = req.JMBG,
+                FirstName = req.FirstName,
+                LastName = req.LastName,
+                DateOfBirth = req.DateOfBirth,
+                IndexNumber = req.IndexNumber
+            };
+
+            _repo.Setup(r => r.GetByIdAsync(13, It.IsAny<CancellationToken>()))
+                 .ReturnsAsync(entity);
+
+            // act
+            var resp = await _svc.CreateAsync(req);
+
+            // assert (state)
             resp.Should().NotBeNull();
-            resp.Id.Should().Be(123);
+            resp.Id.Should().Be(13);
+            resp.FirstName.Should().Be("Milica");
+            resp.LastName.Should().Be("Tosic");
+
+            // assert (behavior)
             _repo.Verify(r => r.CreateAsync(
-                         It.Is<Student>(s =>
-                             s.FirstName == "Milica" &&
-                             s.LastName == "Tosic" &&
-                             s.JMBG == "0211995701236" &&
-                             s.DateOfBirth == new DateOnly(1995, 11, 2) &&
-                             s.IndexNumber == "2020/1234"
-                         ),
-                        It.IsAny<CancellationToken>()),
-                        Times.Once);
+                It.Is<Student>(s =>
+                    s.FirstName == "Milica" &&
+                    s.LastName == "Tosic" &&
+                    s.JMBG == "0211995701236" &&
+                    s.DateOfBirth == new DateOnly(1995, 11, 2) &&
+                    s.IndexNumber == "2020/1234"
+                ),
+                It.IsAny<CancellationToken>()), Times.Once);
+
+            _repo.Verify(r => r.GetByIdAsync(13, It.IsAny<CancellationToken>()), Times.Once);
         }
         [Fact]
         public async Task CreateAsync_Throws_WhenJmbgAlreadyExists()

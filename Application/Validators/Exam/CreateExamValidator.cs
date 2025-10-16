@@ -15,16 +15,20 @@ namespace Application.Validators.Exam
             RuleSet("Create", () =>
             {
                 RuleFor(x => x.StudentID)
-                  .GreaterThan(0);
+                  .GreaterThan(0)
+                  .WithMessage("You must specify student.");
 
                 RuleFor(x => x.SubjectID)
-                  .GreaterThan(0);
+                  .GreaterThan(0)
+                  .WithMessage("You must specify subject.");
 
                 RuleFor(x => x.ExaminerID)
-                  .GreaterThan(0);
+                  .GreaterThan(0)
+                  .WithMessage("You must specify examiner.");
 
                 RuleFor(x => x.SupervisorID)
-                    .Must((req, sup) => sup is null || sup > 0);
+                    .Must((req, sup) => sup is null || sup > 0)
+                    .WithMessage("Supervisor ID must be greater than 0.");
 
                 RuleFor(x => x.Grade)
                     .InclusiveBetween((byte)5, (byte)10)
