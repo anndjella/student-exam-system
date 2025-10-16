@@ -1,4 +1,5 @@
-﻿using Application.DTO.Students;
+﻿using Application.Common;
+using Application.DTO.Students;
 using Application.Services;
 using Domain.Entity;
 using Domain.Interfaces;
@@ -14,12 +15,12 @@ public sealed class StudentService : IStudentService
     public async Task<StudentResponse> CreateAsync(CreateStudentRequest req, CancellationToken ct = default)
     {
         if (await _repo.ExistsByJmbgAsync(req.JMBG, ct))
-            throw new InvalidOperationException("Student with this JMBG already exists.");
+            throw new AppException(AppErrorCode.Conflict,"Student with this JMBG already exists.");
 
         if (await _repo.ExistsByIndexAsync(req.IndexNumber, ct))
-            throw new InvalidOperationException("Index already exists.");
+            throw new AppException(AppErrorCode.Conflict, "Index already exists.");
 
-        var student = new Student
+        Student student = new Student
         {
             JMBG = req.JMBG,
             FirstName = req.FirstName,
@@ -29,7 +30,8 @@ public sealed class StudentService : IStudentService
         };
 
         var id = await _repo.CreateAsync(student, ct);
-        var created = await _repo.GetByIdAsync(id, ct) ?? throw new InvalidOperationException("Unexpected error in creating.");
+        var created = await _repo.GetByIdAsync(id, ct) ??
+            throw new AppException(AppErrorCode.Unexpected,"Unexpected error in creating.");
 
         return Map(created);
     }
@@ -37,7 +39,9 @@ public sealed class StudentService : IStudentService
     public async Task<StudentResponse?> GetAsync(int id, CancellationToken ct = default)
     {
         var s = await _repo.GetByIdAsync(id, ct);
-        return s is null ? null : Map(s);
+        return s is null ?
+            throw new AppException(AppErrorCode.NotFound, $"Student with id {id} not found.")
+            : Map(s);
     }
 
     public async Task<IReadOnlyList<StudentResponse>> ListAsync(CancellationToken ct = default)
@@ -48,14 +52,15 @@ public sealed class StudentService : IStudentService
 
     public async Task UpdateAsync(int id, UpdateStudentRequest req, CancellationToken ct = default)
     {
-        var s = await _repo.GetByIdAsync(id, ct) ?? throw new KeyNotFoundException("Student does not exist.");
+        var s = await _repo.GetByIdAsync(id, ct) ?? 
+            throw new AppException(AppErrorCode.NotFound,$"Student with id {id} not found.");
 
         if (req.FirstName is not null) s.FirstName = req.FirstName;
         if (req.LastName is not null) s.LastName = req.LastName;
         if (req.IndexNumber is not null)
         {
             if (s.IndexNumber != req.IndexNumber && await _repo.ExistsByIndexAsync(req.IndexNumber, ct))
-                throw new InvalidOperationException("Index already exists.");
+                throw new AppException(AppErrorCode.Conflict,"Index already exists.");
             s.IndexNumber = req.IndexNumber;
         }
 
@@ -65,7 +70,8 @@ public sealed class StudentService : IStudentService
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
         var s = await _repo.GetByIdAsync(id, ct);
-        if (s is null) return;
+        if (s is null)
+            throw new AppException(AppErrorCode.NotFound, $"Student with id {id} not found.");
         await _repo.DeleteAsync(s, ct);
     }
 

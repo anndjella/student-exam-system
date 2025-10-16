@@ -21,13 +21,9 @@ namespace Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody, CustomizeValidator(RuleSet = "Create")] CreateSubjectRequest req, CancellationToken ct)
         {
-            try
-            {
-                var resp = await _svc.CreateAsync(req, ct);
-                return CreatedAtAction(nameof(GetOne), new { id = resp.Id }, resp);
-            }
-            catch (ArgumentException ex) { return BadRequest(ex.Message); }
-            catch (InvalidOperationException ex) { return Conflict(ex.Message); }
+            var resp = await _svc.CreateAsync(req, ct);
+            return CreatedAtAction(nameof(GetOne), new { id = resp.Id }, resp);
+
         }
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetOne(int id, CancellationToken ct)
@@ -38,12 +34,7 @@ namespace Api.Controllers
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody, CustomizeValidator(RuleSet = "Update")] UpdateSubjectRequest req, CancellationToken ct)
         {
-            try { await _svc.UpdateAsync(id, req, ct); return NoContent(); }
-            catch (KeyNotFoundException)
-            {
-                return NotFound($"Subject with id {id} does not exist.");
-            }
-            catch (InvalidOperationException ex) { return Conflict(ex.Message); }
+            await _svc.UpdateAsync(id, req, ct); return NoContent();
         }
 
         [HttpDelete("{id:int}")]

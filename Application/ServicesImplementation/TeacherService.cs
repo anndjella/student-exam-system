@@ -1,4 +1,5 @@
-﻿using Application.DTO.Students;
+﻿using Application.Common;
+using Application.DTO.Students;
 using Application.DTO.Teachers;
 using Application.Services;
 using Domain.Entity;
@@ -18,9 +19,9 @@ namespace Application.ServicesImplementation
         public async Task<TeacherResponse> CreateAsync(CreateTeacherRequest req, CancellationToken ct = default)
         {
             if (await _repo.ExistsByJmbgAsync(req.JMBG, ct))
-                throw new InvalidOperationException("Teacher with this JMBG already exists.");
+                throw new AppException(AppErrorCode.Conflict,"Teacher with this JMBG already exists.");
 
-            var teacher = new Teacher
+            Teacher teacher = new Teacher
             {
                 JMBG = req.JMBG,
                 FirstName = req.FirstName,
@@ -30,7 +31,8 @@ namespace Application.ServicesImplementation
             };
 
             var id = await _repo.CreateAsync(teacher, ct);
-            var created = await _repo.GetByIdAsync(id, ct) ?? throw new InvalidOperationException("Unexpected error in creating.");
+            var created = await _repo.GetByIdAsync(id, ct) ?? 
+                throw new AppException(AppErrorCode.Unexpected,"Unexpected error in creating.");
 
             return Map(created);
         }
@@ -38,14 +40,17 @@ namespace Application.ServicesImplementation
         public async Task DeleteAsync(int id, CancellationToken ct = default)
         {
             var s = await _repo.GetByIdAsync(id, ct);
-            if (s is null) return;
+            if (s is null) 
+                throw new AppException(AppErrorCode.NotFound, $"Teacher with id {id} not found.");
             await _repo.DeleteAsync(s, ct);
         }
 
         public async Task<TeacherResponse?> GetAsync(int id, CancellationToken ct = default)
         {
             var s = await _repo.GetByIdAsync(id, ct);
-            return s is null ? null : Map(s);
+            return s is null ? 
+                throw new AppException(AppErrorCode.NotFound, $"Teacher with id {id} not found.")
+                : Map(s);
         }
 
         public async Task<IReadOnlyList<TeacherResponse>> ListAsync(CancellationToken ct = default)
@@ -56,7 +61,8 @@ namespace Application.ServicesImplementation
 
         public async Task UpdateAsync(int id, UpdateTeacherRequest req, CancellationToken ct = default)
         {
-            var s = await _repo.GetByIdAsync(id, ct) ?? throw new KeyNotFoundException("Teacher does not exist.");
+            var s = await _repo.GetByIdAsync(id, ct) ??
+                throw new AppException(AppErrorCode.NotFound, $"Teacher with id {id} not found.");
 
             if (req.FirstName is not null) s.FirstName = req.FirstName;
             if (req.LastName is not null) s.LastName = req.LastName;

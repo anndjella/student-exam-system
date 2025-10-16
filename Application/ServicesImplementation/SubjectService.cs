@@ -1,4 +1,5 @@
-﻿using Application.DTO.Students;
+﻿using Application.Common;
+using Application.DTO.Students;
 using Application.DTO.Subjects;
 using Application.Services;
 using Domain.Entity;
@@ -28,21 +29,25 @@ namespace Application.ServicesImplementation
                 ESPB=req.ESPB
             };
             var id = await _repo.CreateAsync(subject,ct);
-            var created = await _repo.GetByIdAsync(id, ct) ?? throw new InvalidOperationException("Unexpected error in creating.");
+            var created = await _repo.GetByIdAsync(id, ct) ??
+                throw new AppException(AppErrorCode.Unexpected,"Unexpected error in creating.");
             return Map(created);
         }
 
         public async Task DeleteAsync(int id, CancellationToken ct = default)
         {
             var s = await _repo.GetByIdAsync(id, ct);
-            if (s is null) return;
+            if (s is null) 
+                throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.");
             await _repo.DeleteAsync(s, ct);
         }
 
         public async Task<SubjectResponse?> GetAsync(int id, CancellationToken ct = default)
         {
             var s = await _repo.GetByIdAsync(id, ct);
-            return s is null ? null : Map(s);
+            return s is null ? 
+                throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.")
+                : Map(s);
         }
 
         public async Task<IReadOnlyList<SubjectResponse>> ListAsync(CancellationToken ct = default)
@@ -53,7 +58,8 @@ namespace Application.ServicesImplementation
 
         public async Task UpdateAsync(int id, UpdateSubjectRequest req, CancellationToken ct = default)
         {
-            var s = await _repo.GetByIdAsync(id, ct) ?? throw new KeyNotFoundException("Student does not exist.");
+            var s = await _repo.GetByIdAsync(id, ct) ??
+                throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.");
 
             if (req.Name is not null) s.Name = req.Name;
             if (req.ESPB is not null) s.ESPB = req.ESPB.Value;
