@@ -1,4 +1,5 @@
-﻿using Application.DTO.Students;
+﻿using Application.DTO.Exams;
+using Application.DTO.Students;
 using Application.Services;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
@@ -43,6 +44,14 @@ namespace Api.Controllers
         {
             await _svc.DeleteAsync(id, ct);
             return NoContent();
+        }
+        [HttpGet("{id:int}/exams")]
+        public async Task<ActionResult<IReadOnlyList<ExamResponse>>> GetExamsForStudent(
+        int id,
+        CancellationToken ct)
+        {
+            var exams = await _svc.GetExamsAsync(id, ct);
+            return Ok(exams);
         }
     }
 }

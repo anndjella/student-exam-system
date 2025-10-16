@@ -1,4 +1,5 @@
-﻿using Domain.Entity;
+﻿using Application.DTO.Exams;
+using Domain.Entity;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -45,6 +46,30 @@ namespace Infrastructure.Repositories
         {
           return await _db.Teachers.AsNoTracking().OrderBy(x => x.LastName).ThenBy(x => x.FirstName).ToListAsync(ct);
 
+        }
+
+        public async Task<IReadOnlyList<Exam>> ListExamsAsExaminerAsync(int teacherId, CancellationToken ct = default)
+        {
+            return await _db.Exams.AsNoTracking()
+                       .Where(e => e.ExaminerID == teacherId)
+                       .Include(e=>e.Student)
+                       .Include(e => e.Subject)
+                       .Include(e => e.Examiner)
+                       .Include(e => e.Supervisor)
+                       .OrderByDescending(e => e.Date).ThenByDescending(e => e.ID)
+                       .ToListAsync(ct);
+        }
+
+        public async Task<IReadOnlyList<Exam>> ListExamsAsSupervisorAsync(int teacherId, CancellationToken ct = default)
+        {
+            return await _db.Exams.AsNoTracking()
+                 .Where(e => e.SupervisorID == teacherId)
+                 .Include(e => e.Student)
+                 .Include(e => e.Subject)
+                 .Include(e => e.Examiner)
+                 .Include(e => e.Supervisor)
+                 .OrderByDescending(e => e.Date).ThenByDescending(e => e.ID)
+                 .ToListAsync(ct);
         }
 
         public async Task UpdateAsync(Teacher teacher, CancellationToken ct = default)

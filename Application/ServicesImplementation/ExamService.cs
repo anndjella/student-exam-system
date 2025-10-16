@@ -59,7 +59,7 @@ namespace Application.ServicesImplementation
             var created = await _repo.GetByIdWithDetailsAsync(id, ct)
                           ?? throw new AppException(AppErrorCode.Unexpected, "Unexpected error in creating.");
 
-            return Map(created);
+            return Mapper.ExamToResponse(created);
         }
 
         public async Task DeleteAsync(int id, CancellationToken ct = default)
@@ -75,13 +75,13 @@ namespace Application.ServicesImplementation
             var e = await _repo.GetByIdWithDetailsAsync(id, ct);
             return e is null ?
                 throw new AppException(AppErrorCode.NotFound, $"Exam with id {id} not found.")
-                : Map(e);
+                : Mapper.ExamToResponse(e);
         }
 
         public async Task<IReadOnlyList<ExamResponse>> ListAsync(CancellationToken ct = default)
         {
             var list = await _repo.ListWithDetailsAsync(ct);
-            return list.Select(Map).ToList();
+            return list.Select(Mapper.ExamToResponse).ToList();
         }
 
         public async Task UpdateAsync(int id, UpdateExamRequest req, CancellationToken ct = default)
@@ -104,21 +104,7 @@ namespace Application.ServicesImplementation
                 if (req.Note is not null)
                     e.Note = string.IsNullOrWhiteSpace(req.Note) ? null : req.Note.Trim();
             }
-
             await _repo.UpdateAsync(e, ct);
         }
-        private static ExamResponse Map(Exam e) => new()
-        {
-            ID = e.ID,
-            StudentID = e.StudentID,
-            SubjectID = e.SubjectID,
-            ExaminerID = e.ExaminerID,
-            SupervisorID = e.SupervisorID,
-            Grade = e.Grade,
-            Date = e.Date,
-            Note = e.Note,
-            StudentIndex = e.Student?.IndexNumber ?? "",
-            SubjectName = e.Subject?.Name ?? ""
-        };
     }
 }

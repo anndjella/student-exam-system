@@ -16,6 +16,8 @@ namespace Domain.Interfaces
         // read
         Task<Student?> GetByIdAsync(int id, CancellationToken ct = default);
         Task<IReadOnlyList<Student>> ListAsync(CancellationToken ct = default);
+        Task<IReadOnlyList<Exam>> GetExamsAsync(int studentId, CancellationToken ct = default);
+
 
         // write
         Task<int> CreateAsync(Student student, CancellationToken ct = default);

@@ -31,7 +31,7 @@ namespace Application.ServicesImplementation
             var id = await _repo.CreateAsync(subject,ct);
             var created = await _repo.GetByIdAsync(id, ct) ??
                 throw new AppException(AppErrorCode.Unexpected,"Unexpected error in creating.");
-            return Map(created);
+            return Mapper.SubjectToResponse(created);
         }
 
         public async Task DeleteAsync(int id, CancellationToken ct = default)
@@ -47,13 +47,13 @@ namespace Application.ServicesImplementation
             var s = await _repo.GetByIdAsync(id, ct);
             return s is null ? 
                 throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.")
-                : Map(s);
+                : Mapper.SubjectToResponse(s);
         }
 
         public async Task<IReadOnlyList<SubjectResponse>> ListAsync(CancellationToken ct = default)
         {
              var list = await _repo.ListAsync(ct);
-            return list.Select(Map).ToList();
+            return list.Select(Mapper.SubjectToResponse).ToList();
         }
 
         public async Task UpdateAsync(int id, UpdateSubjectRequest req, CancellationToken ct = default)
@@ -66,11 +66,5 @@ namespace Application.ServicesImplementation
 
             await _repo.UpdateAsync(s, ct);
         }
-        private static SubjectResponse Map(Subject s) => new()
-        {
-            Id = s.ID,
-            Name=s.Name,
-            ESPB=s.ESPB
-        };
     }
 }

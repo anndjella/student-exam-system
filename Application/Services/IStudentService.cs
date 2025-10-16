@@ -1,4 +1,5 @@
-﻿using Application.DTO.Students;
+﻿using Application.DTO.Exams;
+using Application.DTO.Students;
 
 namespace Application.Services
 {
@@ -9,5 +10,7 @@ namespace Application.Services
         Task<IReadOnlyList<StudentResponse>> ListAsync(CancellationToken ct = default);
         Task UpdateAsync(int id, UpdateStudentRequest req, CancellationToken ct = default);
         Task DeleteAsync(int id, CancellationToken ct = default);
+        Task<IReadOnlyList<ExamResponse>> GetExamsAsync(int studentId, CancellationToken ct = default);
+
     }
 }

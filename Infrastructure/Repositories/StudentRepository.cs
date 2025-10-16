@@ -44,5 +44,19 @@ namespace Infrastructure.Repositories
             _db.Students.Remove(student);
             await _db.SaveChangesAsync(ct);
         }
+
+        public async Task<IReadOnlyList<Exam>> GetExamsAsync(int studentId, CancellationToken ct = default)
+        {
+            return await _db.Exams
+              .AsNoTracking()
+              .Where(e => e.StudentID == studentId)
+              .Include(e=>e.Student)
+              .Include(e => e.Subject)
+              .Include(e => e.Examiner)
+              .Include(e => e.Supervisor)
+              .OrderByDescending(e => e.Date)
+              .ThenByDescending(e => e.ID)
+              .ToListAsync(ct);
+        }
     }
 }

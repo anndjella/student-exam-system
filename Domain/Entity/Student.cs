@@ -12,6 +12,6 @@ namespace Domain.Entity
     {
         public string IndexNumber { get; set; } = "";
         public double? GPA { get; set; }
-        public ICollection<Exam> Exams { get; private set; } = new List<Exam>();
+        public ICollection<Exam> Exams { get;  set; } = new List<Exam>();
     }
 }

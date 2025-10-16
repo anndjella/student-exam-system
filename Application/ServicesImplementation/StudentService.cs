@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.DTO.Exams;
 using Application.DTO.Students;
 using Application.Services;
 using Domain.Entity;
@@ -33,7 +34,7 @@ public sealed class StudentService : IStudentService
         var created = await _repo.GetByIdAsync(id, ct) ??
             throw new AppException(AppErrorCode.Unexpected,"Unexpected error in creating.");
 
-        return Map(created);
+        return Mapper.StudentToResponse(created);
     }
 
     public async Task<StudentResponse?> GetAsync(int id, CancellationToken ct = default)
@@ -41,13 +42,13 @@ public sealed class StudentService : IStudentService
         var s = await _repo.GetByIdAsync(id, ct);
         return s is null ?
             throw new AppException(AppErrorCode.NotFound, $"Student with id {id} not found.")
-            : Map(s);
+            : Mapper.StudentToResponse(s);
     }
 
     public async Task<IReadOnlyList<StudentResponse>> ListAsync(CancellationToken ct = default)
     {
         var list = await _repo.ListAsync(ct);
-        return list.Select(Map).ToList();
+        return list.Select(Mapper.StudentToResponse).ToList();
     }
 
     public async Task UpdateAsync(int id, UpdateStudentRequest req, CancellationToken ct = default)
@@ -75,13 +76,13 @@ public sealed class StudentService : IStudentService
         await _repo.DeleteAsync(s, ct);
     }
 
-    private static StudentResponse Map(Student s) => new()
+    public async Task<IReadOnlyList<ExamResponse>> GetExamsAsync(int studentId, CancellationToken ct = default)
     {
-        Id = s.ID,
-        FirstName = s.FirstName,
-        LastName = s.LastName,
-        Age = s.Age,
-        Gpa = s.GPA,
-        IndexNumber = s.IndexNumber
-    };
+        if (await _repo.GetByIdAsync(studentId, ct) is null)
+            throw new AppException(AppErrorCode.NotFound, $"Student with id {studentId} not found.");
+
+        var exams = await _repo.GetExamsAsync(studentId, ct);
+
+        return exams.Select(Mapper.ExamToResponse).ToList();
+    }
 }

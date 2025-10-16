@@ -16,6 +16,8 @@ namespace Domain.Interfaces
         Task<int> CreateAsync(Teacher teacher, CancellationToken ct = default);
         Task UpdateAsync(Teacher teacher, CancellationToken ct = default);
         Task DeleteAsync(Teacher teacher, CancellationToken ct = default);
+        Task<IReadOnlyList<Exam>> ListExamsAsExaminerAsync(int teacherId, CancellationToken ct = default);
+        Task<IReadOnlyList<Exam>> ListExamsAsSupervisorAsync(int teacherId, CancellationToken ct = default);
 
     }
 }

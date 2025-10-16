@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.DTO.Exams;
 using Application.DTO.Students;
 using Application.DTO.Teachers;
 using Application.Services;
@@ -34,7 +35,7 @@ namespace Application.ServicesImplementation
             var created = await _repo.GetByIdAsync(id, ct) ?? 
                 throw new AppException(AppErrorCode.Unexpected,"Unexpected error in creating.");
 
-            return Map(created);
+            return Mapper.TeacherToResponse(created);
         }
 
         public async Task DeleteAsync(int id, CancellationToken ct = default)
@@ -50,13 +51,33 @@ namespace Application.ServicesImplementation
             var s = await _repo.GetByIdAsync(id, ct);
             return s is null ? 
                 throw new AppException(AppErrorCode.NotFound, $"Teacher with id {id} not found.")
-                : Map(s);
+                : Mapper.TeacherToResponse(s);
         }
 
         public async Task<IReadOnlyList<TeacherResponse>> ListAsync(CancellationToken ct = default)
         {
             var list = await _repo.ListAsync(ct);
-            return list.Select(Map).ToList();
+            return list.Select(Mapper.TeacherToResponse).ToList();
+        }
+
+        public async Task<IReadOnlyList<ExamResponse>> ListExamsAsExaminerAsync(int teacherId, CancellationToken ct = default)
+        {
+            if (await _repo.GetByIdAsync(teacherId, ct) is null)
+                throw new AppException(AppErrorCode.NotFound, $"Teacher with id {teacherId} not found.");
+
+            var exams = await _repo.ListExamsAsExaminerAsync(teacherId, ct);
+
+            return exams.Select(Mapper.ExamToResponse).ToList();
+        }
+
+        public async Task<IReadOnlyList<ExamResponse>> ListExamsAsSupervisorAsync(int teacherId, CancellationToken ct = default)
+        {
+            if (await _repo.GetByIdAsync(teacherId, ct) is null)
+                throw new AppException(AppErrorCode.NotFound, $"Teacher with id {teacherId} not found.");
+
+            var exams = await _repo.ListExamsAsSupervisorAsync(teacherId, ct);
+
+            return exams.Select(Mapper.ExamToResponse).ToList();
         }
 
         public async Task UpdateAsync(int id, UpdateTeacherRequest req, CancellationToken ct = default)
@@ -70,12 +91,5 @@ namespace Application.ServicesImplementation
 
             await _repo.UpdateAsync(s, ct);
         }
-        private static TeacherResponse Map(Teacher s) => new()
-        {
-            Id = s.ID,
-            FirstName = s.FirstName,
-            LastName = s.LastName,
-            Title = s.Title
-        };
     }
 }
