@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Api;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Application.Common;
 
 namespace Tests.Application
 {
@@ -53,7 +54,7 @@ namespace Tests.Application
         }
 
         [Fact]
-        public async Task Create_WhenServiceThrowsInvalidOperation_Returns409()
+        public async Task Create_WhenServiceThrowsInvalidOperation_Throws()
         {
             // arrange
             CreateStudentRequest req = new CreateStudentRequest
@@ -64,43 +65,18 @@ namespace Tests.Application
                 DateOfBirth = new DateOnly(1990, 1, 1),
                 IndexNumber = "2024/5"
             };
-
             _svc.Setup(s => s.CreateAsync(req, It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new InvalidOperationException("Index already exists."));
+                .ThrowsAsync(new AppException(AppErrorCode.Conflict, "Index already exists."));
 
-            // act
-            var result = await _ctrl.Create(req, CancellationToken.None);
+            // act 
+            Func<Task> act = () => _ctrl.Create(req, CancellationToken.None);
+            
+            //assert
+            await act.Should().ThrowAsync<AppException>()
+                .Where(ex=>ex.Code==AppErrorCode.Conflict)
+                .WithMessage("Index already exists.");
 
-            // assert
-            var conflict = result as ConflictObjectResult;
-            conflict.Should().NotBeNull();
-            conflict!.StatusCode.Should().Be(409);
-            conflict.Value.Should().Be("Index already exists.");
-        }
-        [Fact]
-        public async Task Create_WhenServiceThrowsArgumentException_Returns400()
-        {
-            // arrange
-            CreateStudentRequest req = new CreateStudentRequest
-            {
-                JMBG = "bad",
-                FirstName = "Ana",
-                LastName = "Anić",
-                DateOfBirth = new DateOnly(1990, 1, 1),
-                IndexNumber = "2024/5"
-            };
-
-            _svc.Setup(s => s.CreateAsync(req, It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new ArgumentException("Invalid JMBG."));
-
-            // act
-            var result = await _ctrl.Create(req, CancellationToken.None);
-
-            // assert
-            var bad = result as BadRequestObjectResult;
-            bad.Should().NotBeNull();
-            bad!.StatusCode.Should().Be(400);
-            bad.Value.Should().Be("Invalid JMBG.");
+            _svc.Verify(s => s.CreateAsync(req, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -112,8 +88,8 @@ namespace Tests.Application
                 FirstName = "Ana",
                 LastName = "Anić",
                 IndexNumber = "2024/5"
-            }
-            ;
+            };
+
             _svc.Setup(s => s.GetAsync(7, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(resp);
 
@@ -125,7 +101,7 @@ namespace Tests.Application
             ok.Value.Should().Be(resp);
         }
         [Fact]
-        public async Task GetOne_WhenServiceReturnsNull_Returns404()
+        public async Task GetOne_WhenServiceReturnsNull_Throws()
         {
             _svc.Setup(s => s.GetAsync(99, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((StudentResponse?)null);
@@ -137,9 +113,9 @@ namespace Tests.Application
         [Fact]
         public async Task Update_WhenServiceCompletes_Returns204()
         {
-            UpdateStudentRequest req = new UpdateStudentRequest 
-            { 
-                FirstName = "Ana" 
+            UpdateStudentRequest req = new UpdateStudentRequest
+            {
+                FirstName = "Ana"
             };
             _svc.Setup(s => s.UpdateAsync(5, req, It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
@@ -149,39 +125,23 @@ namespace Tests.Application
             result.Should().BeOfType<NoContentResult>();
         }
         [Fact]
-        public async Task Update_WhenServiceThrowsNotFound_Returns404()
+        public async Task Update_WhenServiceThrowsNotFound_Throws()
         {
             UpdateStudentRequest req = new UpdateStudentRequest
             {
-                FirstName = "Ana" 
+                FirstName = "Ana"
             };
             _svc.Setup(s => s.UpdateAsync(999, req, It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new KeyNotFoundException());
+                .ThrowsAsync(new AppException(AppErrorCode.NotFound, "Student with id 999 not found."));
 
-            var result = await _ctrl.Update(999, req, CancellationToken.None);
+            Func<Task> act = () => _ctrl.Update(999, req, CancellationToken.None);
 
-            var notFound = result as NotFoundObjectResult;
-            notFound.Should().NotBeNull();
-            notFound!.StatusCode.Should().Be(404);
-            notFound.Value.Should().Be($"Person with id 999 does not exist.");
-        }
-        [Fact]
-        public async Task Update_WhenServiceThrowsConflict_Returns409()
-        {
-            UpdateStudentRequest req = new UpdateStudentRequest
-            { 
-                IndexNumber = "2024/5"
-            };
-            _svc.Setup(s => s.UpdateAsync(5, req, It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new InvalidOperationException("Index already exists."));
+            await act.Should().ThrowAsync<AppException>()
+                .Where(ex=>ex.Code==AppErrorCode.NotFound)
+                .WithMessage("Student with id 999 not found.");
 
-            var result = await _ctrl.Update(5, req, CancellationToken.None);
-
-            var conflict = result as ConflictObjectResult;
-            conflict.Should().NotBeNull();
-            conflict!.StatusCode.Should().Be(409);
-            conflict.Value.Should().Be("Index already exists.");
-        }
+            _svc.Verify(s => s.UpdateAsync(999, req, It.IsAny<CancellationToken>()), Times.Once);
+        }  
         [Fact]
         public async Task Delete_Always_Returns204()
         {
@@ -191,18 +151,16 @@ namespace Tests.Application
 
             result.Should().BeOfType<NoContentResult>();
         }
-
         [Fact]
-        public async Task Delete_WhenServiceThrows_ExceptionBubbles()
+        public async Task Delete_WhenServiceThrows_Throws()
         {
             _svc.Setup(s => s.DeleteAsync(7, It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new InvalidOperationException("boom"));
+                .ThrowsAsync(new InvalidOperationException("invalid"));
 
             var act = async () => await _ctrl.Delete(7, CancellationToken.None);
 
             await act.Should().ThrowAsync<InvalidOperationException>()
-                     .WithMessage("boom");
+                     .WithMessage("invalid");
         }
-
     }
 }

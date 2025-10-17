@@ -9,6 +9,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Application.Common;
+using FluentAssertions.Specialized;
+using static System.Net.Mime.MediaTypeNames;
 
 
 namespace Tests.Service
@@ -56,7 +59,7 @@ namespace Tests.Service
         }
 
         [Fact]
-        public void GetAsync_ReturnsNull_WhenStudentDoesNotExist()
+        public async Task GetAsync_ThrowsAppExc_WhenStudentDoesNotExist()
         {
             // arrange
             int id = 26;
@@ -64,10 +67,12 @@ namespace Tests.Service
                  .ReturnsAsync((Student?)null); //student with id=26 does not exists
 
             // act
-            StudentResponse? resp = _svc.GetAsync(id).Result;
+            Func<Task> act = () => _svc.GetAsync(id, CancellationToken.None);
 
-            // assert (state)
-            Assert.Null(resp);
+            // assert
+            await act.Should().ThrowAsync<AppException>()
+                .Where(ex=>ex.Code==AppErrorCode.NotFound)
+                .WithMessage("Student with id 26 not found.");
 
             // assert (behavior)
             _repo.Verify(r => r.GetByIdAsync(id, It.IsAny<CancellationToken>()), Times.Once);
@@ -104,7 +109,7 @@ namespace Tests.Service
                  .ReturnsAsync(entity);
 
             // act
-            var resp = await _svc.CreateAsync(req);
+            StudentResponse resp = await _svc.CreateAsync(req);
 
             // assert (state)
             resp.Should().NotBeNull();
@@ -144,7 +149,11 @@ namespace Tests.Service
                  .ReturnsAsync(false);
 
             //act + Assert
-            await Assert.ThrowsAsync<InvalidOperationException>(() => _svc.CreateAsync(req));
+            Func<Task> act = () => _svc.CreateAsync(req);
+
+            await act.Should().ThrowAsync<AppException>()
+                .Where(ex=>ex.Code==AppErrorCode.Conflict)
+                .WithMessage("Student with this JMBG already exists.");
 
             _repo.Verify(r => r.CreateAsync(It.IsAny<Student>(), It.IsAny<CancellationToken>()), Times.Never);
             _repo.Verify(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -211,8 +220,13 @@ namespace Tests.Service
                 IndexNumber = "2019/999"
             };
 
-            //act + assert
-            await Assert.ThrowsAsync<InvalidOperationException>(() => _svc.UpdateAsync(11, req));
+            //act
+            Func<Task> act = () => _svc.UpdateAsync(11, req);
+
+            // assert
+            await act.Should().ThrowAsync<AppException>()
+                .Where(ex=>ex.Code==AppErrorCode.Conflict)
+                .WithMessage("Index already exists.");
 
             _repo.Verify(r => r.UpdateAsync(It.IsAny<Student>(), It.IsAny<CancellationToken>()), Times.Never);
         }
@@ -243,10 +257,87 @@ namespace Tests.Service
                  .ReturnsAsync((Student?)null);
 
             //act
-            await _svc.DeleteAsync(999);
+            Func<Task> act = () => _svc.DeleteAsync(999, CancellationToken.None);
 
             //assert
+            await act.Should().ThrowAsync<AppException>()
+                .Where(ex => ex.Code == AppErrorCode.NotFound)
+                .WithMessage("Student with id 999 not found.");
+
             _repo.Verify(r => r.DeleteAsync(It.IsAny<Student>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task GetExamsAsync_WhenStudentNotFound_ThrowsNotFound()
+        {
+            // arrange
+            _repo.Setup(r => r.GetByIdAsync(26, It.IsAny<CancellationToken>()))
+                 .ReturnsAsync((Student?)null);
+
+            // act
+            Func<Task> act = () => _svc.GetExamsAsync(26, CancellationToken.None);
+
+            // assert
+            await act.Should().ThrowAsync<AppException>()
+                .Where(ex=>ex.Code== AppErrorCode.NotFound)
+                .WithMessage("Student with id 26 not found.");
+
+            _repo.Verify(r => r.GetByIdAsync(26, It.IsAny<CancellationToken>()), Times.Once);
+            _repo.Verify(r => r.GetExamsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+            _repo.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task GetExamsAsync_WhenStudentExists_ReturnsMappedList()
+        {
+            // arrange
+            _repo.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                 .ReturnsAsync(new Student { ID = 1 });
+
+            var exams = new[]
+            {
+            new Exam { ID = 10, StudentID = 1, SubjectID = 2, ExaminerID = 3, SupervisorID = null, Grade = 8, Date = new DateOnly(2025, 10, 5), Note = "ispravka" },
+            new Exam { ID = 11, StudentID = 1, SubjectID = 5, ExaminerID = 6, SupervisorID = 7, Grade = 9, Date = new DateOnly(2025, 9, 20),  Note = null }
+            };
+            _repo.Setup(r => r.GetExamsAsync(1, It.IsAny<CancellationToken>()))
+                 .ReturnsAsync(exams);
+
+            // act
+            var result = await _svc.GetExamsAsync(1, CancellationToken.None);
+
+            // assert
+            result.Should().NotBeNull().And.HaveCount(2);
+
+            result[0].ID.Should().Be(10);
+            result[0].Grade.Should().Be(8);
+
+            result[1].ID.Should().Be(11);
+            result[1].Grade.Should().Be(9);
+
+            _repo.Verify(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
+            _repo.Verify(r => r.GetExamsAsync(1, It.IsAny<CancellationToken>()), Times.Once);
+            _repo.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task GetExamsAsync_WhenNoExams_ReturnsEmptyList()
+        {
+            // arrange
+            _repo.Setup(r => r.GetByIdAsync(5, It.IsAny<CancellationToken>()))
+                 .ReturnsAsync(new Student { ID = 5 });
+
+            _repo.Setup(r => r.GetExamsAsync(5, It.IsAny<CancellationToken>()))
+                 .ReturnsAsync(Array.Empty<Exam>());
+
+            // act
+            var result = await _svc.GetExamsAsync(5, CancellationToken.None);
+
+            // assert
+            result.Should().NotBeNull().And.BeEmpty();
+
+            _repo.Verify(r => r.GetByIdAsync(5, It.IsAny<CancellationToken>()), Times.Once);
+            _repo.Verify(r => r.GetExamsAsync(5, It.IsAny<CancellationToken>()), Times.Once);
+            _repo.VerifyNoOtherCalls();
         }
 
     }

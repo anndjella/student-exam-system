@@ -38,9 +38,9 @@ namespace Tests.Persistance
 
             var fromDb = await _db.Students.AsNoTracking().SingleAsync(x => x.ID == s.ID);
 
-            Assert.Equal("Ana", fromDb.FirstName);
-            Assert.Equal("Anić", fromDb.LastName);
-            Assert.Equal("2024/15", fromDb.IndexNumber);
+            Assert.Equal(s.FirstName, fromDb.FirstName);
+            Assert.Equal(s.LastName, fromDb.LastName);
+            Assert.Equal(s.IndexNumber, fromDb.IndexNumber);
 
         }
         [Fact]
@@ -68,8 +68,6 @@ namespace Tests.Persistance
             });
 
             await Assert.ThrowsAsync<DbUpdateException>(() => _db.SaveChangesAsync());
-
-
         }
         [Fact]
         public async Task Deleting_Student_cascades_to_Exams()

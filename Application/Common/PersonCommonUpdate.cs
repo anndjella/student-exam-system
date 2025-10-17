@@ -13,15 +13,17 @@ namespace Application.Common
         {
             RuleSet("Update", () =>
             {
-                RuleFor(x => x.FirstName)
+                When(x => x.FirstName != null, () =>
+                    RuleFor(x => x.FirstName)
                     .NotEmpty()
                     .WithMessage("First name is required.")
-                    .MaximumLength(100);
+                    .MaximumLength(100));
 
+                When(x => x.LastName != null, () =>
                 RuleFor(x => x.LastName)
                     .NotEmpty()
                     .WithMessage("Last name is required.")
-                    .MaximumLength(100);
+                    .MaximumLength(100));
             });
         }
 
