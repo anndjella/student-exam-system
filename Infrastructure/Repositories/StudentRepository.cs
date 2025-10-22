@@ -22,7 +22,7 @@ namespace Infrastructure.Repositories
             => _db.Students.AnyAsync(x => x.IndexNumber == indexNumber, ct);
 
         public async Task<Student?> GetByIdAsync(int id, CancellationToken ct = default)
-            => await _db.Students.FirstOrDefaultAsync(x => x.ID == id, ct);
+            => await _db.Students.AsNoTracking().FirstOrDefaultAsync(x => x.ID == id, ct);
 
         public async Task<IReadOnlyList<Student>> ListAsync(CancellationToken ct = default)
             => await _db.Students.AsNoTracking().OrderBy(x => x.LastName).ThenBy(x => x.FirstName).ToListAsync(ct);

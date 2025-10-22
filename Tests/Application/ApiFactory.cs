@@ -17,7 +17,7 @@ namespace Tests.Application
         public Mock<IStudentService> StudentSvcMock;
         public ApiFactory()
         {
-            StudentSvcMock=new Mock<IStudentService>();
+            StudentSvcMock=new Mock<IStudentService>(MockBehavior.Strict);
         }
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {

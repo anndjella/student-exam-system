@@ -1,4 +1,5 @@
 ﻿using Domain.Entity;
+using FluentAssertions;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -38,7 +39,9 @@ namespace Tests.Persistance
                 Note = null
             };
             _db.Exams.Add(exam);
-            await _db.SaveChangesAsync();
+            Func<Task> insertAct = () => _db.SaveChangesAsync();
+            await insertAct.Should().NotThrowAsync("FK are valid");
+
             exam.Grade = 4;
             await Assert.ThrowsAsync<DbUpdateException>(() => _db.SaveChangesAsync());
         }

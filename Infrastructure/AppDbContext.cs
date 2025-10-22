@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Security.Cryptography;
 using System.Reflection.Emit;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace Infrastructure
 {
@@ -85,7 +86,12 @@ namespace Infrastructure
 
               );
                 }
-                b.Ignore(s => s.GPA);
+                //b.Ignore(s => s.GPA);
+                b.Property(s => s.GPA)
+                    .HasColumnType("decimal(4,2)")
+                    .ValueGeneratedOnAddOrUpdate(); 
+
+                b.Property(s => s.GPA).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
 
             });
 

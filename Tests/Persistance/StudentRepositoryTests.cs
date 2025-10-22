@@ -113,7 +113,7 @@ namespace Tests.Persistance
 
             Exam exam = new Exam
             {
-                StudentID = student.ID,
+                StudentID = 3,
                 SubjectID = subject.ID,
                 ExaminerID = examiner.ID,
                 SupervisorID = supervisor.ID,
@@ -122,12 +122,14 @@ namespace Tests.Persistance
                 Note = "ok"
             };
             _db.Exams.Add(exam);
-            await _db.SaveChangesAsync();
+            Func<Task> insertAct = () => _db.SaveChangesAsync();
+            await insertAct.Should().NotThrowAsync("FK are valid");
 
             Assert.Equal(1, await _db.Exams.CountAsync(e => e.StudentID == student.ID));
 
             _db.Students.Remove(student);
-            await _db.SaveChangesAsync();
+            Func<Task> deleteAct = () => _db.SaveChangesAsync();
+            await deleteAct.Should().NotThrowAsync("Delete is OK");
 
             Assert.Null(await _db.Students.FindAsync(student.ID));
             Assert.Equal(0, await _db.Exams.CountAsync(e => e.StudentID == student.ID));

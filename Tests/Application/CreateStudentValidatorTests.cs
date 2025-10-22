@@ -27,7 +27,6 @@ namespace Tests.Application
                 JMBG = "1504998710016",
                 IndexNumber = "2024/1234"
             };
-
             var r = _validator.TestValidate(model, o => o.IncludeRuleSets("Create"));
             r.ShouldNotHaveAnyValidationErrors();
         }
@@ -68,7 +67,8 @@ namespace Tests.Application
             };
 
             var r = _validator.TestValidate(model, o => o.IncludeRuleSets("Create"));
-            r.ShouldHaveValidationErrorFor(x => x.IndexNumber);
+            r.ShouldHaveValidationErrorFor(x => x.IndexNumber)
+                .WithErrorMessage("Invalid index number");
         }
         [Fact]
         public void Create_Jmbg_MustBeDigits_Length13_Checksum()
@@ -142,7 +142,8 @@ namespace Tests.Application
             };
 
             var r = _validator.TestValidate(model, o => o.IncludeRuleSets("Create"));
-            r.ShouldHaveValidationErrorFor(x => x.DateOfBirth);
+            r.ShouldHaveValidationErrorFor(x => x.DateOfBirth)
+                .WithErrorMessage("DateOfBirth out of range");
         }
     }
 }
