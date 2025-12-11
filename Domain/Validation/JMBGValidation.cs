@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Validation
 {
-    public static class JMBGValidation
+    public static class JmbgValidation
     {
         public static bool IsAllDigits(string s) => s.All(char.IsDigit) && s.Length == 13;
 

@@ -7,7 +7,6 @@ using Application.DTO.Students;
 using FluentValidation;
 using Application.Common;
 using FluentValidation.AspNetCore;
-using Api.Filter;
 using Application.ServicesImplementation;
 using Application.Validators.Student;
 using Application.Validators.Teacher;
@@ -45,10 +44,7 @@ builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
 builder.Services.AddScoped<IExamRepository, ExamRepository>();
 builder.Services.AddScoped<IExamService, ExamService>();
-//builder.Services.AddControllers(o =>
-//{
-//    o.Filters.Add<ApiExceptionFilter>();
-//});
+
 builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
 builder.Services.AddProblemDetails();
@@ -101,4 +97,7 @@ app.MapControllers();
 
 await app.RunAsync();
 
-public partial class Program { }
+public partial class Program
+{
+    protected Program() { }
+}

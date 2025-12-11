@@ -30,6 +30,8 @@ namespace Infrastructure.Repositories
                 .AsNoTracking()
                 .Include(x => x.Student)
                 .Include(x => x.Subject)
+                .Include(x => x.Examiner)
+                .Include(x => x.Supervisor)
                 .OrderByDescending(x => x.Date).ThenBy(x => x.StudentID)
                 .ToListAsync(ct);
 

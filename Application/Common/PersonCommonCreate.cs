@@ -38,20 +38,20 @@ namespace Application.Common
                     .Cascade(CascadeMode.Stop)
                     .NotEmpty().WithMessage("JMBG is required.")
                     .Length(13).WithMessage("JMBG must be 13 digits.")
-                    .Must(JMBGValidation.IsAllDigits).WithMessage("JMBG must contain only digits.")
+                    .Must(JmbgValidation.IsAllDigits).WithMessage("JMBG must contain only digits.")
                     .DependentRules(() =>
                     {
                         RuleFor(x => x.JMBG)
-                            .Must(JMBGValidation.RegionLooksSerbian).WithMessage("JMBG region is not for Serbia.")
-                            .Must(JMBGValidation.ChecksumValid).WithMessage("Check digit of JMBG is not valid.");
+                            .Must(JmbgValidation.RegionLooksSerbian).WithMessage("JMBG region is not for Serbia.")
+                            .Must(JmbgValidation.ChecksumValid).WithMessage("Check digit of JMBG is not valid.");
                     });
 
                 RuleFor(x => x)
-                    .Must(x => JMBGValidation.TryParseDate(x.JMBG, out var dob) && dob == x.DateOfBirth)
+                    .Must(x => JmbgValidation.TryParseDate(x.JMBG, out var dob) && dob == x.DateOfBirth)
                     .WithMessage("DateOfBirth doesn't match the date from JMBG.")
                     .When(x => !string.IsNullOrEmpty(x.JMBG)
                                 && x.JMBG.Length == 13
-                                && JMBGValidation.IsAllDigits(x.JMBG));
+                                && JmbgValidation.IsAllDigits(x.JMBG));
             });
             
         }

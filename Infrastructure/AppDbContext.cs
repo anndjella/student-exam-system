@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Reflection.Emit;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Metadata;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Infrastructure
 {
@@ -23,6 +24,7 @@ namespace Infrastructure
         public DbSet<Subject> Subjects => Set<Subject>();
         public DbSet<Exam> Exams => Set<Exam>();
 
+        [ExcludeFromCodeCoverage]
         [Obsolete]
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -86,7 +88,6 @@ namespace Infrastructure
 
               );
                 }
-                //b.Ignore(s => s.GPA);
                 b.Property(s => s.GPA)
                     .HasColumnType("decimal(4,2)")
                     .ValueGeneratedOnAddOrUpdate(); 

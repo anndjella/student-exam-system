@@ -77,7 +77,7 @@ namespace Tests.Application
             var req = new UpdateStudentRequest { FirstName = "Ana"};
 
             _fx.StudentSvcMock
-                .Setup(s => s.UpdateAsync(99, It.IsAny<UpdateStudentRequest>(), It.IsAny<CancellationToken>()))
+                .Setup(s => s.UpdateAsync(999, It.IsAny<UpdateStudentRequest>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new AppException(AppErrorCode.NotFound, "Student with id 999 not found."));
 
             var http = await _client.PutAsJsonAsync("/api/students/999", req);

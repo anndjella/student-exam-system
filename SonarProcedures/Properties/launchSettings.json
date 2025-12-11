@@ -1,0 +1,12 @@
+﻿{
+  "profiles": {
+    "SonarProcedures": {
+      "commandName": "Project",
+      "workingDirectory": "..\\",
+      "environmentVariables": {
+        "SONAR_HOST_URL": "https://sonarcloud.io",
+        "SONAR_TOKEN": "19c0ef7170160d5b5f77984019f06e76150bcbd9"
+      }
+    }
+  }
+}

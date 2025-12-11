@@ -14,10 +14,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure", "Infrastru
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Api", "Api\Api.csproj", "{E5FE0561-36D4-456E-8E1F-686984265E56}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{9B43CDC8-C34E-4D66-BEC4-4CB9C5A83286}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{9B43CDC8-C34E-4D66-BEC4-4CB9C5A83286}"
 	ProjectSection(ProjectDependencies) = postProject
 		{6FC5AB85-0932-4F68-AF20-92EC2327B583} = {6FC5AB85-0932-4F68-AF20-92EC2327B583}
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SonarProcedures", "SonarProcedures\SonarProcedures.csproj", "{FD824FFE-5C46-4B2F-9D86-32B7A48FFD80}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{9B43CDC8-C34E-4D66-BEC4-4CB9C5A83286}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9B43CDC8-C34E-4D66-BEC4-4CB9C5A83286}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B43CDC8-C34E-4D66-BEC4-4CB9C5A83286}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD824FFE-5C46-4B2F-9D86-32B7A48FFD80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD824FFE-5C46-4B2F-9D86-32B7A48FFD80}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD824FFE-5C46-4B2F-9D86-32B7A48FFD80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD824FFE-5C46-4B2F-9D86-32B7A48FFD80}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

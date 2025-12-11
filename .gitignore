@@ -13,3 +13,4 @@ TestResults/
 coverage/
 **/coverage.cobertura.xml
 **/coverage.opencover.xml
+baseline
