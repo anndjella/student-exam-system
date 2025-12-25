@@ -37,7 +37,8 @@ namespace Application.Common
         };
         public static ExamResponse ExamToResponse(Exam e) => new()
         {
-            ID = e.ID,
+            StudentID=e.StudentID,
+            SubjectID=e.SubjectID,
             Grade = e.Grade,
             Date = e.Date,
             Note = e.Note,

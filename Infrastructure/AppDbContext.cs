@@ -111,14 +111,7 @@ namespace Infrastructure
                 });
 
                 b.ToTable("Exam");
-                b.HasKey(e => e.ID);
-
-                b.Property(e => e.ID)
-                   .UseIdentityColumn();
-
-                b.Property(e => e.Date)
-                   .HasColumnType("date")
-                   .IsRequired();
+                b.HasKey(e => new { e.Date,e.SubjectID, e.StudentID});
 
                 b.Property(e => e.Note)
                     .HasMaxLength(500);
@@ -126,10 +119,6 @@ namespace Infrastructure
                 b.Property(e => e.Grade)
                  .IsRequired();
                 b.HasCheckConstraint("CK_Exam_Grade", "[Grade] BETWEEN 5 AND 10");
-
-                b.HasIndex(e => new { e.StudentID, e.SubjectID, e.Date })
-                  .IsUnique()
-                  .HasDatabaseName("UX_Exam_Student_Subject_Date");
 
                 b.HasIndex(e => new { e.StudentID, e.SubjectID })
                  .IsUnique()
@@ -169,7 +158,7 @@ namespace Infrastructure
                 b.Property(s => s.Name)
                  .HasMaxLength(100)
                  .IsRequired();
-
+             
                 b.Property(s => s.ESPB)
                  .HasColumnType("tinyint")
                  .IsRequired();

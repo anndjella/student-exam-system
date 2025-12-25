@@ -46,16 +46,11 @@ namespace Tests.Service
                 Note = null
             };
 
-            _repo.Setup(r => r.CreateAsync(It.IsAny<Exam>(), default))
-                .ReturnsAsync(23);
-            _repo.Setup(r => r.GetByIdWithDetailsAsync(23, default))
-                .ReturnsAsync(new Exam { ID = 23, Grade = 7 });
+            _repo.Setup(r => r.CreateAsync(It.IsAny<Exam>(), default));
+            _repo.Setup(r => r.GetByKeyWithDetailsAsync(1,2, new DateOnly(2024, 1, 10), default))
+                .ReturnsAsync(new Exam { Grade = 7 });
 
-            ExamResponse resp = await _svc.CreateAsync(req);
-
-            resp.Should().NotBeNull();
-            resp.ID.Should().Be(23);
-            resp.Grade.Should().Be(7);
+             await _svc.CreateAsync(req);
 
             _repo.Verify(r => r.CreateAsync(It.IsAny<Exam>(), default), Times.Once);
         }
@@ -89,29 +84,29 @@ namespace Tests.Service
         [Fact]
         public async Task Update_Ok()
         {
-            _repo.Setup(r => r.GetByIdAsync(23, default))
-               .ReturnsAsync(new Exam { ID = 23, Grade = 6 });
+            _repo.Setup(r => r.GetByKeyAsync(1, 2, new DateOnly(2024, 1, 10), default))
+               .ReturnsAsync(new Exam { Grade = 6 });
             UpdateExamRequest req = new UpdateExamRequest
             {
                 Grade = 7,
                 Note = "Greška"
             };
-            await _svc.UpdateAsync(23, req, default);
+            await _svc.UpdateAsync(1, 2, new DateOnly(2024, 1, 10), req, default);
 
-            _repo.Verify(r => r.UpdateAsync(It.Is<Exam>(e => e.ID == 23 && e.Grade == 7 && e.Note=="Greška"), default));
+            _repo.Verify(r => r.UpdateAsync(It.Is<Exam>(e => e.Grade == 7 && e.Note=="Greška"), default));
             _repo.Verify(r => r.UpdateAsync(It.IsAny<Exam>(),default), Times.Once);
         }
         [Fact]
         public async Task Update_WhenNoteNull_Throws()
         {
-            _repo.Setup(r => r.GetByIdAsync(23, default))
-               .ReturnsAsync(new Exam { ID = 23, Grade = 6 });
+            _repo.Setup(r => r.GetByKeyAsync(1, 2, new DateOnly(2024, 1, 10), default))
+               .ReturnsAsync(new Exam {Grade = 6 });
             UpdateExamRequest req = new UpdateExamRequest
             {
                 Grade = 7,
                 Note = null
             };
-            Func<Task> act = async () => await _svc.UpdateAsync(23, req, default);
+            Func<Task> act = async () => await _svc.UpdateAsync(1, 2, new DateOnly(2024, 1, 10), req, default);
 
             await act.Should().ThrowAsync<AppException>()
                 .Where(ex => ex.Code == AppErrorCode.BadRequest)

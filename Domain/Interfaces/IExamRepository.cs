@@ -11,11 +11,11 @@ namespace Domain.Interfaces
     {
         Task<bool> ExistsOnDateAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default);
         Task<bool> HasPassedAsync(int studentId, int subjectId, CancellationToken ct = default);
-        Task<Exam?> GetByIdAsync(int id, CancellationToken ct = default);
-        Task<Exam?> GetByIdWithDetailsAsync(int id, CancellationToken ct = default);
+        Task<Exam?> GetByKeyAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default);
+        Task<Exam?> GetByKeyWithDetailsAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default);
         Task<IReadOnlyList<Exam>> ListWithDetailsAsync(CancellationToken ct = default);
-        Task<int> CreateAsync(Exam exam, CancellationToken ct = default);
+        Task CreateAsync(Exam exam, CancellationToken ct = default);
         Task UpdateAsync(Exam exam, CancellationToken ct = default);
-        Task DeleteAsync(Exam exam, CancellationToken ct = default);
+        Task DeleteAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default);
     }
 }

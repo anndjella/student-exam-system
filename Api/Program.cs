@@ -13,6 +13,8 @@ using Application.Validators.Teacher;
 using Application.Validators.Subject;
 using Application.Validators.Exam;
 using Api.Middleware;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 
 

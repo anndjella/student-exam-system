@@ -250,8 +250,8 @@ namespace Tests.Service
 
             var exams = new[]
             {
-            new Exam { ID = 10, StudentID = 1, SubjectID = 2, ExaminerID = 3, SupervisorID = null, Grade = 8, Date = new DateOnly(2025, 10, 5), Note = "ispravka" },
-            new Exam { ID = 11, StudentID = 1, SubjectID = 5, ExaminerID = 6, SupervisorID = 7, Grade = 9, Date = new DateOnly(2025, 9, 20),  Note = null }
+            new Exam { StudentID = 1, SubjectID = 2, ExaminerID = 3, SupervisorID = null, Grade = 8, Date = new DateOnly(2025, 10, 5), Note = "ispravka" },
+            new Exam { StudentID = 1, SubjectID = 5, ExaminerID = 6, SupervisorID = 7, Grade = 9, Date = new DateOnly(2025, 9, 20),  Note = null }
             };
             _repo.Setup(r => r.GetExamsAsync(_id, It.IsAny<CancellationToken>()))
                  .ReturnsAsync(exams);
@@ -262,8 +262,8 @@ namespace Tests.Service
             // assert
             result.Should().NotBeNull().And.HaveCount(2);
 
-            var expected = exams.Select(e => new { e.ID, e.Grade }).ToArray();
-            var actual = result.Select(r => new { r.ID, r.Grade }).ToArray();
+            var expected = exams.Select(e => new { e.Grade }).ToArray();
+            var actual = result.Select(r => new { r.Grade }).ToArray();
 
             actual.Should().BeEquivalentTo(expected, opts => opts.WithoutStrictOrdering());
 

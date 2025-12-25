@@ -55,7 +55,6 @@ namespace Infrastructure.Repositories
               .Include(e => e.Examiner)
               .Include(e => e.Supervisor)
               .OrderByDescending(e => e.Date)
-              .ThenByDescending(e => e.ID)
               .ToListAsync(ct);
         }
     }

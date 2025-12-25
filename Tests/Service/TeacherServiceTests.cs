@@ -257,16 +257,16 @@ namespace Tests.Service
 
             var exams = new[]
             {
-                new Exam { ID = 10, StudentID = 1, SubjectID = 2, ExaminerID = 3, Grade = 8, Date = new DateOnly(2025, 10, 5) },
-                new Exam { ID = 11, StudentID = 4, SubjectID = 5, ExaminerID = 3, Grade = 9, Date = new DateOnly(2025, 9, 20) }
+                new Exam { StudentID = 1, SubjectID = 2, ExaminerID = 3, Grade = 8, Date = new DateOnly(2025, 10, 5) },
+                new Exam { StudentID = 4, SubjectID = 5, ExaminerID = 3, Grade = 9, Date = new DateOnly(2025, 9, 20) }
             };
             _repo.Setup(r => r.ListExamsAsExaminerAsync(_id, It.IsAny<CancellationToken>()))
                  .ReturnsAsync(exams);
 
             var result = await _svc.ListExamsAsExaminerAsync(_id, CancellationToken.None);
 
-            var expected = exams.Select(e => new { e.ID, e.Grade }).ToArray();
-            var actual = result.Select(r => new { r.ID, r.Grade }).ToArray();
+            var expected = exams.Select(e => new { e.Grade }).ToArray();
+            var actual = result.Select(r => new { r.Grade }).ToArray();
 
             expected.Should().BeEquivalentTo(actual,op=>op.WithoutStrictOrdering());   
 

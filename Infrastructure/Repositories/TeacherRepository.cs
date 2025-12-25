@@ -56,7 +56,7 @@ namespace Infrastructure.Repositories
                        .Include(e => e.Subject)
                        .Include(e => e.Examiner)
                        .Include(e => e.Supervisor)
-                       .OrderByDescending(e => e.Date).ThenByDescending(e => e.ID)
+                       .OrderByDescending(e => e.Date)
                        .ToListAsync(ct);
         }
 
@@ -68,7 +68,7 @@ namespace Infrastructure.Repositories
                  .Include(e => e.Subject)
                  .Include(e => e.Examiner)
                  .Include(e => e.Supervisor)
-                 .OrderByDescending(e => e.Date).ThenByDescending(e => e.ID)
+                 .OrderByDescending(e => e.Date)
                  .ToListAsync(ct);
         }
 

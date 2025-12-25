@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace Domain.Entity
 {
-    public sealed class Exam : IEntity
+    public sealed class Exam
     {
-        public int ID { get; set; }
         public int StudentID { get; set; }
 
         public byte Grade { get;  set; }

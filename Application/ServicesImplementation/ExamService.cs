@@ -24,7 +24,7 @@ namespace Application.ServicesImplementation
             _teachers = teachers;
             _subjects = subjects;
         }
-        public async Task<ExamResponse> CreateAsync(CreateExamRequest req, CancellationToken ct = default)
+        public async Task CreateAsync(CreateExamRequest req, CancellationToken ct = default)
         {
             if (await _students.GetByIdAsync(req.StudentID, ct) is null)
                 throw new AppException(AppErrorCode.BadRequest, $"Student with id {req.StudentID} not found.");
@@ -55,26 +55,22 @@ namespace Application.ServicesImplementation
                 Grade = req.Grade
             };
 
-            var id = await _repo.CreateAsync(exam, ct);
-            var created = await _repo.GetByIdWithDetailsAsync(id, ct)
-                          ?? throw new AppException(AppErrorCode.Unexpected, "Unexpected error in creating.");
-
-            return Mapper.ExamToResponse(created);
+            await _repo.CreateAsync(exam, ct);
         }
 
-        public async Task DeleteAsync(int id, CancellationToken ct = default)
+        public async Task DeleteAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default)
         {
-            var s = await _repo.GetByIdAsync(id, ct);
+            var s = await _repo.GetByKeyAsync(studentId,subjectId,date, ct);
             if (s is null) 
-                throw new AppException(AppErrorCode.NotFound, $"Exam with id {id} not found.");
-            await _repo.DeleteAsync(s, ct);
+                throw new AppException(AppErrorCode.NotFound, $"Exam not found.");
+            await _repo.DeleteAsync(studentId,subjectId,date, ct);
         }
 
-        public async Task<ExamResponse?> GetAsync(int id, CancellationToken ct = default)
+        public async Task<ExamResponse?> GetAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default)
         {
-            var e = await _repo.GetByIdWithDetailsAsync(id, ct);
+            var e = await _repo.GetByKeyWithDetailsAsync(studentId, subjectId, date, ct);
             return e is null ?
-                throw new AppException(AppErrorCode.NotFound, $"Exam with id {id} not found.")
+                throw new AppException(AppErrorCode.NotFound, $"Exam not found.")
                 : Mapper.ExamToResponse(e);
         }
 
@@ -84,10 +80,10 @@ namespace Application.ServicesImplementation
             return list.Select(Mapper.ExamToResponse).ToList();
         }
 
-        public async Task UpdateAsync(int id, UpdateExamRequest req, CancellationToken ct = default)
+        public async Task UpdateAsync(int studentId, int subjectId, DateOnly date, UpdateExamRequest req, CancellationToken ct = default)
         {
-            var e = await _repo.GetByIdAsync(id, ct) ??
-                throw new AppException(AppErrorCode.NotFound, $"Exam with id {id} not found.");
+            var e = await _repo.GetByKeyAsync(studentId, subjectId, date, ct) ??
+                throw new AppException(AppErrorCode.NotFound, $"Exam not found.");
 
             if (req.Grade is byte newGrade && newGrade != e.Grade)
             {
