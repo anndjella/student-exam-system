@@ -11,7 +11,7 @@ namespace Domain.Interfaces
     {
         // read
         Task<Subject?> GetByIdAsync(int id, CancellationToken ct = default);
-        Task<IReadOnlyList<Subject>> ListAsync(CancellationToken ct = default);
+        Task<List<Subject>> ListAsync(CancellationToken ct = default);
 
         // write
         Task<int> CreateAsync(Subject subject, CancellationToken ct = default);

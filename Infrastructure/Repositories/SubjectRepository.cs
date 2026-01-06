@@ -30,18 +30,16 @@ namespace Infrastructure.Repositories
             await _db.SaveChangesAsync(ct);
         }
 
-        public async Task<Subject?> GetByIdAsync(int id, CancellationToken ct = default)
-       => await _db.Subjects.FirstOrDefaultAsync(x => x.ID == id, ct);
+        public Task<Subject?> GetByIdAsync(int id, CancellationToken ct = default)
+           =>  _db.Subjects.FirstOrDefaultAsync(x => x.ID == id, ct);
 
 
-        public async Task<IReadOnlyList<Subject>> ListAsync(CancellationToken ct = default)
-       => await _db.Subjects.AsNoTracking().OrderBy(x => x.Name).ThenBy(x => x.ESPB).ToListAsync(ct);
+        public Task<List<Subject>> ListAsync(CancellationToken ct = default)
+         =>  _db.Subjects.OrderBy(x => x.Name).ThenBy(x => x.ECTS).ToListAsync(ct);
 
 
-        public async Task UpdateAsync(Subject subject, CancellationToken ct = default)
-        {
-            await _db.SaveChangesAsync(ct);
-        }
+        public Task UpdateAsync(Subject subject, CancellationToken ct = default)
+          => _db.SaveChangesAsync(ct);
 
     }
 }

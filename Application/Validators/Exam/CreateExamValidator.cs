@@ -22,13 +22,13 @@ namespace Application.Validators.Exam
                   .GreaterThan(0)
                   .WithMessage("You must specify subject.");
 
-                RuleFor(x => x.ExaminerID)
-                  .GreaterThan(0)
-                  .WithMessage("You must specify examiner.");
+                //RuleFor(x => x.ExaminerID)
+                //  .GreaterThan(0)
+                //  .WithMessage("You must specify examiner.");
 
-                RuleFor(x => x.SupervisorID)
-                    .Must((req, sup) => sup is null || sup > 0)
-                    .WithMessage("Supervisor ID must be greater than 0.");
+                //RuleFor(x => x.SupervisorID)
+                //    .Must((req, sup) => sup is null || sup > 0)
+                //    .WithMessage("Supervisor ID must be greater than 0.");
 
                 RuleFor(x => x.Grade)
                     .InclusiveBetween((byte)5, (byte)10)

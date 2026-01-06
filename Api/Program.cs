@@ -15,6 +15,8 @@ using Application.Validators.Exam;
 using Api.Middleware;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using Microsoft.AspNetCore.Identity;
+using Domain.Common;
 
 
 
@@ -28,24 +30,28 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateStudentValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateStudentValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateTeacherValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<UpdateTeacherValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateSubjectValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<UpdateSubjectValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateExamValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<UpdateExamValidator>();
+//builder.Services.AddValidatorsFromAssemblyContaining<CreateTeacherValidator>();
+//builder.Services.AddValidatorsFromAssemblyContaining<UpdateTeacherValidator>();
+//builder.Services.AddValidatorsFromAssemblyContaining<CreateSubjectValidator>();
+//builder.Services.AddValidatorsFromAssemblyContaining<UpdateSubjectValidator>();
+//builder.Services.AddValidatorsFromAssemblyContaining<CreateExamValidator>();
+//builder.Services.AddValidatorsFromAssemblyContaining<UpdateExamValidator>();
 
 builder.Services.AddControllers();
 
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<IStudentService, StudentService>();
-builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
-builder.Services.AddScoped<ITeacherService, TeacherService>();
-builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
-builder.Services.AddScoped<ISubjectService, SubjectService>();
-builder.Services.AddScoped<IExamRepository, ExamRepository>();
-builder.Services.AddScoped<IExamService, ExamService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
+//builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
+//builder.Services.AddScoped<ITeacherService, TeacherService>();
+//builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
+//builder.Services.AddScoped<ISubjectService, SubjectService>();
+//builder.Services.AddScoped<IExamRepository, ExamRepository>();
+//builder.Services.AddScoped<IExamService, ExamService>();
 
 builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
@@ -92,8 +98,8 @@ using (var scope = app.Services.CreateScope())
 app.UseCors("FrontDev");
 app.UseHttpsRedirection();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseAuthentication();
-app.UseAuthorization();
+//app.UseAuthentication();
+//app.UseAuthorization();
 
 app.MapControllers();
 

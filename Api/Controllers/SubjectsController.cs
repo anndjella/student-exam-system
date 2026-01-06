@@ -22,7 +22,7 @@ namespace Api.Controllers
         public async Task<IActionResult> Create([FromBody, CustomizeValidator(RuleSet = "Create")] CreateSubjectRequest req, CancellationToken ct)
         {
             var resp = await _svc.CreateAsync(req, ct);
-            return CreatedAtAction(nameof(GetOne), new { id = resp.Id }, resp);
+            return CreatedAtAction(nameof(GetOne), new { id = resp.ID }, resp);
 
         }
         [HttpGet("{id:int}")]

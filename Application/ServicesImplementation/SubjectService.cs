@@ -21,18 +21,23 @@ namespace Application.ServicesImplementation
             _repo = repo;
         }
 
-        public async Task<SubjectResponse> CreateAsync(CreateSubjectRequest req, CancellationToken ct = default)
+        public Task<SubjectResponse> CreateAsync(CreateSubjectRequest req, CancellationToken ct = default)
         {
-            Subject subject = new Subject
-            {
-                Name=req.Name,
-                ESPB=req.ESPB
-            };
-            var id = await _repo.CreateAsync(subject,ct);
-            var created = await _repo.GetByIdAsync(id, ct) ??
-                throw new AppException(AppErrorCode.Unexpected,"Unexpected error in creating.");
-            return Mapper.SubjectToResponse(created);
+            throw new NotImplementedException();
         }
+
+        //public async Task<SubjectResponse> CreateAsync(CreateSubjectRequest req, CancellationToken ct = default)
+        //{
+        //    Subject subject = new Subject
+        //    {
+        //        Name=req.Name,
+        //        ECTS=req.ESPB
+        //    };
+        //    var id = await _repo.CreateAsync(subject,ct);
+        //    var created = await _repo.GetByIdAsync(id, ct) ??
+        //        throw new AppException(AppErrorCode.Unexpected,"Unexpected error in creating.");
+        //    return Mapper.SubjectToResponse(created);
+        //}
 
         public async Task DeleteAsync(int id, CancellationToken ct = default)
         {
@@ -42,29 +47,44 @@ namespace Application.ServicesImplementation
             await _repo.DeleteAsync(s, ct);
         }
 
-        public async Task<SubjectResponse?> GetAsync(int id, CancellationToken ct = default)
+        public Task<SubjectResponse?> GetAsync(int id, CancellationToken ct = default)
         {
-            var s = await _repo.GetByIdAsync(id, ct);
-            return s is null ? 
-                throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.")
-                : Mapper.SubjectToResponse(s);
+            throw new NotImplementedException();
         }
 
-        public async Task<IReadOnlyList<SubjectResponse>> ListAsync(CancellationToken ct = default)
+        public Task<IReadOnlyList<SubjectResponse>> ListAsync(CancellationToken ct = default)
         {
-             var list = await _repo.ListAsync(ct);
-            return list.Select(Mapper.SubjectToResponse).ToList();
+            throw new NotImplementedException();
         }
 
-        public async Task UpdateAsync(int id, UpdateSubjectRequest req, CancellationToken ct = default)
+        public Task UpdateAsync(int id, UpdateSubjectRequest req, CancellationToken ct = default)
         {
-            var s = await _repo.GetByIdAsync(id, ct) ??
-                throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.");
-
-            if (req.Name is not null) s.Name = req.Name;
-            if (req.ESPB is not null) s.ESPB = req.ESPB.Value;
-
-            await _repo.UpdateAsync(s, ct);
+            throw new NotImplementedException();
         }
+
+        //public async Task<SubjectResponse?> GetAsync(int id, CancellationToken ct = default)
+        //{
+        //    var s = await _repo.GetByIdAsync(id, ct);
+        //    return s is null ? 
+        //        throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.")
+        //        : Mapper.SubjectToResponse(s);
+        //}
+
+        //public async Task<IReadOnlyList<SubjectResponse>> ListAsync(CancellationToken ct = default)
+        //{
+        //     var list = await _repo.ListAsync(ct);
+        //    return list.Select(Mapper.SubjectToResponse).ToList();
+        //}
+
+        //public async Task UpdateAsync(int id, UpdateSubjectRequest req, CancellationToken ct = default)
+        //{
+        //    var s = await _repo.GetByIdAsync(id, ct) ??
+        //        throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.");
+
+        //    if (req.Name is not null) s.Name = req.Name;
+        //    if (req.ESPB is not null) s.ECTS = req.ESPB.Value;
+
+        //    await _repo.UpdateAsync(s, ct);
+        //}
     }
 }

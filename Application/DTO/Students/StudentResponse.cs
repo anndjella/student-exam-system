@@ -8,11 +8,11 @@ namespace Application.DTO.Students
 {
     public sealed class StudentResponse
     {
-        public int Id { get; set; }
+        public int ID { get; set; }
         public string FirstName { get; set; } = "";
         public string LastName { get; set; } = "";
-        public int Age { get; set; }
-        public double? Gpa { get; set; }
+        public double? GPA { get; set; }
+        public int? ECTSCount { get; set; }
         public string IndexNumber { get; set; } = "";
     }
 }

@@ -10,18 +10,15 @@ namespace Domain.Interfaces
     public  interface IStudentRepository
     {
         // existence checks
-        Task<bool> ExistsByJmbgAsync(string jmbg, CancellationToken ct = default);
         Task<bool> ExistsByIndexAsync(string indexNumber, CancellationToken ct = default);
 
         // read
         Task<Student?> GetByIdAsync(int id, CancellationToken ct = default);
-        Task<IReadOnlyList<Student>> ListAsync(CancellationToken ct = default);
-        Task<IReadOnlyList<Exam>> GetExamsAsync(int studentId, CancellationToken ct = default);
-
+        Task<Student?> GetByIdWithUserAsync(int id, CancellationToken ct = default);
+        Task<Student?> GetByIndexAsync(string indexNumber, CancellationToken ct = default);
 
         // write
-        Task<int> CreateAsync(Student student, CancellationToken ct = default);
-        Task UpdateAsync(Student student, CancellationToken ct = default);
-        Task DeleteAsync(Student student, CancellationToken ct = default);
+        void Add(Student student);
+        void Update(Student student);
     }
 }

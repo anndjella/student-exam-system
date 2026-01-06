@@ -16,7 +16,7 @@ namespace Application.DTO.Exams
         public string StudentIndex { get; set; } = "";
         public string StudentFullName { get; set; } = "";
         public string SubjectName { get; set; } = "";
-        public string ExaminerFullName { get; set; } = "";
-        public string SupervisorFullName { get; set; } = "";
+        //public string ExaminerFullName { get; set; } = "";
+        //public string SupervisorFullName { get; set; } = "";
     }
 }

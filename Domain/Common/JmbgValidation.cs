@@ -4,35 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Validation
+namespace Domain.Common
 {
     public static class JmbgValidation
     {
         public static bool IsAllDigits(string s) => s.All(char.IsDigit) && s.Length == 13;
-
-        public static bool TryParseDate(string jmbg, out DateOnly dob)
-        {
-            int dd = int.Parse(jmbg[..2]);
-            int mm = int.Parse(jmbg.Substring(2, 2));
-            int yyy = int.Parse(jmbg.Substring(4, 3)); 
-
-
-            int year = (yyy >= 800) ? 1000 + yyy : 2000 + yyy;
-            int currentYear = DateTime.UtcNow.Year;
-            if (year < 1900 || year > currentYear) { dob = default; return false; }
-
-            try
-            {
-                dob = new DateOnly(year, mm, dd);
-                return true;
-            }
-            catch
-            {
-                dob = default;
-                return false;
-            }
-        }
-
         public static bool ChecksumValid(string jmbg)
         {
             var d = jmbg.Select(c => c - '0').ToArray();

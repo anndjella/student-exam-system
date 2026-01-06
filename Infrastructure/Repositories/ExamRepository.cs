@@ -23,10 +23,6 @@ namespace Infrastructure.Repositories
 
         public Task<Exam?> GetByKeyWithDetailsAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default)
             => _db.Exams
-            .Include(x => x.Student)
-            .Include(x => x.Subject)
-            .Include(x => x.Examiner)
-            .Include(x => x.Supervisor)
             .FirstOrDefaultAsync(e =>
                e.StudentID == studentId &&
                e.SubjectID == subjectId &&
@@ -35,10 +31,6 @@ namespace Infrastructure.Repositories
         public async Task<IReadOnlyList<Exam>> ListWithDetailsAsync(CancellationToken ct = default)
             => await _db.Exams
                 .AsNoTracking()
-                .Include(x => x.Student)
-                .Include(x => x.Subject)
-                .Include(x => x.Examiner)
-                .Include(x => x.Supervisor)
                 .OrderByDescending(x => x.Date).ThenBy(x => x.StudentID)
                 .ToListAsync(ct);
 

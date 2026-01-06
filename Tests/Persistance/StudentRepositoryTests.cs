@@ -90,7 +90,7 @@ namespace Tests.Persistance
                 LastName = "B",
                 DateOfBirth = new DateOnly(1970, 1, 1),
                 JMBG = "0101970123456",
-                Title = Title.AssistantProfessor
+                Title = Enums.AssistantProfessor
             };
             Teacher supervisor = new Teacher
             {
@@ -98,14 +98,14 @@ namespace Tests.Persistance
                 LastName = "Y",
                 DateOfBirth = new DateOnly(1975, 1, 1),
                 JMBG = "0101975123456",
-                Title = Title.FullProfessor
+                Title = Enums.FullProfessor
             };
             _db.Teachers.AddRange(examiner, supervisor);
 
             var subject = new Subject
             {
                 Name = "Math",
-                ESPB = 8
+                ECTS = 8
             };
             _db.Subjects.Add(subject);
 

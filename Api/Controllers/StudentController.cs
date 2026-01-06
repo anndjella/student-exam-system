@@ -18,7 +18,7 @@ namespace Api.Controllers
         public async Task<IActionResult> Create([FromBody, CustomizeValidator(RuleSet = "Create")] CreateStudentRequest req, CancellationToken ct)
         {
             var resp = await _svc.CreateAsync(req, ct);
-            return CreatedAtAction(nameof(GetOne), new { id = resp.Id }, resp);
+            return CreatedAtAction(nameof(GetOne), new { id = resp.ID }, resp);
         }
 
         [HttpGet("{id:int}")]
@@ -27,10 +27,6 @@ namespace Api.Controllers
             var resp = await _svc.GetAsync(id, ct);
             return resp is null ? NotFound() : Ok(resp);
         }
-
-        [HttpGet]
-        public async Task<IActionResult> GetAll(CancellationToken ct)
-            => Ok(await _svc.ListAsync(ct));
 
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody, CustomizeValidator(RuleSet = "Update")] UpdateStudentRequest req, CancellationToken ct)
@@ -42,16 +38,8 @@ namespace Api.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id, CancellationToken ct)
         {
-            await _svc.DeleteAsync(id, ct);
+            await _svc.SoftDeleteAsync(id, ct);
             return NoContent();
-        }
-        [HttpGet("{id:int}/exams")]
-        public async Task<ActionResult<IReadOnlyList<ExamResponse>>> GetExamsForStudent(
-        int id,
-        CancellationToken ct)
-        {
-            var exams = await _svc.GetExamsAsync(id, ct);
-            return Ok(exams);
         }
     }
 }

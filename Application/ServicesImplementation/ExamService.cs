@@ -32,11 +32,11 @@ namespace Application.ServicesImplementation
             if (await _subjects.GetByIdAsync(req.SubjectID, ct) is null)
                 throw new AppException(AppErrorCode.BadRequest, $"Subject with id {req.SubjectID} not found.");
 
-            if (await _teachers.GetByIdAsync(req.ExaminerID, ct) is null)
-                throw new AppException(AppErrorCode.BadRequest, $"Examiner with id {req.ExaminerID} not found.");
+            //if (await _teachers.GetByIdAsync(req.ExaminerID, ct) is null)
+            //    throw new AppException(AppErrorCode.BadRequest, $"Examiner with id {req.ExaminerID} not found.");
 
-            if (req.SupervisorID is not null && await _teachers.GetByIdAsync(req.SupervisorID.Value, ct) is null)
-                throw new AppException(AppErrorCode.BadRequest, $"Supervisor with id {req.SupervisorID} not found.");
+            //if (req.SupervisorID is not null && await _teachers.GetByIdAsync(req.SupervisorID.Value, ct) is null)
+            //    throw new AppException(AppErrorCode.BadRequest, $"Supervisor with id {req.SupervisorID} not found.");
 
             if (await _repo.ExistsOnDateAsync(req.StudentID, req.SubjectID, req.Date, ct))
                 throw new AppException(AppErrorCode.Conflict, "A student cannot take the same subject exam more than once on the same day.");
@@ -48,8 +48,8 @@ namespace Application.ServicesImplementation
             {
                 StudentID = req.StudentID,
                 SubjectID = req.SubjectID,
-                ExaminerID = req.ExaminerID,
-                SupervisorID = req.SupervisorID,
+                //ExaminerID = req.ExaminerID,
+                //SupervisorID = req.SupervisorID,
                 Date = req.Date,
                 Note = req.Note,
                 Grade = req.Grade
@@ -66,19 +66,19 @@ namespace Application.ServicesImplementation
             await _repo.DeleteAsync(studentId,subjectId,date, ct);
         }
 
-        public async Task<ExamResponse?> GetAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default)
-        {
-            var e = await _repo.GetByKeyWithDetailsAsync(studentId, subjectId, date, ct);
-            return e is null ?
-                throw new AppException(AppErrorCode.NotFound, $"Exam not found.")
-                : Mapper.ExamToResponse(e);
-        }
+        //public async Task<ExamResponse?> GetAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default)
+        //{
+        //    //var e = await _repo.GetByKeyWithDetailsAsync(studentId, subjectId, date, ct);
+        //    //return e is null ?
+        //    //    throw new AppException(AppErrorCode.NotFound, $"Exam not found.")
+        //    //    : Mapper.ExamToResponse(e);
+        //}
 
-        public async Task<IReadOnlyList<ExamResponse>> ListAsync(CancellationToken ct = default)
-        {
-            var list = await _repo.ListWithDetailsAsync(ct);
-            return list.Select(Mapper.ExamToResponse).ToList();
-        }
+        //public async Task<IReadOnlyList<ExamResponse>> ListAsync(CancellationToken ct = default)
+        //{
+        //    //var list = await _repo.ListWithDetailsAsync(ct);
+        //    //return list.Select(Mapper.ExamToResponse).ToList();
+        //}
 
         public async Task UpdateAsync(int studentId, int subjectId, DateOnly date, UpdateExamRequest req, CancellationToken ct = default)
         {

@@ -7,10 +7,7 @@ namespace Application.Services
     {
         Task<StudentResponse> CreateAsync(CreateStudentRequest req, CancellationToken ct = default);
         Task<StudentResponse?> GetAsync(int id, CancellationToken ct = default);
-        Task<IReadOnlyList<StudentResponse>> ListAsync(CancellationToken ct = default);
         Task UpdateAsync(int id, UpdateStudentRequest req, CancellationToken ct = default);
-        Task DeleteAsync(int id, CancellationToken ct = default);
-        Task<IReadOnlyList<ExamResponse>> GetExamsAsync(int studentId, CancellationToken ct = default);
-
+        Task SoftDeleteAsync(int id, CancellationToken ct = default);
     }
 }

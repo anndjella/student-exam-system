@@ -20,8 +20,8 @@ namespace Application.Validators.Student
                 When(x => x.IndexNumber != null, () =>
                     RuleFor(x => x.IndexNumber!)
                             .NotEmpty()
-                            .MaximumLength(20)
-                            .Matches(@"^[0-9]{4}/[0-9]{1,6}$")
+                            .MaximumLength(9)
+                            .Matches(@"^[0-9]{4}/[0-9]{4}$")
                             .WithMessage("Format of an Index Number must be YYYY/Number, e.g., 2024/1234."));
             });
         }

@@ -22,51 +22,76 @@ namespace Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Domain.Entity.Exam", b =>
+            modelBuilder.Entity("Domain.Entity.Enrollment", b =>
                 {
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
+                    b.Property<int>("StudentID")
+                        .HasColumnType("int");
 
                     b.Property<int>("SubjectID")
                         .HasColumnType("int");
 
-                    b.Property<int>("StudentID")
+                    b.Property<int>("SchoolYearID")
                         .HasColumnType("int");
 
-                    b.Property<int>("ExaminerID")
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.HasKey("StudentID", "SubjectID", "SchoolYearID");
+
+                    b.HasIndex("SchoolYearID");
+
+                    b.HasIndex("SubjectID");
+
+                    b.ToTable("Enrollment", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Enrollment_Status", "[Status] BETWEEN 1 AND 3");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Entity.Exam", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<byte>("Grade")
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<byte?>("Grade")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("Note")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int?>("SupervisorID")
+                    b.Property<DateTime?>("SignedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("StudentID")
                         .HasColumnType("int");
 
-                    b.HasKey("Date", "SubjectID", "StudentID");
+                    b.Property<int>("SubjectID")
+                        .HasColumnType("int");
 
-                    b.HasIndex("ExaminerID");
+                    b.Property<int>("TeacherID")
+                        .HasColumnType("int");
 
-                    b.HasIndex("SubjectID");
+                    b.Property<int>("TermID")
+                        .HasColumnType("int");
 
-                    b.HasIndex("SupervisorID");
+                    b.HasKey("ID");
 
-                    b.HasIndex("StudentID", "SubjectID")
-                        .IsUnique()
-                        .HasDatabaseName("UX_Exam_PassOnce")
-                        .HasFilter("[Grade] >= 6");
+                    b.HasIndex("TeacherID");
+
+                    b.HasIndex("StudentID", "SubjectID", "TermID")
+                        .IsUnique();
 
                     b.ToTable("Exam", null, t =>
                         {
-                            t.HasTrigger("trg_Exam_UpdateGpa");
-
                             t.HasCheckConstraint("CK_Exam_Grade", "[Grade] BETWEEN 5 AND 10");
                         });
-
-                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("Domain.Entity.Person", b =>
@@ -77,18 +102,19 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
 
-                    b.Property<int>("Age")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("int")
-                        .HasComputedColumnSql("DATEDIFF(YEAR, [DateOfBirth], GETDATE()) - CASE WHEN FORMAT(GETDATE(),'MMdd') < FORMAT([DateOfBirth],'MMdd') THEN 1 ELSE 0 END", false);
-
                     b.Property<DateOnly>("DateOfBirth")
                         .HasColumnType("date");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("JMBG")
                         .IsRequired()
@@ -103,18 +129,88 @@ namespace Infrastructure.Migrations
                     b.HasKey("ID");
 
                     b.HasIndex("JMBG")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("Person", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Person_DateOfBirth_Range", "[DateOfBirth] >= '1900-01-01' AND [DateOfBirth] <= '2008-12-31'");
+                            t.HasCheckConstraint("CK_Person_DateOfBirth_Range", "[DateOfBirth] >= '1900-01-01' AND [DateOfBirth] <= CONVERT(date, GETDATE())");
 
                             t.HasCheckConstraint("CK_Person_JMBG_13Digits", "LEN([JMBG]) = 13 AND PATINDEX('%[^0-9]%', [JMBG]) = 0");
-
-                            t.HasCheckConstraint("CK_Person_JMBG_DateOfBirth", "LEFT([JMBG], 7) =     RIGHT('00' + CAST(DATEPART(DAY, [DateOfBirth]) AS varchar(2)), 2) +    RIGHT('00' + CAST(DATEPART(MONTH, [DateOfBirth]) AS varchar(2)), 2) +    RIGHT('000' + CAST(DATEPART(YEAR, [DateOfBirth]) AS varchar(4)), 3)");
                         });
 
                     b.UseTptMappingStrategy();
+                });
+
+            modelBuilder.Entity("Domain.Entity.Registration", b =>
+                {
+                    b.Property<int>("SubjectID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StudentID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TermID")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("RegisteredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.HasKey("SubjectID", "StudentID", "TermID");
+
+                    b.HasIndex("StudentID");
+
+                    b.HasIndex("TermID");
+
+                    b.ToTable("Registration", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Registration_Status", "[Status] BETWEEN 1 AND 2");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Entity.SchoolYear", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("SchoolYear", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_SchoolYear_EndDate_After_StartDate", "[EndDate]>[StartDate]");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Entity.StudentStats", b =>
+                {
+                    b.Property<int>("ECTSCount")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("GPA")
+                        .HasColumnType("decimal(4,2)");
+
+                    b.Property<int>("StudentID")
+                        .HasColumnType("int")
+                        .HasColumnName("StudentID");
+
+                    b.ToTable((string)null);
+
+                    b.ToView("vw_StudentStats", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entity.Subject", b =>
@@ -125,8 +221,14 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
 
-                    b.Property<byte>("ESPB")
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("ECTS")
                         .HasColumnType("tinyint");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -137,7 +239,106 @@ namespace Infrastructure.Migrations
 
                     b.ToTable("Subject", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Subject_Espb", "[ESPB] BETWEEN 1 AND 60");
+                            t.HasCheckConstraint("CK_Subject_ECTS", "[ECTS] BETWEEN 1 AND 15");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Entity.TeachingAssignment", b =>
+                {
+                    b.Property<int>("SubjectID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TeacherID")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("CanGrade")
+                        .HasColumnType("bit");
+
+                    b.HasKey("SubjectID", "TeacherID");
+
+                    b.HasIndex("TeacherID");
+
+                    b.ToTable("TeachingAssignment", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entity.Term", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateOnly>("RegistrationEndDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("RegistrationStartDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("Term", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Term_EndDate_After_StartDate", "[EndDate] > [StartDate]");
+
+                            t.HasCheckConstraint("CK_Term_RegEndDate_After_RegStartDate", "[RegistrationEndDate] > [RegistrationStartDate]");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Entity.User", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
+
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("PersonID")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("Role")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("isActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("PersonID")
+                        .IsUnique();
+
+                    b.HasIndex("Username")
+                        .IsUnique();
+
+                    b.ToTable("User", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_User_Role", "[Role] BETWEEN 1 AND 3");
                         });
                 });
 
@@ -145,14 +346,10 @@ namespace Infrastructure.Migrations
                 {
                     b.HasBaseType("Domain.Entity.Person");
 
-                    b.Property<decimal?>("GPA")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("decimal(4,2)");
-
                     b.Property<string>("IndexNumber")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(9)
+                        .HasColumnType("nvarchar(9)");
 
                     b.HasIndex("IndexNumber")
                         .IsUnique()
@@ -160,13 +357,11 @@ namespace Infrastructure.Migrations
 
                     b.ToTable("Student", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Person_DateOfBirth_Range", "[DateOfBirth] >= '1900-01-01' AND [DateOfBirth] <= '2008-12-31'");
+                            t.HasCheckConstraint("CK_Person_DateOfBirth_Range", "[DateOfBirth] >= '1900-01-01' AND [DateOfBirth] <= CONVERT(date, GETDATE())");
 
                             t.HasCheckConstraint("CK_Person_JMBG_13Digits", "LEN([JMBG]) = 13 AND PATINDEX('%[^0-9]%', [JMBG]) = 0");
 
-                            t.HasCheckConstraint("CK_Person_JMBG_DateOfBirth", "LEFT([JMBG], 7) =     RIGHT('00' + CAST(DATEPART(DAY, [DateOfBirth]) AS varchar(2)), 2) +    RIGHT('00' + CAST(DATEPART(MONTH, [DateOfBirth]) AS varchar(2)), 2) +    RIGHT('000' + CAST(DATEPART(YEAR, [DateOfBirth]) AS varchar(4)), 3)");
-
-                            t.HasCheckConstraint("CK_Student_IndexNumber_Format", "[IndexNumber] NOT LIKE '%[^0-9/]%' AND CHARINDEX('/', [IndexNumber]) = 5 AND LEN([IndexNumber]) BETWEEN 6 AND 10 AND RIGHT([IndexNumber], LEN([IndexNumber]) - 5) NOT LIKE '%[^0-9]%'");
+                            t.HasCheckConstraint("CK_Student_IndexNumber_Format", "[IndexNumber] LIKE '[0-9][0-9][0-9][0-9]/[0-9][0-9][0-9][0-9]'");
                         });
                 });
 
@@ -174,53 +369,131 @@ namespace Infrastructure.Migrations
                 {
                     b.HasBaseType("Domain.Entity.Person");
 
+                    b.Property<string>("EmployeeNumber")
+                        .IsRequired()
+                        .HasMaxLength(9)
+                        .HasColumnType("nvarchar(9)");
+
                     b.Property<byte>("Title")
                         .HasColumnType("tinyint");
 
+                    b.HasIndex("EmployeeNumber")
+                        .IsUnique()
+                        .HasFilter("[EmployeeNumber] IS NOT NULL");
+
                     b.ToTable("Teacher", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Person_DateOfBirth_Range", "[DateOfBirth] >= '1900-01-01' AND [DateOfBirth] <= '2008-12-31'");
+                            t.HasCheckConstraint("CK_Person_DateOfBirth_Range", "[DateOfBirth] >= '1900-01-01' AND [DateOfBirth] <= CONVERT(date, GETDATE())");
 
                             t.HasCheckConstraint("CK_Person_JMBG_13Digits", "LEN([JMBG]) = 13 AND PATINDEX('%[^0-9]%', [JMBG]) = 0");
 
-                            t.HasCheckConstraint("CK_Person_JMBG_DateOfBirth", "LEFT([JMBG], 7) =     RIGHT('00' + CAST(DATEPART(DAY, [DateOfBirth]) AS varchar(2)), 2) +    RIGHT('00' + CAST(DATEPART(MONTH, [DateOfBirth]) AS varchar(2)), 2) +    RIGHT('000' + CAST(DATEPART(YEAR, [DateOfBirth]) AS varchar(4)), 3)");
+                            t.HasCheckConstraint("CK_Teacher_EmployeeNumber_Format", "[EmployeeNumber] LIKE '[0-9][0-9][0-9][0-9]/[0-9][0-9][0-9][0-9]'");
 
                             t.HasCheckConstraint("CK_Teacher_Title", "[Title] BETWEEN 1 AND 4");
                         });
                 });
 
-            modelBuilder.Entity("Domain.Entity.Exam", b =>
+            modelBuilder.Entity("Domain.Entity.Enrollment", b =>
                 {
-                    b.HasOne("Domain.Entity.Teacher", "Examiner")
-                        .WithMany("ExamsAsExaminer")
-                        .HasForeignKey("ExaminerID")
+                    b.HasOne("Domain.Entity.SchoolYear", "SchoolYear")
+                        .WithMany("Enrollments")
+                        .HasForeignKey("SchoolYearID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Domain.Entity.Student", "Student")
-                        .WithMany("Exams")
+                        .WithMany("Enrollments")
+                        .HasForeignKey("StudentID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entity.Subject", "Subject")
+                        .WithMany("Enrollments")
+                        .HasForeignKey("SubjectID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SchoolYear");
+
+                    b.Navigation("Student");
+
+                    b.Navigation("Subject");
+                });
+
+            modelBuilder.Entity("Domain.Entity.Exam", b =>
+                {
+                    b.HasOne("Domain.Entity.Teacher", "Teacher")
+                        .WithMany("SignedExams")
+                        .HasForeignKey("TeacherID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entity.Registration", "Registration")
+                        .WithOne("Exam")
+                        .HasForeignKey("Domain.Entity.Exam", "StudentID", "SubjectID", "TermID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Registration");
+
+                    b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("Domain.Entity.Registration", b =>
+                {
+                    b.HasOne("Domain.Entity.Student", "Student")
+                        .WithMany("Registrations")
                         .HasForeignKey("StudentID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Domain.Entity.Subject", "Subject")
-                        .WithMany("Exams")
+                        .WithMany("Registrations")
                         .HasForeignKey("SubjectID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entity.Teacher", "Supervisor")
-                        .WithMany("ExamsAsSupervisor")
-                        .HasForeignKey("SupervisorID")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Examiner");
+                    b.HasOne("Domain.Entity.Term", "Term")
+                        .WithMany("Registrations")
+                        .HasForeignKey("TermID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Student");
 
                     b.Navigation("Subject");
 
-                    b.Navigation("Supervisor");
+                    b.Navigation("Term");
+                });
+
+            modelBuilder.Entity("Domain.Entity.TeachingAssignment", b =>
+                {
+                    b.HasOne("Domain.Entity.Subject", "Subject")
+                        .WithMany("TeachingAssignments")
+                        .HasForeignKey("SubjectID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entity.Teacher", "Teacher")
+                        .WithMany("TeachingAssignments")
+                        .HasForeignKey("TeacherID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Subject");
+
+                    b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("Domain.Entity.User", b =>
+                {
+                    b.HasOne("Domain.Entity.Person", "Person")
+                        .WithOne("User")
+                        .HasForeignKey("Domain.Entity.User", "PersonID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Person");
                 });
 
             modelBuilder.Entity("Domain.Entity.Student", b =>
@@ -241,21 +514,47 @@ namespace Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Domain.Entity.Person", b =>
+                {
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Entity.Registration", b =>
+                {
+                    b.Navigation("Exam");
+                });
+
+            modelBuilder.Entity("Domain.Entity.SchoolYear", b =>
+                {
+                    b.Navigation("Enrollments");
+                });
+
             modelBuilder.Entity("Domain.Entity.Subject", b =>
                 {
-                    b.Navigation("Exams");
+                    b.Navigation("Enrollments");
+
+                    b.Navigation("Registrations");
+
+                    b.Navigation("TeachingAssignments");
+                });
+
+            modelBuilder.Entity("Domain.Entity.Term", b =>
+                {
+                    b.Navigation("Registrations");
                 });
 
             modelBuilder.Entity("Domain.Entity.Student", b =>
                 {
-                    b.Navigation("Exams");
+                    b.Navigation("Enrollments");
+
+                    b.Navigation("Registrations");
                 });
 
             modelBuilder.Entity("Domain.Entity.Teacher", b =>
                 {
-                    b.Navigation("ExamsAsExaminer");
+                    b.Navigation("SignedExams");
 
-                    b.Navigation("ExamsAsSupervisor");
+                    b.Navigation("TeachingAssignments");
                 });
 #pragma warning restore 612, 618
         }

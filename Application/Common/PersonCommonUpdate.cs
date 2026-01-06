@@ -17,13 +17,13 @@ namespace Application.Common
                     RuleFor(x => x.FirstName)
                     .NotEmpty()
                     .WithMessage("First name is required.")
-                    .MaximumLength(100));
+                    .MaximumLength(50));
 
                 When(x => x.LastName != null, () =>
                 RuleFor(x => x.LastName)
                     .NotEmpty()
                     .WithMessage("Last name is required.")
-                    .MaximumLength(100));
+                    .MaximumLength(50));
             });
         }
 

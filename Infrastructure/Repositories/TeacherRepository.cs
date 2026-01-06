@@ -18,6 +18,8 @@ namespace Infrastructure.Repositories
         {
             _db = db;
         }
+        public Task<bool> ExistsByEmployeeNumAsync(string employeeNum, CancellationToken ct = default)
+          => _db.Teachers.AsNoTracking().AnyAsync(x => x.EmployeeNumber == employeeNum, ct);
 
         public async Task<int> CreateAsync(Teacher teacher, CancellationToken ct = default)
         {
@@ -26,55 +28,16 @@ namespace Infrastructure.Repositories
             return teacher.ID;
         }
 
-        public async Task DeleteAsync(Teacher teacher, CancellationToken ct = default)
-        {
-            _db.Teachers.Remove(teacher);
-            await _db.SaveChangesAsync(ct);
-        }
+        public Task DeleteByIdAsync(int teacherId, CancellationToken ct = default)
+        => _db.Teachers.Where(e => e.ID == teacherId).ExecuteDeleteAsync();
 
-        public Task<bool> ExistsByJmbgAsync(string jmbg, CancellationToken ct = default)
-        {
-            return _db.Teachers.AnyAsync(x => x.JMBG == jmbg, ct);
-        }
 
-        public async Task<Teacher?> GetByIdAsync(int id, CancellationToken ct = default)
-        {
-            return await _db.Teachers.FirstOrDefaultAsync(x => x.ID == id, ct);
-        }
+        public  Task<Teacher?> GetByIdAsync(int id, CancellationToken ct = default)
+           =>  _db.Teachers.FirstOrDefaultAsync(x => x.ID == id, ct);
+        
 
-        public async Task<IReadOnlyList<Teacher>> ListAsync(CancellationToken ct = default)
-        {
-          return await _db.Teachers.AsNoTracking().OrderBy(x => x.LastName).ThenBy(x => x.FirstName).ToListAsync(ct);
-
-        }
-
-        public async Task<IReadOnlyList<Exam>> ListExamsAsExaminerAsync(int teacherId, CancellationToken ct = default)
-        {
-            return await _db.Exams.AsNoTracking()
-                       .Where(e => e.ExaminerID == teacherId)
-                       .Include(e=>e.Student)
-                       .Include(e => e.Subject)
-                       .Include(e => e.Examiner)
-                       .Include(e => e.Supervisor)
-                       .OrderByDescending(e => e.Date)
-                       .ToListAsync(ct);
-        }
-
-        public async Task<IReadOnlyList<Exam>> ListExamsAsSupervisorAsync(int teacherId, CancellationToken ct = default)
-        {
-            return await _db.Exams.AsNoTracking()
-                 .Where(e => e.SupervisorID == teacherId)
-                 .Include(e => e.Student)
-                 .Include(e => e.Subject)
-                 .Include(e => e.Examiner)
-                 .Include(e => e.Supervisor)
-                 .OrderByDescending(e => e.Date)
-                 .ToListAsync(ct);
-        }
-
-        public async Task UpdateAsync(Teacher teacher, CancellationToken ct = default)
-        {
-            await _db.SaveChangesAsync(ct);
-        }
+        public Task UpdateAsync(Teacher teacher, CancellationToken ct = default) 
+           =>  _db.SaveChangesAsync(ct);
+        
     }
 }

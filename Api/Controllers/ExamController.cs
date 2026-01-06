@@ -23,15 +23,15 @@ namespace Api.Controllers
             return NoContent();
         }
 
-        [HttpGet("{studentId:int}/{subjectId:int}/{date}")]
-        public async Task<IActionResult> GetOne(int studentId, int subjectId, DateOnly date, CancellationToken ct)
-        {
-            var resp = await _svc.GetAsync(studentId, subjectId, date, ct);
-            return resp is null ? NotFound() : Ok(resp);
-        }
-        [HttpGet]
-        public async Task<IActionResult> GetAll(CancellationToken ct)
-        => Ok(await _svc.ListAsync(ct));
+        //[HttpGet("{studentId:int}/{subjectId:int}/{date}")]
+        //public async Task<IActionResult> GetOne(int studentId, int subjectId, DateOnly date, CancellationToken ct)
+        //{
+        //    var resp = await _svc.GetAsync(studentId, subjectId, date, ct);
+        //    return resp is null ? NotFound() : Ok(resp);
+        //}
+        //[HttpGet]
+        //public async Task<IActionResult> GetAll(CancellationToken ct)
+        //=> Ok(await _svc.ListAsync(ct));
 
         [HttpPut("{studentId:int}/{subjectId:int}/{date}")]
         public async Task<IActionResult> Update(

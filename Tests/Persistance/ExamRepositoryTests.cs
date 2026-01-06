@@ -23,8 +23,8 @@ namespace Tests.Persistance
             await SqliteDbFixture.ClearAsync(_db);
 
             Student student = new Student { FirstName = "A", LastName = "B", JMBG = "0101990123456", DateOfBirth = new DateOnly(1990, 1, 1), IndexNumber = "2020/1" };
-            Teacher teacher = new Teacher { FirstName = "T", LastName = "E", JMBG = "0202990123456", DateOfBirth = new DateOnly(1980, 2, 2), Title = Title.FullProfessor };
-            Subject subject = new Subject { Name = "Math", ESPB = 6 };
+            Teacher teacher = new Teacher { FirstName = "T", LastName = "E", JMBG = "0202990123456", DateOfBirth = new DateOnly(1980, 2, 2), Title = Enums.FullProfessor };
+            Subject subject = new Subject { Name = "Math", ECTS = 6 };
             _db.AddRange(student, teacher, subject);
             await _db.SaveChangesAsync();
 
