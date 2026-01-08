@@ -15,76 +15,63 @@ namespace Application.ServicesImplementation
 {
     public class SubjectService : ISubjectService
     {
-        private readonly ISubjectRepository _repo;
-        public SubjectService(ISubjectRepository repo)
+        private readonly IUnitOfWork _uow;
+        public SubjectService(IUnitOfWork uow)
         {
-            _repo = repo;
+            _uow = uow;
+        }
+        public async Task<SubjectResponse> CreateAsync(CreateSubjectRequest req, CancellationToken ct = default)
+        {
+            Subject subject = new Subject
+            {
+                Name = req.Name,
+                ECTS = req.ECTS
+            };
+            _uow.Subjects.Add(subject);
+            await _uow.CommitAsync(ct);
+           
+            var created = await _uow.Subjects.GetByIdAsync(subject.ID, ct) ??
+                throw new AppException(AppErrorCode.Unexpected, "Unexpected error in creating.");
+
+            return Mapper.SubjectToResponse(created);
         }
 
-        public Task<SubjectResponse> CreateAsync(CreateSubjectRequest req, CancellationToken ct = default)
+        public async Task SoftDeleteAsync(int id, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
-        }
-
-        //public async Task<SubjectResponse> CreateAsync(CreateSubjectRequest req, CancellationToken ct = default)
-        //{
-        //    Subject subject = new Subject
-        //    {
-        //        Name=req.Name,
-        //        ECTS=req.ESPB
-        //    };
-        //    var id = await _repo.CreateAsync(subject,ct);
-        //    var created = await _repo.GetByIdAsync(id, ct) ??
-        //        throw new AppException(AppErrorCode.Unexpected,"Unexpected error in creating.");
-        //    return Mapper.SubjectToResponse(created);
-        //}
-
-        public async Task DeleteAsync(int id, CancellationToken ct = default)
-        {
-            var s = await _repo.GetByIdAsync(id, ct);
+            var s = await _uow.Subjects.GetByIdAsync(id, ct);
             if (s is null) 
                 throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.");
-            await _repo.DeleteAsync(s, ct);
-        }
 
-        public Task<SubjectResponse?> GetAsync(int id, CancellationToken ct = default)
+            s.MarkDeleted();
+            _uow.Subjects.Update(s);
+           await  _uow.CommitAsync(ct);
+        }
+        public async Task<SubjectResponse?> GetByIdAsync(int id, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            var s = await _uow.Subjects.GetByIdAsync(id, ct);
+            return s is null ?
+                throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.")
+                : Mapper.SubjectToResponse(s);
         }
 
-        public Task<IReadOnlyList<SubjectResponse>> ListAsync(CancellationToken ct = default)
+        public async Task UpdateAsync(int id, UpdateSubjectRequest req, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            var s = await _uow.Subjects.GetByIdAsync(id, ct) ??
+                throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.");
+
+            if (req.Name is not null) s.Name = req.Name;
+            if (req.ECTS is not null) s.ECTS = req.ECTS.Value;
+
+            _uow.Subjects.Update(s);
+            await _uow.CommitAsync(ct);
         }
 
-        public Task UpdateAsync(int id, UpdateSubjectRequest req, CancellationToken ct = default)
+        public async Task<SubjectResponse?> GetByNameAsync(string name, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            var s = await _uow.Subjects.GetByNameAsync(name, ct);
+            return s is null ?
+                throw new AppException(AppErrorCode.NotFound, $"Subject named {name} not found.")
+                : Mapper.SubjectToResponse(s);
         }
-
-        //public async Task<SubjectResponse?> GetAsync(int id, CancellationToken ct = default)
-        //{
-        //    var s = await _repo.GetByIdAsync(id, ct);
-        //    return s is null ? 
-        //        throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.")
-        //        : Mapper.SubjectToResponse(s);
-        //}
-
-        //public async Task<IReadOnlyList<SubjectResponse>> ListAsync(CancellationToken ct = default)
-        //{
-        //     var list = await _repo.ListAsync(ct);
-        //    return list.Select(Mapper.SubjectToResponse).ToList();
-        //}
-
-        //public async Task UpdateAsync(int id, UpdateSubjectRequest req, CancellationToken ct = default)
-        //{
-        //    var s = await _repo.GetByIdAsync(id, ct) ??
-        //        throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.");
-
-        //    if (req.Name is not null) s.Name = req.Name;
-        //    if (req.ESPB is not null) s.ECTS = req.ESPB.Value;
-
-        //    await _repo.UpdateAsync(s, ct);
-        //}
     }
 }

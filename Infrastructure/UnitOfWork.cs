@@ -18,19 +18,22 @@ namespace Infrastructure
             IStudentRepository students,
             ITeacherRepository teachers,
             IPersonRepository people,
-            IUserRepository users)
+            IUserRepository users,
+            ISubjectRepository subjects)
         {
             _db = db;
             Students = students;
             Teachers = teachers;
             People = people;
             Users = users;
+            Subjects = subjects;
         }
 
         public IStudentRepository Students { get; }
         public ITeacherRepository Teachers { get; }
         public IPersonRepository People { get; }
         public IUserRepository Users { get; }
+        public ISubjectRepository Subjects { get; }
 
         public Task<int> CommitAsync(CancellationToken ct = default)
             => _db.SaveChangesAsync(ct);

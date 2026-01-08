@@ -19,10 +19,10 @@ namespace Application.Validators.Subject
                         .NotEmpty().WithMessage("Name cannot be empty.")
                         .MaximumLength(100));
 
-                When(x => x.ESPB is not null, () =>
-                    RuleFor(x => x.ESPB!.Value)
-                       .GreaterThan(0).WithMessage("ESPB must be > 0.")
-                    .LessThanOrEqualTo(60).WithMessage("ESPB must be <= 60."));
+                When(x => x.ECTS is not null, () =>
+                    RuleFor(x => x.ECTS!.Value)
+                       .GreaterThan((byte)0).WithMessage("ESPB must be > 0.")
+                    .LessThanOrEqualTo((byte)15).WithMessage("ESPB must be <= 15."));
             });
         }
     }

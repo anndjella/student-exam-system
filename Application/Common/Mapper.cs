@@ -30,12 +30,12 @@ namespace Application.Common
             EmployeeNumber=s.EmployeeNumber,
             Title = s.Title
         };
-        //public static SubjectResponse SubjectToResponse(Subject s) => new()
-        //{
-        //    Id = s.ID,
-        //    Name = s.Name,
-        //    ESPB = s.ECTS
-        //};
+        public static SubjectResponse SubjectToResponse(Subject s) => new()
+        {
+            ID = s.ID,
+            Name = s.Name,
+            ESPB = s.ECTS
+        };
         //public static ExamResponse ExamToResponse(Exam e) => new()
         //{
         //    StudentID=e.StudentID,

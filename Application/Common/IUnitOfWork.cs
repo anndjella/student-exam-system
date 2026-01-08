@@ -13,6 +13,7 @@ namespace Application.Common
         ITeacherRepository Teachers { get; }
         IPersonRepository People { get; }
         IUserRepository Users { get; }
+        ISubjectRepository Subjects { get; }
 
         Task<int> CommitAsync(CancellationToken ct = default);
     }

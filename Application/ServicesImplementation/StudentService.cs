@@ -50,7 +50,6 @@ public sealed class StudentService : IStudentService
 
         student.User = user;
 
-        _uow.Students.Add(student);
         _uow.Users.Add(user);
 
         await _uow.CommitAsync(ct);

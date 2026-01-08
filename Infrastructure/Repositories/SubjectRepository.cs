@@ -17,29 +17,16 @@ namespace Infrastructure.Repositories
         {
             _db = db;
         }
-        public async Task<int> CreateAsync(Subject subject, CancellationToken ct = default)
-        {
-            _db.Subjects.Add(subject);
-            await _db.SaveChangesAsync(ct);
-            return subject.ID;
-        }
-
-        public async Task DeleteAsync(Subject subject, CancellationToken ct = default)
-        {
-            _db.Subjects.Remove(subject);
-            await _db.SaveChangesAsync(ct);
-        }
+        public void Add(Subject subject)
+        =>_db.Subjects.Add(subject);
 
         public Task<Subject?> GetByIdAsync(int id, CancellationToken ct = default)
-           =>  _db.Subjects.FirstOrDefaultAsync(x => x.ID == id, ct);
+        =>_db.Subjects.AsNoTracking().FirstOrDefaultAsync(x=>x.ID == id, ct);   
 
+        public Task<Subject?> GetByNameAsync(string name, CancellationToken ct = default)
+        => _db.Subjects.FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower(), ct);
 
-        public Task<List<Subject>> ListAsync(CancellationToken ct = default)
-         =>  _db.Subjects.OrderBy(x => x.Name).ThenBy(x => x.ECTS).ToListAsync(ct);
-
-
-        public Task UpdateAsync(Subject subject, CancellationToken ct = default)
-          => _db.SaveChangesAsync(ct);
-
+        public void Update(Subject subject)
+        =>_db.Subjects.Update(subject);
     }
 }

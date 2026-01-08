@@ -18,9 +18,9 @@ namespace Application.Validators.Subject
                     .NotEmpty().WithMessage("Name is required.")
                     .MaximumLength(100);
 
-                RuleFor(x => x.ESPB)
-                    .GreaterThan(0).WithMessage("ESPB must be > 0.")
-                    .LessThanOrEqualTo(60).WithMessage("ESPB must be <= 60.");
+                RuleFor(x => x.ECTS)
+                    .GreaterThan((byte)0).WithMessage("ECTS must be > 0.")
+                    .LessThanOrEqualTo((byte)15).WithMessage("ECTS must be <= 15.");
 
             });
         }

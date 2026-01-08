@@ -9,6 +9,6 @@ namespace Application.DTO.Subjects
     public class UpdateSubjectRequest
     {
         public string? Name { get; set; }
-        public int? ESPB { get; set; }
+        public byte? ECTS { get; set; }
     }
 }

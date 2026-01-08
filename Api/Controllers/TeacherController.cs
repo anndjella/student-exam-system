@@ -10,7 +10,8 @@ namespace Api.Controllers
 {
     [ApiController]
     [Route("api/teachers")]
-    [Authorize(Policy = "PasswordChanged")]
+    [Authorize(Roles = "StudentService", Policy = "PasswordChanged")]
+
     public class TeacherController : ControllerBase
     {
         private readonly ITeacherService _svc;

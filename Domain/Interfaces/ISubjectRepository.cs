@@ -1,6 +1,7 @@
 ﻿using Domain.Entity;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,11 +12,9 @@ namespace Domain.Interfaces
     {
         // read
         Task<Subject?> GetByIdAsync(int id, CancellationToken ct = default);
-        Task<List<Subject>> ListAsync(CancellationToken ct = default);
-
+        Task<Subject?> GetByNameAsync(string name, CancellationToken ct = default);
         // write
-        Task<int> CreateAsync(Subject subject, CancellationToken ct = default);
-        Task UpdateAsync(Subject subject, CancellationToken ct = default);
-        Task DeleteAsync(Subject subject, CancellationToken ct = default);
+        void Add(Subject subject);
+        void Update(Subject subject);
     }
 }

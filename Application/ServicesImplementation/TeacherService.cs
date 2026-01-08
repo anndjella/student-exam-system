@@ -55,7 +55,6 @@ namespace Application.ServicesImplementation
 
             teacher.User = user;
 
-            _uow.Teachers.Add(teacher);
             _uow.Users.Add(user);
 
             await _uow.CommitAsync(ct);
