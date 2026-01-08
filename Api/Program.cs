@@ -17,28 +17,26 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Domain.Common;
-
+using Application.Auth;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
+// Db
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
+// Validation
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateStudentValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateStudentValidator>();
-//builder.Services.AddValidatorsFromAssemblyContaining<CreateTeacherValidator>();
-//builder.Services.AddValidatorsFromAssemblyContaining<UpdateTeacherValidator>();
-//builder.Services.AddValidatorsFromAssemblyContaining<CreateSubjectValidator>();
-//builder.Services.AddValidatorsFromAssemblyContaining<UpdateSubjectValidator>();
-//builder.Services.AddValidatorsFromAssemblyContaining<CreateExamValidator>();
-//builder.Services.AddValidatorsFromAssemblyContaining<UpdateExamValidator>();
 
 builder.Services.AddControllers();
 
+// DI
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddScoped<IPersonRepository, PersonRepository>();
@@ -46,17 +44,18 @@ builder.Services.AddScoped<IStudentRepository, StudentRepository>();
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
-//builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
-//builder.Services.AddScoped<ITeacherService, TeacherService>();
-//builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
-//builder.Services.AddScoped<ISubjectService, SubjectService>();
-//builder.Services.AddScoped<IExamRepository, ExamRepository>();
-//builder.Services.AddScoped<IExamService, ExamService>();
 
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<AuthService>();
+
+// Authorization requirements/handler
+builder.Services.AddScoped<MustChangePasswordClearedRequirement>();
+builder.Services.AddSingleton<IAuthorizationHandler, MustChangePasswordClearedHandler>();
+
+// Middleware
 builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
-builder.Services.AddProblemDetails();
-
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -71,7 +70,33 @@ builder.Services.AddSwaggerGen(c =>
         Format = "date",
         Nullable = true
     });
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "Enter: Bearer {your JWT token}"
+    });
+
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
+
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontDev", p =>
@@ -80,10 +105,38 @@ builder.Services.AddCors(options =>
          .AllowAnyMethod()
     );
 });
-var app = builder.Build();
-app.UseRouting();
 
-// Configure the HTTP request pipeline.
+// AuthN (JWT)
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o =>
+{
+    o.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
+        )
+    };
+});
+
+// AuthZ
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("PasswordChanged", p =>
+        p.RequireAuthenticatedUser()
+         .AddRequirements(new MustChangePasswordClearedRequirement()));
+    // options.AddPolicy("PasswordChanged", p => p.RequireClaim("mcp", "true"));
+});
+
+var app = builder.Build();
+
+// Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -95,11 +148,18 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
 }
+
+app.UseRouting();
+
 app.UseCors("FrontDev");
+
 app.UseHttpsRedirection();
+
+// Exception middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-//app.UseAuthentication();
-//app.UseAuthorization();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

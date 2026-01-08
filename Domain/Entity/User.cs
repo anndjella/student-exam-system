@@ -31,6 +31,14 @@ namespace Domain.Entity
             MustChangePassword = true;
             Role = role;
         }
+        public User(UserRole role, string username, string passwordHash,int personId)
+        {
+            PersonID = personId;
+            Username = username;
+            PasswordHash = passwordHash;
+            MustChangePassword = true;
+            Role = role;
+        }
         public void SetPasswordHash(string newHash)
         {
             PasswordHash = newHash;

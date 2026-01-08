@@ -7,6 +7,7 @@ using Domain.Entity;
 using Domain.Interfaces;
 using Domain.Common;
 using Domain.Enums;
+using Application.Auth;
 
 namespace Application.Services;
 
@@ -42,9 +43,10 @@ public sealed class StudentService : IStudentService
             throw new AppException(AppErrorCode.Conflict, "Generated username already exists.");
 
         var initialPlain = CredentialsGenerator.InitialPasswordPlain(student.JMBG);
-        var hash = PasswordHasher.Hash(initialPlain);
+        var user = new User(UserRole.Student, username, passwordHash: "TEMP");
 
-        var user = new User(UserRole.Student, username, hash);
+        var hash = PasswordService.Hash(user, initialPlain);
+        user.SetPasswordHash(hash);
 
         student.User = user;
 
@@ -59,12 +61,19 @@ public sealed class StudentService : IStudentService
         return Mapper.StudentToResponse(created);
     }
 
-    public async Task<StudentResponse?> GetAsync(int id, CancellationToken ct = default)
+    public async Task<StudentResponse?> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var s = await _uow.Students.GetByIdAsync(id, ct);
         if (s is null)
             throw new AppException(AppErrorCode.NotFound, $"Student with id {id} not found.");
 
+        return Mapper.StudentToResponse(s);
+    }
+    public async Task<StudentResponse?> GetByIndexAsync(string index, CancellationToken ct = default)
+    {
+        var s=await _uow.Students.GetByIndexAsync(index, ct);
+        if (s is null)
+            throw new AppException(AppErrorCode.NotFound, $"Student with index {index} not found.");
         return Mapper.StudentToResponse(s);
     }
 
