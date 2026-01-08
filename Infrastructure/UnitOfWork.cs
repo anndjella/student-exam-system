@@ -16,19 +16,19 @@ namespace Infrastructure
         public UnitOfWork(
             AppDbContext db,
             IStudentRepository students,
-            //ITeacherRepository teachers,
+            ITeacherRepository teachers,
             IPersonRepository people,
             IUserRepository users)
         {
             _db = db;
             Students = students;
-            //Teachers = teachers;
+            Teachers = teachers;
             People = people;
             Users = users;
         }
 
         public IStudentRepository Students { get; }
-        //public ITeacherRepository Teachers { get; }
+        public ITeacherRepository Teachers { get; }
         public IPersonRepository People { get; }
         public IUserRepository Users { get; }
 

@@ -18,22 +18,22 @@ namespace Api.Controllers
         public StudentController(IStudentService svc) => _svc = svc;
 
         [HttpPost]
-        [Authorize(Roles = "StudentService", Policy = "PasswordChanged")]
-        public async Task<IActionResult> Create(CreateStudentRequest req, CancellationToken ct)
+        [Authorize(Roles = "StudentService")]
+        public async Task<IActionResult> Create([FromBody, CustomizeValidator(RuleSet = "Create")] CreateStudentRequest req, CancellationToken ct)
         {
             var resp = await _svc.CreateAsync(req, ct);
-            return CreatedAtAction(nameof(GetOne), new { id = resp.ID }, resp);
+            return CreatedAtAction(nameof(GetOneById), new { id = resp.ID }, resp);
         }
 
         [HttpGet("{id:int}")]
-        [Authorize(Roles = "StudentService,Teacher", Policy = "PasswordChanged")]
-        public async Task<ActionResult<StudentResponse>> GetOne(int id, CancellationToken ct)
+        [Authorize(Roles = "StudentService,Teacher")]
+        public async Task<ActionResult<StudentResponse>> GetOneById(int id, CancellationToken ct)
         {
             var resp = await _svc.GetByIdAsync(id, ct);
             return resp is null ? NotFound() : Ok(resp);
         }
         [HttpGet("{year:int}/{number:int}")]
-        [Authorize(Roles ="StudentService,Teacher", Policy="PasswordChanged")]
+        [Authorize(Roles ="StudentService,Teacher")]
         public async Task<ActionResult<StudentResponse>> GetOneByIndex(int year, int number, CancellationToken ct)
         {
             string index = $"{year}/{number:D4}";
@@ -42,15 +42,15 @@ namespace Api.Controllers
         }
 
         [HttpPut("{id:int}")]
-        [Authorize(Roles = "StudentService", Policy = "PasswordChanged")]
-        public async Task<IActionResult> Update(int id, UpdateStudentRequest req, CancellationToken ct)
+        [Authorize(Roles = "StudentService")]
+        public async Task<IActionResult> Update(int id, [FromBody, CustomizeValidator(RuleSet = "Update")] UpdateStudentRequest req, CancellationToken ct)
         {
             await _svc.UpdateAsync(id, req, ct);
             return NoContent();
         }
 
         [HttpDelete("{id:int}")]
-        [Authorize(Roles = "StudentService", Policy = "PasswordChanged")]
+        [Authorize(Roles = "StudentService")]
         public async Task<IActionResult> SoftDelete(int id, CancellationToken ct)
         {
             await _svc.SoftDeleteAsync(id, ct);

@@ -18,26 +18,23 @@ namespace Infrastructure.Repositories
         {
             _db = db;
         }
+        public void Add(Teacher teacher) => _db.Teachers.Add(teacher);
+        public void Update(Teacher teacher) => _db.Teachers.Update(teacher);
         public Task<bool> ExistsByEmployeeNumAsync(string employeeNum, CancellationToken ct = default)
-          => _db.Teachers.AsNoTracking().AnyAsync(x => x.EmployeeNumber == employeeNum, ct);
-
-        public async Task<int> CreateAsync(Teacher teacher, CancellationToken ct = default)
-        {
-            _db.Teachers.Add(teacher);
-            await _db.SaveChangesAsync(ct);
-            return teacher.ID;
-        }
+          => _db.Teachers.AnyAsync(x => x.EmployeeNumber == employeeNum, ct);
 
         public Task DeleteByIdAsync(int teacherId, CancellationToken ct = default)
         => _db.Teachers.Where(e => e.ID == teacherId).ExecuteDeleteAsync();
 
-
         public  Task<Teacher?> GetByIdAsync(int id, CancellationToken ct = default)
            =>  _db.Teachers.FirstOrDefaultAsync(x => x.ID == id, ct);
-        
+       
+        public Task<Teacher?> GetByIdWithUserAsync(int id, CancellationToken ct = default)
+        =>_db.Teachers
+            .Include(x=>x.User)
+            .FirstOrDefaultAsync(x=>x.ID == id, ct);
 
-        public Task UpdateAsync(Teacher teacher, CancellationToken ct = default) 
-           =>  _db.SaveChangesAsync(ct);
-        
+        public Task<Teacher?> GetByEmployeeNumAsync(string employeeNum, CancellationToken ct = default)
+        => _db.Teachers.FirstOrDefaultAsync(x => x.EmployeeNumber == employeeNum);
     }
 }

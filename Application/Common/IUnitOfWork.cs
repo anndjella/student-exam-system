@@ -10,7 +10,7 @@ namespace Application.Common
     public interface IUnitOfWork
     {
         IStudentRepository Students { get; }
-        //ITeacherRepository Teachers { get; }
+        ITeacherRepository Teachers { get; }
         IPersonRepository People { get; }
         IUserRepository Users { get; }
 

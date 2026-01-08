@@ -13,11 +13,11 @@ namespace Domain.Interfaces
         Task<bool> ExistsByEmployeeNumAsync(string employeeNum, CancellationToken ct = default);
         //read
         Task<Teacher?> GetByIdAsync(int id, CancellationToken ct = default);
-        //write
-        Task<int> CreateAsync(Teacher teacher, CancellationToken ct = default);
-        Task UpdateAsync(Teacher teacher, CancellationToken ct = default);
-        //delete
-        Task DeleteByIdAsync(int teacherId, CancellationToken ct = default);
+        Task<Teacher?> GetByIdWithUserAsync(int id, CancellationToken ct = default);
+        Task<Teacher?> GetByEmployeeNumAsync(string employeeNum, CancellationToken ct = default);
+        // write
+        void Add(Teacher teacher);
+        void Update(Teacher teacher);
 
     }
 }
