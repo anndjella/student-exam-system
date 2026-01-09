@@ -25,6 +25,9 @@ namespace Infrastructure.Repositories
 
         public Task<Subject?> GetByNameAsync(string name, CancellationToken ct = default)
         => _db.Subjects.FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower(), ct);
+        public Task<List<int>> GetExistingIdsAsync(List<int> ids, CancellationToken ct)
+        => _db.Subjects.Where(s => ids.Contains(s.ID)).Select(s => s.ID).ToListAsync(ct);
+
 
         public void Update(Subject subject)
         =>_db.Subjects.Update(subject);

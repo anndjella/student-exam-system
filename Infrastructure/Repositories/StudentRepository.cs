@@ -31,5 +31,11 @@ namespace Infrastructure.Repositories
          => _db.Students
             .Include(s => s.User)
             .FirstOrDefaultAsync(x => x.ID == id, ct);
+        public Task<List<int>> ListIdsByIndexPrefixAsync(string prefix, CancellationToken ct)
+         => _db.Students
+            .Where(s => s.IndexNumber.StartsWith(prefix))
+            .Select(s => s.ID)
+            .ToListAsync(ct);
+
     }
 }

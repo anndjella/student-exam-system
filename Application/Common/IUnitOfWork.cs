@@ -14,6 +14,8 @@ namespace Application.Common
         IPersonRepository People { get; }
         IUserRepository Users { get; }
         ISubjectRepository Subjects { get; }
+        ISchoolYearRepository SchoolYears { get; }
+        IEnrollmentRepository Enrollments { get; }
 
         Task<int> CommitAsync(CancellationToken ct = default);
     }

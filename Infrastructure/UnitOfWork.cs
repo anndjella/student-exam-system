@@ -1,5 +1,6 @@
 ﻿using Application.Common;
 using Domain.Interfaces;
+using Infrastructure.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,27 +14,17 @@ namespace Infrastructure
     {
         private readonly AppDbContext _db;
 
-        public UnitOfWork(
-            AppDbContext db,
-            IStudentRepository students,
-            ITeacherRepository teachers,
-            IPersonRepository people,
-            IUserRepository users,
-            ISubjectRepository subjects)
+        public UnitOfWork(AppDbContext db)
         {
-            _db = db;
-            Students = students;
-            Teachers = teachers;
-            People = people;
-            Users = users;
-            Subjects = subjects;
+            _db = db;    
         }
-
-        public IStudentRepository Students { get; }
-        public ITeacherRepository Teachers { get; }
-        public IPersonRepository People { get; }
-        public IUserRepository Users { get; }
-        public ISubjectRepository Subjects { get; }
+        public IStudentRepository Students => new StudentRepository(_db);
+        public ITeacherRepository Teachers => new TeacherRepository(_db);
+        public IPersonRepository People => new PersonRepository(_db);
+        public IUserRepository Users => new UserRepository(_db);
+        public ISubjectRepository Subjects => new SubjectRepository(_db);
+        public ISchoolYearRepository SchoolYears => new SchoolYearRepository(_db);
+        public IEnrollmentRepository Enrollments => new EnrollmentRepository(_db);
 
         public Task<int> CommitAsync(CancellationToken ct = default)
             => _db.SaveChangesAsync(ct);

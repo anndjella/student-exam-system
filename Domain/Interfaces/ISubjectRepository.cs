@@ -13,6 +13,8 @@ namespace Domain.Interfaces
         // read
         Task<Subject?> GetByIdAsync(int id, CancellationToken ct = default);
         Task<Subject?> GetByNameAsync(string name, CancellationToken ct = default);
+        public Task<List<int>> GetExistingIdsAsync(List<int> ids, CancellationToken ct);
+
         // write
         void Add(Subject subject);
         void Update(Subject subject);
