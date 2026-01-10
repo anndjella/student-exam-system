@@ -16,8 +16,6 @@ namespace Infrastructure.Repositories
         public StudentRepository(AppDbContext db) => _db = db;
 
         public void Add(Student s) => _db.Students.Add(s);
-        public void Update(Student s) => _db.Students.Update(s);
-
         public Task<Student?> GetByIdAsync(int id, CancellationToken ct = default)
             => _db.Students.FirstOrDefaultAsync(x => x.ID == id, ct);
 

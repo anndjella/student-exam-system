@@ -16,6 +16,7 @@ namespace Domain.Interfaces
             CancellationToken ct);
 
         public void AddRange(IEnumerable<Enrollment> enrollments);
-
+        Task<List<Enrollment>> ListByStudentIdAsync(int studentId, CancellationToken ct);
+        Task<List<Enrollment>> ListActiveAsync(DateOnly today, CancellationToken ct);
     }
 }

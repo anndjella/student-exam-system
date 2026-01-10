@@ -1,5 +1,6 @@
 ﻿using Application.Common;
 using Application.DTO.Enrollments;
+using Application.DTO.Me.Student;
 using Application.Services;
 using Domain.Entity;
 using Domain.Enums;
@@ -40,14 +41,12 @@ namespace Application.ServicesImplementation
             if (studentIds.Count == 0)
                 return new BulkEnrollResult(StudentsMatched: 0, EnrollmentsCreated: 0, EnrollmentsSkipped: 0);
 
-            // 2) Ucitaj postojece enrollmente da izbegnes duplikate
             var existingPairs = await _uow.Enrollments.ListExistingPairsAsync(
                 studentIds,
                 req.SchoolYearId,
                 distinctSubjectIds,
                 ct);
 
-            // 3) Kreiraj samo nove
             var toCreate = new List<Enrollment>(capacity: studentIds.Count * distinctSubjectIds.Count);
 
             foreach (var sid in studentIds)
@@ -80,5 +79,48 @@ namespace Application.ServicesImplementation
                 EnrollmentsSkipped: skipped
             );
         }
-    }
+
+        public async Task<int> ExpireActiveEnrollmentsAsync(CancellationToken ct)
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var toExpire = await _uow.Enrollments.ListActiveAsync(today, ct);
+
+            foreach (var e in toExpire)
+                e.Status = EnrollmentStatus.Expired;
+
+            await _uow.CommitAsync(ct);
+
+            return toExpire.Count;
+        }
+
+        public async Task<MyEnrolledSubjectsResponse> GetMySubjectsAsync(int personId, CancellationToken ct)
+        {
+            var student = await _uow.Students.GetByIdAsync(personId, ct);
+            if (student is null)
+                throw new AppException(AppErrorCode.NotFound,"Student not found.");
+
+            var enrollments = await _uow.Enrollments.ListByStudentIdAsync(student.ID, ct);
+
+            var dto = new MyEnrolledSubjectsResponse();
+
+            foreach (var e in enrollments)
+            {
+                var item = new MyEnrolledSubjectItem
+                {
+                    SubjectID = e.Subject!.ID,
+                    SubjectName = e.Subject.Name,
+                    ECTS = e.Subject.ECTS,
+                    SchoolYearID = e.SchoolYear!.ID,
+                    SchoolYearName = $"{e.SchoolYear.StartDate.Year}/{e.SchoolYear.EndDate.Year}",
+                    Status = e.Status
+                };
+
+                if (e.Status == EnrollmentStatus.Passed) dto.Passed.Add(item);
+                else dto.NotPassed.Add(item);
+            }
+
+            return dto;
+        }
+    } 
 }

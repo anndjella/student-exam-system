@@ -73,7 +73,7 @@ namespace Application.ServicesImplementation
             t.MarkDeleted();
             t.User?.Deactivate();
 
-            _uow.Teachers.Update(t);
+            //_uow.Teachers.Update(t);
             await _uow.CommitAsync(ct);
         }
 
@@ -108,7 +108,7 @@ namespace Application.ServicesImplementation
                 t.EmployeeNumber = req.EmployeeNumber;
             }
 
-            _uow.Teachers.Update(t);
+            //_uow.Teachers.Update(t);
             await _uow.CommitAsync(ct);
         }
     }

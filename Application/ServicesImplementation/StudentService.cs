@@ -92,7 +92,7 @@ public sealed class StudentService : IStudentService
             s.IndexNumber = req.IndexNumber;
         }
 
-        _uow.Students.Update(s);
+        //_uow.Students.Update(s);
         await _uow.CommitAsync(ct);
     }
 
@@ -104,7 +104,7 @@ public sealed class StudentService : IStudentService
         s.MarkDeleted();
         s.User?.Deactivate();
 
-        _uow.Students.Update(s);
+        //_uow.Students.Update(s);
         await _uow.CommitAsync(ct);
     }
 }

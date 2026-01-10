@@ -17,7 +17,5 @@ namespace Domain.Interfaces
         Task<Teacher?> GetByEmployeeNumAsync(string employeeNum, CancellationToken ct = default);
         // write
         void Add(Teacher teacher);
-        void Update(Teacher teacher);
-
     }
 }

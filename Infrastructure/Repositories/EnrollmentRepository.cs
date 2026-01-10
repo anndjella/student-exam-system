@@ -1,4 +1,5 @@
 ﻿using Domain.Entity;
+using Domain.Enums;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -32,6 +33,21 @@ namespace Infrastructure.Repositories
 
         public void AddRange(IEnumerable<Enrollment> enrollments)
             => _db.Enrollments.AddRange(enrollments);
+        public Task<List<Enrollment>> ListByStudentIdAsync(int studentId, CancellationToken ct)
+    => _db.Enrollments
+        .AsTracking()
+        .Where(e => e.StudentID == studentId)
+        .Include(e => e.Subject)
+        .Include(e => e.SchoolYear)
+        .ToListAsync(ct);
 
+        public Task<List<Enrollment>> ListActiveAsync(DateOnly today, CancellationToken ct)
+        {
+            return _db.Enrollments
+                .Include(e => e.SchoolYear)
+                .Where(e => e.Status == EnrollmentStatus.Active)
+                .Where(e => e.SchoolYear.EndDate < today)
+                .ToListAsync(ct);
+        }
     }
 }

@@ -19,7 +19,6 @@ namespace Infrastructure.Repositories
             _db = db;
         }
         public void Add(Teacher teacher) => _db.Teachers.Add(teacher);
-        public void Update(Teacher teacher) => _db.Teachers.Update(teacher);
         public Task<bool> ExistsByEmployeeNumAsync(string employeeNum, CancellationToken ct = default)
           => _db.Teachers.AnyAsync(x => x.EmployeeNumber == employeeNum, ct);
 

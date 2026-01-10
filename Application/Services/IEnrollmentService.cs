@@ -1,4 +1,5 @@
 ﻿using Application.DTO.Enrollments;
+using Application.DTO.Me.Student;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,5 +13,8 @@ namespace Application.Services
         Task<BulkEnrollResult> BulkEnrollByIndexYearAsync(
             BulkEnrollByIndexYearRequest req,
             CancellationToken ct);
+
+        public Task<MyEnrolledSubjectsResponse> GetMySubjectsAsync(int personId, CancellationToken ct);
+        Task<int> ExpireActiveEnrollmentsAsync(CancellationToken ct);
     }
 }

@@ -43,7 +43,7 @@ namespace Application.ServicesImplementation
                 throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.");
 
             s.MarkDeleted();
-            _uow.Subjects.Update(s);
+            //_uow.Subjects.Update(s);
            await  _uow.CommitAsync(ct);
         }
         public async Task<SubjectResponse?> GetByIdAsync(int id, CancellationToken ct = default)
@@ -62,7 +62,7 @@ namespace Application.ServicesImplementation
             if (req.Name is not null) s.Name = req.Name;
             if (req.ECTS is not null) s.ECTS = req.ECTS.Value;
 
-            _uow.Subjects.Update(s);
+            //_uow.Subjects.Update(s);
             await _uow.CommitAsync(ct);
         }
 

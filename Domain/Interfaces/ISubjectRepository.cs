@@ -17,6 +17,5 @@ namespace Domain.Interfaces
 
         // write
         void Add(Subject subject);
-        void Update(Subject subject);
     }
 }
