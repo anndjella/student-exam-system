@@ -25,6 +25,7 @@ namespace Infrastructure
         public ISubjectRepository Subjects => new SubjectRepository(_db);
         public ISchoolYearRepository SchoolYears => new SchoolYearRepository(_db);
         public IEnrollmentRepository Enrollments => new EnrollmentRepository(_db);
+        public ITeachingAssignmentRepository TeachingAssignments => new TeachingAssignmentRepository(_db);
 
         public Task<int> CommitAsync(CancellationToken ct = default)
             => _db.SaveChangesAsync(ct);

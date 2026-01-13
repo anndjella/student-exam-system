@@ -2,6 +2,7 @@
 using Application.DTO.Students;
 using Application.DTO.Subjects;
 using Application.DTO.Teachers;
+using Application.DTO.TeachingAssignment;
 using Domain.Entity;
 using System;
 using System.Collections.Generic;
@@ -58,6 +59,13 @@ namespace Application.Common
             FirstName = req.FirstName,
             LastName = req.LastName,
             IndexNumber = req.IndexNumber
+        };
+
+        internal static TeachingAssignmentResponse TeachingAssignmentToResponse(TeachingAssignment created) => new()
+        {
+            SubjectID = created.SubjectID,
+            TeacherID = created.TeacherID,
+            CanGrade = created.CanGrade
         };
         //public static Teacher CreateToTeacher(CreateTeacherRequest req, int id) => new()
         //{

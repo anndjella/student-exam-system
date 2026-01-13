@@ -8,7 +8,7 @@ namespace Domain.Entity
 {
     public sealed class TeachingAssignment
     {
-        public bool CanGrade { get; set; }
+        public bool CanGrade { get; set; } = false;
         public int SubjectID {  get; set; }
         public Subject Subject { get; set; } = null!;
         public int TeacherID {  get; set; }

@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Api.Auth;
+using Application.Validators;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +35,7 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateStudentValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateStudentValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateEnrollmentsValidator>();
 
 builder.Services.AddControllers();
 
@@ -52,6 +54,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISchoolYearRepository, SchoolYearRepository>();
 builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
+builder.Services.AddScoped<ITeachingAssignmentRepository, TeachingAssignmentRepository>();
+builder.Services.AddScoped<ITeachingAssignmentService, TeachingAssignmentService>();
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuthService>();
