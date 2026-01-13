@@ -23,7 +23,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Api.Auth;
-using Application.Validators;
+using Application.Validators.Enrollment;
 
 
 var builder = WebApplication.CreateBuilder(args);

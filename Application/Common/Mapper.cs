@@ -1,9 +1,11 @@
-﻿using Application.DTO.Exams;
+﻿using Application.DTO.Enrollments;
+using Application.DTO.Exams;
 using Application.DTO.Students;
 using Application.DTO.Subjects;
 using Application.DTO.Teachers;
 using Application.DTO.TeachingAssignment;
 using Domain.Entity;
+using Microsoft.AspNetCore.Http.HttpResults;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,7 +30,7 @@ namespace Application.Common
             ID = s.ID,
             FirstName = s.FirstName,
             LastName = s.LastName,
-            EmployeeNumber=s.EmployeeNumber,
+            EmployeeNumber = s.EmployeeNumber,
             Title = s.Title
         };
         public static SubjectResponse SubjectToResponse(Subject s) => new()
@@ -61,11 +63,24 @@ namespace Application.Common
             IndexNumber = req.IndexNumber
         };
 
-        internal static TeachingAssignmentResponse TeachingAssignmentToResponse(TeachingAssignment created) => new()
+        internal static TeachingAssignmentResponse TeachingAssignmentToResponse(TeachingAssignment ta) => new()
         {
-            SubjectID = created.SubjectID,
-            TeacherID = created.TeacherID,
-            CanGrade = created.CanGrade
+            SubjectID = ta.SubjectID,
+            SubjectName = ta.Subject != null ? ta.Subject.Name : string.Empty,
+            TeacherID = ta.TeacherID,
+            TeacherEmployeeNum = ta.Teacher != null ? ta.Teacher.EmployeeNumber : string.Empty,
+            TeacherName = ta.Teacher != null ? $"{ta.Teacher.FirstName} {ta.Teacher.LastName}" : string.Empty,
+            CanGrade = ta.CanGrade
+
+        };
+        internal static EnrollmentResponse EnrollmentToResponse(Enrollment e) => new()
+        {
+            SubjectID = e.SubjectID,
+            SubjectName = e.Subject != null ? e.Subject.Name : string.Empty,
+            ECTS = e.Subject != null ? e.Subject.ECTS : 0,
+            SchoolYearID = e.SchoolYearID,  
+            SchoolYearName=e.SchoolYear != null ? $"{e.SchoolYear.StartDate.Year}/{e.SchoolYear.EndDate.Year}" : string.Empty,
+            Status=e.Status
         };
         //public static Teacher CreateToTeacher(CreateTeacherRequest req, int id) => new()
         //{

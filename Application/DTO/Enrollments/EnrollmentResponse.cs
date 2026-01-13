@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.DTO.Me.Student
+namespace Application.DTO.Enrollments
 {
-    public sealed class MyEnrolledSubjectItem
+    public class EnrollmentResponse
     {
         public int SubjectID { get; set; }
         public string SubjectName { get; set; } = "";

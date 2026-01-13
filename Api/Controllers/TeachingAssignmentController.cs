@@ -26,6 +26,18 @@ namespace Api.Controllers.Me
             var resp = await _svc.GetAsync(teacherId,subjectId, ct);
             return resp is null ? NotFound() : Ok(resp);
         }
+        [HttpGet("by-teacher/{teacherId:int}")]
+        public async Task<ActionResult<TeachingAssignmentResponse>> ListByTeacherId(int teacherId, CancellationToken ct)
+        {
+            var resp = await _svc.ListByTeacherAsync(teacherId, ct);
+            return resp is null ? NotFound() : Ok(resp);
+        }
+        [HttpGet("by-subject/{subjectId:int}")]
+        public async Task<ActionResult<TeachingAssignmentResponse>> ListBySubjectId(int subjectId, CancellationToken ct)
+        {
+            var resp = await _svc.ListBySubjectAsync(subjectId, ct);
+            return resp is null ? NotFound() : Ok(resp);
+        }
         [HttpPut("{teacherId:int}/{subjectId:int}/can-grade")]
         public async Task<IActionResult> Update(CreateTeachingAssignmentRequest req, CancellationToken ct)
         {

@@ -106,16 +106,7 @@ namespace Application.ServicesImplementation
 
             foreach (var e in enrollments)
             {
-                var item = new MyEnrolledSubjectItem
-                {
-                    SubjectID = e.Subject!.ID,
-                    SubjectName = e.Subject.Name,
-                    ECTS = e.Subject.ECTS,
-                    SchoolYearID = e.SchoolYear!.ID,
-                    SchoolYearName = $"{e.SchoolYear.StartDate.Year}/{e.SchoolYear.EndDate.Year}",
-                    Status = e.Status
-                };
-
+                var item = Mapper.EnrollmentToResponse(e);
                 if (e.Status == EnrollmentStatus.Passed) dto.Passed.Add(item);
                 else dto.NotPassed.Add(item);
             }

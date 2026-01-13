@@ -1,7 +1,10 @@
 ﻿using Application.Common;
+using Application.DTO.Me.Student;
+using Application.DTO.Me.Teacher;
 using Application.DTO.TeachingAssignment;
 using Application.Services;
 using Domain.Entity;
+using Domain.Enums;
 using Microsoft.AspNetCore.Server.HttpSys;
 using System;
 using System.Collections.Generic;
@@ -69,7 +72,27 @@ namespace Application.ServicesImplementation
             return Mapper.TeachingAssignmentToResponse(ta);
         }
 
-        public async Task<List<TeachingAssignmentResponse>> GetBySubjectAsync(int subjectId, CancellationToken ct)
+        public async Task<MyTeachingAssignmentsResponse> GetMyTeachingAssignments(int personId, CancellationToken ct)
+        {
+            var teacher = await _uow.Teachers.GetByIdAsync(personId, ct);
+            if (teacher is null)
+                throw new AppException(AppErrorCode.NotFound, "Teacher not found.");
+
+            var teachingAssignments=await _uow.TeachingAssignments.ListByTeacherIdAsync(teacher.ID, ct);
+
+            var dto = new MyTeachingAssignmentsResponse();
+
+            foreach (var e in teachingAssignments)
+            {
+                var item = Mapper.TeachingAssignmentToResponse(e);
+                if (e.CanGrade) dto.GradableSubjects.Add(item);
+                else dto.NonGradableSubjects.Add(item);
+            }
+
+            return dto;
+        }
+
+        public async Task<List<TeachingAssignmentResponse>> ListBySubjectAsync(int subjectId, CancellationToken ct)
         {
             if (await _uow.Subjects.GetByIdAsync(subjectId, ct) is null)
                 throw new AppException(AppErrorCode.NotFound, $"Subject with id {subjectId} not found");
@@ -79,7 +102,7 @@ namespace Application.ServicesImplementation
             return list.Select(Mapper.TeachingAssignmentToResponse).ToList();
         }
 
-        public async Task<List<TeachingAssignmentResponse>> GetByTeacherAsync(int teacherId, CancellationToken ct)
+        public async Task<List<TeachingAssignmentResponse>> ListByTeacherAsync(int teacherId, CancellationToken ct)
         {
             if (await _uow.Teachers.GetByIdAsync(teacherId, ct) is null)
                 throw new AppException(AppErrorCode.NotFound, $"Teacher with id {teacherId} not found");
