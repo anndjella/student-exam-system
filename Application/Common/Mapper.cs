@@ -1,9 +1,11 @@
 ﻿using Application.DTO.Enrollments;
 using Application.DTO.Exams;
+using Application.DTO.Registrations;
 using Application.DTO.Students;
 using Application.DTO.Subjects;
 using Application.DTO.Teachers;
 using Application.DTO.TeachingAssignment;
+using Application.DTO.Term;
 using Domain.Entity;
 using Microsoft.AspNetCore.Http.HttpResults;
 using System;
@@ -39,20 +41,27 @@ namespace Application.Common
             Name = s.Name,
             ESPB = s.ECTS
         };
-        //public static ExamResponse ExamToResponse(Exam e) => new()
-        //{
-        //    StudentID=e.StudentID,
-        //    SubjectID=e.SubjectID,
-        //    Grade = e.Grade,
-        //    Date = e.Date,
-        //    Note = e.Note,
-        //    StudentIndex = e.Student?.IndexNumber ?? string.Empty,
+        public static ExamResponse ExamToResponse(Exam e) => new()
+        {
+            ID = e.ID,
+            StudentID =  e.StudentID,
 
-        //    StudentFullName = e.Student != null ? $"{e.Student.FirstName} {e.Student.LastName}".Trim() : string.Empty,
-        //    SubjectName = e.Subject?.Name ?? string.Empty,
-        //    ExaminerFullName = e.Examiner != null ? $"{e.Examiner.FirstName} {e.Examiner.LastName}".Trim() : string.Empty,
-        //    SupervisorFullName = e.Supervisor != null ? $"{e.Supervisor.FirstName} {e.Supervisor.LastName}".Trim() : string.Empty,
-        //};
+            SubjectID = e.SubjectID,
+            SubjectName = e.Registration?.Subject?.Name ?? string.Empty,
+
+            TermId = e.TermID,
+            TermName = e.Registration?.Term?.Name ?? string.Empty,
+
+            TeacherID = e.TeacherID,
+            TeacherFullName = e.Teacher != null
+                 ? $"{e.Teacher.FirstName} {e.Teacher.LastName}"
+                 : string.Empty,
+
+            Grade = e.Grade,
+            Date = e.Date,
+            Note = e.Note,
+            SignedAt = e.SignedAt
+        };
 
         public static Student CreateToStudent(CreateStudentRequest req, int id) => new()
         {
@@ -66,7 +75,7 @@ namespace Application.Common
         internal static TeachingAssignmentResponse TeachingAssignmentToResponse(TeachingAssignment ta) => new()
         {
             SubjectID = ta.SubjectID,
-            SubjectName = ta.Subject != null ? ta.Subject.Name : string.Empty,
+            SubjectName = ta?.Subject != null ? ta.Subject.Name : string.Empty,
             TeacherID = ta.TeacherID,
             TeacherEmployeeNum = ta.Teacher != null ? ta.Teacher.EmployeeNumber : string.Empty,
             TeacherName = ta.Teacher != null ? $"{ta.Teacher.FirstName} {ta.Teacher.LastName}" : string.Empty,
@@ -75,12 +84,29 @@ namespace Application.Common
         };
         internal static EnrollmentResponse EnrollmentToResponse(Enrollment e) => new()
         {
-            SubjectID = e.SubjectID,
+            SubjectID = e.SubjectID,         
             SubjectName = e.Subject != null ? e.Subject.Name : string.Empty,
-            ECTS = e.Subject != null ? e.Subject.ECTS : 0,
-            SchoolYearID = e.SchoolYearID,  
-            SchoolYearName=e.SchoolYear != null ? $"{e.SchoolYear.StartDate.Year}/{e.SchoolYear.EndDate.Year}" : string.Empty,
-            Status=e.Status
+            SubjectECTS = e.Subject?.ECTS ?? 0
+        };
+        internal static RegistrationResponse RegistrationToResponse(Registration e) => new()
+        {
+            StudentID=e.StudentID,
+            SubjectID=e.SubjectID,
+            SubjectName=e.Subject != null ? e.Subject.Name :string.Empty,
+            TermID =e.TermID,
+            TermName=e.Term != null ? e.Term.Name : string.Empty,
+            CancelledAt=e.CancelledAt,
+            RegisteredAt=e.RegisteredAt,
+            IsActive=e.IsActive,           
+        };
+        internal static TermResponse TermToResponse(Term term) => new()
+        {
+            TermID = term.ID,
+            TermName = term.Name,
+            StartDate = term.StartDate,
+            EndDate = term.EndDate,
+            RegistrationEndDate = term.RegistrationEndDate,
+            RegistrationStartDate = term.RegistrationStartDate
         };
         //public static Teacher CreateToTeacher(CreateTeacherRequest req, int id) => new()
         //{

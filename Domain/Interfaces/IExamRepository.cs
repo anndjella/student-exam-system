@@ -9,13 +9,13 @@ namespace Domain.Interfaces
 {
     public interface IExamRepository
     {
-        Task<bool> ExistsOnDateAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default);
-        Task<bool> HasPassedAsync(int studentId, int subjectId, CancellationToken ct = default);
-        Task<Exam?> GetByKeyAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default);
-        Task<Exam?> GetByKeyWithDetailsAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default);
-        Task<IReadOnlyList<Exam>> ListWithDetailsAsync(CancellationToken ct = default);
-        Task CreateAsync(Exam exam, CancellationToken ct = default);
-        Task UpdateAsync(Exam exam, CancellationToken ct = default);
-        Task DeleteAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default);
+        Task<Exam?> GetByKeyAsync(int studentId, int subjectId, int termId, CancellationToken ct = default);
+        Task<List<Exam>> ListUnsignedBySubjectTermAsync(int subjectId, int termId, CancellationToken ct = default);
+        Task<List<Exam>> ListBySubjectTermAsync(int subjectId, int termId, CancellationToken ct = default);
+
+
+        Task<bool> ExistsAnyForTermAsync(int termId, CancellationToken ct = default);
+        Task<bool> ExistsSignedForTermAsync(int termId, CancellationToken ct = default);
+        void Add(Exam exam);
     }
 }

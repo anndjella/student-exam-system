@@ -17,7 +17,7 @@ namespace Domain.Interfaces
         Task<List<TeachingAssignment>> ListBySubjectIdAsync(int subjectId, CancellationToken ct);
         // write
         void Add(TeachingAssignment teachingAssignment);
-        Task<bool> CanTeacherGradeAsync(int teacherId, int subjectId, CancellationToken ct);
+        //Task<bool> CanTeacherGradeAsync(int teacherId, int subjectId, CancellationToken ct);
 
 
         //delete

@@ -2,6 +2,7 @@
 using Application.DTO.Exams;
 using Application.Services;
 using Domain.Entity;
+using Domain.Enums;
 using Domain.Interfaces;
 using System.Linq.Expressions;
 
@@ -9,98 +10,131 @@ namespace Application.ServicesImplementation
 {
     public class ExamService : IExamService
     {
-        private readonly IExamRepository _repo;
-        private readonly IStudentRepository _students;
-        private readonly ITeacherRepository _teachers;
-        private readonly ISubjectRepository _subjects;
-        public ExamService(
-        IExamRepository repo,
-        IStudentRepository students,
-        ITeacherRepository teachers,
-        ISubjectRepository subjects)
+        private readonly IUnitOfWork _uow;
+        public ExamService(IUnitOfWork uow) => _uow = uow;
+
+        public async Task<ExamResponse> UpsertAsync(UpsertExamRequest req, int teacherId, CancellationToken ct = default)
         {
-            _repo = repo;
-            _students = students;
-            _teachers = teachers;
-            _subjects = subjects;
-        }
-        public async Task CreateAsync(CreateExamRequest req, CancellationToken ct = default)
-        {
-            if (await _students.GetByIdAsync(req.StudentID, ct) is null)
-                throw new AppException(AppErrorCode.BadRequest, $"Student with id {req.StudentID} not found.");
+            // 1) teacher assignment + can grade
+            var ta = await _uow.TeachingAssignments.GetAsync(teacherId, req.SubjectID, ct);
+            if (ta is null)
+                throw new AppException(AppErrorCode.Forbidden, "Teacher is not assigned to this subject.");
 
-            if (await _subjects.GetByIdAsync(req.SubjectID, ct) is null)
-                throw new AppException(AppErrorCode.BadRequest, $"Subject with id {req.SubjectID} not found.");
+            if (!ta.CanGrade)
+                throw new AppException(AppErrorCode.Forbidden, "Teacher can not grade (CanGrade=false).");
 
-            //if (await _teachers.GetByIdAsync(req.ExaminerID, ct) is null)
-            //    throw new AppException(AppErrorCode.BadRequest, $"Examiner with id {req.ExaminerID} not found.");
+            // 2) student must have active registration for this term+subject
+            var hasReg = await _uow.Registrations.ExistsActiveAsync(req.StudentID, req.SubjectID, req.TermID, ct);
+            if (!hasReg)
+                throw new AppException(AppErrorCode.Conflict, "Student does not have an active registration for this term.");
 
-            //if (req.SupervisorID is not null && await _teachers.GetByIdAsync(req.SupervisorID.Value, ct) is null)
-            //    throw new AppException(AppErrorCode.BadRequest, $"Supervisor with id {req.SupervisorID} not found.");
+            // 3) upsert exam
+            var exam = await _uow.Exams.GetByKeyAsync(req.StudentID, req.SubjectID, req.TermID, ct);
 
-            if (await _repo.ExistsOnDateAsync(req.StudentID, req.SubjectID, req.Date, ct))
-                throw new AppException(AppErrorCode.Conflict, "A student cannot take the same subject exam more than once on the same day.");
-
-            if (req.Grade >= 6 && await _repo.HasPassedAsync(req.StudentID, req.SubjectID, ct))
-                throw new AppException(AppErrorCode.Conflict, "Student already passed this subject.");
-
-            Exam exam = new Exam
+            if (exam is null)
             {
-                StudentID = req.StudentID,
-                SubjectID = req.SubjectID,
-                //ExaminerID = req.ExaminerID,
-                //SupervisorID = req.SupervisorID,
-                Date = req.Date,
-                Note = req.Note,
-                Grade = req.Grade
-            };
+                exam = new Exam
+                {
+                    StudentID = req.StudentID,
+                    SubjectID = req.SubjectID,
+                    TermID= req.TermID,
+                    Grade = req.Grade,
+                    Date = req.Date,
+                    Note = req.Note,
+                    SignedAt = null
+                };
 
-            await _repo.CreateAsync(exam, ct);
-        }
-
-        public async Task DeleteAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default)
-        {
-            var s = await _repo.GetByKeyAsync(studentId,subjectId,date, ct);
-            if (s is null) 
-                throw new AppException(AppErrorCode.NotFound, $"Exam not found.");
-            await _repo.DeleteAsync(studentId,subjectId,date, ct);
-        }
-
-        //public async Task<ExamResponse?> GetAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default)
-        //{
-        //    //var e = await _repo.GetByKeyWithDetailsAsync(studentId, subjectId, date, ct);
-        //    //return e is null ?
-        //    //    throw new AppException(AppErrorCode.NotFound, $"Exam not found.")
-        //    //    : Mapper.ExamToResponse(e);
-        //}
-
-        //public async Task<IReadOnlyList<ExamResponse>> ListAsync(CancellationToken ct = default)
-        //{
-        //    //var list = await _repo.ListWithDetailsAsync(ct);
-        //    //return list.Select(Mapper.ExamToResponse).ToList();
-        //}
-
-        public async Task UpdateAsync(int studentId, int subjectId, DateOnly date, UpdateExamRequest req, CancellationToken ct = default)
-        {
-            var e = await _repo.GetByKeyAsync(studentId, subjectId, date, ct) ??
-                throw new AppException(AppErrorCode.NotFound, $"Exam not found.");
-
-            if (req.Grade is byte newGrade && newGrade != e.Grade)
-            {
-                if (string.IsNullOrWhiteSpace(req.Note))
-                    throw new AppException(AppErrorCode.BadRequest,"Note is required when changing the grade.");
-                e.Grade = newGrade;
-                e.Note = req.Note;
+                _uow.Exams.Add(exam);
+                await _uow.CommitAsync(ct);
+                return Mapper.ExamToResponse(exam);
             }
-            else
-            {
-                if (req.Grade.HasValue)
-                    e.Grade = req.Grade.Value;
 
-                if (req.Note is not null)
-                    e.Note = string.IsNullOrWhiteSpace(req.Note) ? null : req.Note.Trim();
-            }
-            await _repo.UpdateAsync(e, ct);
+            if (exam.SignedAt is not null)
+                throw new AppException(AppErrorCode.Conflict, "Exam is locked (SignedAt is set).");
+
+            exam.Grade = req.Grade;
+            exam.Date = req.Date;
+            exam.Note = req.Note;
+
+            await _uow.CommitAsync(ct);
+            return Mapper.ExamToResponse(exam);
         }
+
+        public async Task<int> LockAsync(LockExamsRequest req, int teacherId, CancellationToken ct = default)
+        {
+            // teacher assignment + can grade
+            var ta = await _uow.TeachingAssignments.GetAsync(teacherId, req.SubjectID, ct);
+            if (ta is null)
+                throw new AppException(AppErrorCode.Forbidden, "Teacher is not assigned to this subject.");
+
+            if (!ta.CanGrade)
+                throw new AppException(AppErrorCode.Forbidden, "Teacher can not grade (CanGrade=false).");
+
+            var now = DateTime.UtcNow;
+
+            // all students who have active registrations for subject in this term
+            var studentIds = await _uow.Registrations.ListActiveStudentIdsAsync(req.SubjectID, req.TermID, ct);
+
+            // 3) osiguraj da svaki ima exam record (grade null = nije izasao)
+            foreach (var studentId in studentIds)
+            {
+                var exam = await _uow.Exams.GetByKeyAsync(studentId, req.SubjectID, req.TermID, ct);
+
+                if (exam is null)
+                {
+                    exam = new Exam
+                    {
+                        StudentID = studentId,
+                        SubjectID = req.SubjectID,
+                        TermID = req.TermID,
+                        Grade = null,
+                        Date = DateOnly.FromDateTime(now),
+                        Note = null,
+                        SignedAt = null
+                    };
+
+                    _uow.Exams.Add(exam);
+                }
+                else
+                {
+                    if (exam.SignedAt is not null)
+                        continue;
+                }
+            }
+
+            // 4) zakljucaj sve unsigned za ovaj subject+term
+            var unsigned = await _uow.Exams.ListUnsignedBySubjectTermAsync(req.SubjectID, req.TermID, ct);
+
+            foreach (var exam in unsigned)
+            {
+                exam.SignedAt = now;
+                exam.TeacherID = teacherId;
+
+                var r = exam.Registration;
+
+                var enrollment = await _uow.Enrollments.GetAsync(r.StudentID, r.SubjectID, ct);
+
+                if (enrollment is null)
+                    continue;
+
+                if (exam.Grade >= 6)
+                    enrollment.IsPassed = true;
+            }
+
+            await _uow.CommitAsync(ct);
+            return unsigned.Count;
+        }
+
+        public async Task<List<ExamResponse>> ListBySubjectTermAsync(int subjectId, int termId, int teacherId, CancellationToken ct = default)
+        {
+            var ta = await _uow.TeachingAssignments.GetAsync(teacherId, subjectId, ct);
+            if (ta is null)
+                throw new AppException(AppErrorCode.Forbidden, "Teacher is not assigned to this subject.");
+
+            var list = await _uow.Exams.ListBySubjectTermAsync(subjectId, termId, ct);
+            return list.Select(Mapper.ExamToResponse).ToList();
+        }
+        
     }
 }
+

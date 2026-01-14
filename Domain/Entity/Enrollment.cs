@@ -13,8 +13,8 @@ namespace Domain.Entity
         public Student Student { get; set; } = null!;
         public int SubjectID { get; set; }
         public Subject Subject { get; set; } = null!;
-        public int SchoolYearID { get; set; }
-        public SchoolYear SchoolYear { get; set; } = null!;
-        public EnrollmentStatus Status { get; set; } = EnrollmentStatus.Active;
+        public bool IsPassed { get; set; } = false;
+        public DateTime CreatedAt { get; set; }
+        public DateTime? PassedAt { get; set; }
     }
 }

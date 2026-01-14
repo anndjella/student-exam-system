@@ -14,7 +14,6 @@ namespace Application.Services
             BulkEnrollByIndexYearRequest req,
             CancellationToken ct);
 
-        public Task<MyEnrolledSubjectsResponse> GetMySubjectsAsync(int personId, CancellationToken ct);
-        Task<int> ExpireActiveEnrollmentsAsync(CancellationToken ct);
+        public Task<MyEnrolledSubjectsResponse> GetMyEnrolledSubjectsAsync(int personId, CancellationToken ct);
     }
 }

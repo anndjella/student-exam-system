@@ -11,12 +11,13 @@ namespace Domain.Interfaces
     {
         public Task<HashSet<(int StudentId, int SubjectId)>> ListExistingPairsAsync(
             List<int> studentIds,
-            int schoolYearId,
             List<int> subjectIds,
             CancellationToken ct);
 
         public void AddRange(IEnumerable<Enrollment> enrollments);
         Task<List<Enrollment>> ListByStudentIdAsync(int studentId, CancellationToken ct);
-        Task<List<Enrollment>> ListActiveAsync(DateOnly today, CancellationToken ct);
+        Task<bool> ExistsAsync(int studentId, int subjectId, CancellationToken ct);
+        Task<bool> IsPassedAsync(int studentId, int subjectId, CancellationToken ct);
+        Task<Enrollment?> GetAsync(int studentId, int subjectId, CancellationToken ct);
     }
 }

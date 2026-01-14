@@ -25,12 +25,5 @@ namespace Api.Controllers
             var result = await _svc.BulkEnrollByIndexYearAsync(req, ct);
             return Ok(result);
         }
-        [HttpPost("expire")]
-        public async Task<ActionResult<int>> Expire(CancellationToken ct)
-        {
-            var updated = await _svc.ExpireActiveEnrollmentsAsync(ct);
-            return Ok(updated);
-        }
-
     }
 }

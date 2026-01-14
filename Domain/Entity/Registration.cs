@@ -15,7 +15,7 @@ namespace Domain.Entity
         public Subject Subject { get; set; } = null!;
         public int TermID { get; set; }
         public Term Term { get; set; } = null!;
-        public RegistrationStatus Status { get; set; } = RegistrationStatus.Active;
+        public bool IsActive { get; set; } = true;
         public DateTime RegisteredAt {  get; set; }
         public DateTime? CancelledAt { get; set;}
         public Exam? Exam { get; set; }

@@ -4,15 +4,15 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace Api.Controllers.Me
+namespace Api.Controllers.Me.Students
 {
     [ApiController]
     [Route("api/me")]
     [Authorize(Roles = "Student", Policy = "PasswordChanged")]
-    public sealed class StudentsMeController : ControllerBase
+    public sealed class MyEnrollmentsController : ControllerBase
     {
         private readonly IEnrollmentService _svc;
-        public StudentsMeController(IEnrollmentService svc) => _svc = svc;
+        public MyEnrollmentsController(IEnrollmentService svc) => _svc = svc;
 
         [HttpGet("subjects")]
         public async Task<ActionResult<MyEnrolledSubjectsResponse>> GetMySubjects(CancellationToken ct)
@@ -21,7 +21,7 @@ namespace Api.Controllers.Me
             if (!int.TryParse(pidStr, out var personId))
                 return Unauthorized();
 
-            return Ok(await _svc.GetMySubjectsAsync(personId, ct));
+            return Ok(await _svc.GetMyEnrolledSubjectsAsync(personId, ct));
         }
     }
 }

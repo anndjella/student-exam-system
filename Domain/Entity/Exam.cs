@@ -16,7 +16,7 @@ namespace Domain.Entity
         public Registration Registration { get; set; } = null!;
         public int TeacherID { get; set; }
         public Teacher Teacher { get; set; } = null!;
-        public byte? Grade { get; set; } = null!;
+        public byte? Grade { get; set; }
         public DateOnly Date { get; set; }
         public string? Note { get; set; }
     }

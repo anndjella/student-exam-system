@@ -24,6 +24,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Api.Auth;
 using Application.Validators.Enrollment;
+using Application.DTO.Term;
+using Application.Validators.Term;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,6 +38,8 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateStudentValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateStudentValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateEnrollmentsValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateTermValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateTermValidator>();
 
 builder.Services.AddControllers();
 
@@ -51,11 +55,15 @@ builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<ISchoolYearRepository, SchoolYearRepository>();
+//builder.Services.AddScoped<ISchoolYearRepository, SchoolYearRepository>();
 builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<ITeachingAssignmentRepository, TeachingAssignmentRepository>();
 builder.Services.AddScoped<ITeachingAssignmentService, TeachingAssignmentService>();
+builder.Services.AddScoped<ITermRepository, TermRepository>();
+builder.Services.AddScoped<ITermService, TermService>();
+builder.Services.AddScoped<IRegistrationRepository, RegistrationRepository>();
+builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuthService>();

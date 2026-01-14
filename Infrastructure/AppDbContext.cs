@@ -24,7 +24,6 @@ namespace Infrastructure
         public DbSet<Teacher> Teachers => Set<Teacher>();
         public DbSet<Subject> Subjects => Set<Subject>();
         public DbSet<Term> Terms => Set<Term>();
-        public DbSet<SchoolYear> SchoolYears => Set<SchoolYear>();
         public DbSet<Enrollment> Enrollments => Set<Enrollment>();
         public DbSet<Registration> Registrations => Set<Registration>();
         public DbSet<Exam> Exams => Set<Exam>();
@@ -137,22 +136,12 @@ namespace Infrastructure
                 t.HasCheckConstraint("CK_Term_EndDate_After_StartDate","[EndDate] > [StartDate]" );
                 t.HasCheckConstraint("CK_Term_RegEndDate_After_RegStartDate", "[RegistrationEndDate] > [RegistrationStartDate]");
             });
-
-            modelBuilder.Entity<SchoolYear>(s =>
-            {
-                s.ToTable("SchoolYear");
-                s.HasKey("ID");
-                s.Property(e=>e.StartDate).HasColumnType("date");
-                s.Property(e=>e.EndDate).HasColumnType("date");
-
-                s.HasCheckConstraint("CK_SchoolYear_EndDate_After_StartDate", "[EndDate]>[StartDate]");
-            });
+           
 
             modelBuilder.Entity<Enrollment>(e =>
             {
                 e.ToTable("Enrollment");
-                e.HasKey(m => new { m.StudentID, m.SubjectID, m.SchoolYearID });
-                e.HasCheckConstraint("CK_Enrollment_Status", "[Status] BETWEEN 1 AND 3");
+                e.HasKey(m => new { m.StudentID, m.SubjectID});
 
                 e.HasOne(r => r.Student)
                   .WithMany(s => s.Enrollments)
@@ -164,10 +153,6 @@ namespace Infrastructure
                  .HasForeignKey(r => r.SubjectID)
                  .OnDelete(DeleteBehavior.Restrict);
 
-                e.HasOne(r => r.SchoolYear)
-                 .WithMany(y => y.Enrollments)
-                 .HasForeignKey(r => r.SchoolYearID)
-                 .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<TeachingAssignment>(t =>
@@ -190,7 +175,6 @@ namespace Infrastructure
             {
                 r.ToTable("Registration");
                 r.HasKey(e => new { e.SubjectID, e.StudentID, e.TermID });
-                r.HasCheckConstraint("CK_Registration_Status", "[Status] BETWEEN 1 AND 2");
 
                 r.HasOne(m => m.Student)
                   .WithMany(s => s.Registrations)

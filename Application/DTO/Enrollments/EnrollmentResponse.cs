@@ -11,11 +11,6 @@ namespace Application.DTO.Enrollments
     {
         public int SubjectID { get; set; }
         public string SubjectName { get; set; } = "";
-        public int ECTS { get; set; }
-
-        public int SchoolYearID { get; set; }
-        public string SchoolYearName { get; set; } = "";
-
-        public EnrollmentStatus Status { get; set; } = EnrollmentStatus.Active;
+        public byte SubjectECTS { get; set; }
     }
 }

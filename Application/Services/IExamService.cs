@@ -9,10 +9,10 @@ namespace Application.Services
 {
     public interface IExamService
     {
-        Task CreateAsync(CreateExamRequest req, CancellationToken ct = default);
-       // Task<ExamResponse?> GetAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default);
-       // Task<IReadOnlyList<ExamResponse>> ListAsync(CancellationToken ct = default);
-        Task UpdateAsync(int studentId, int subjectId, DateOnly date, UpdateExamRequest req, CancellationToken ct = default);
-        Task DeleteAsync(int studentId, int subjectId, DateOnly date, CancellationToken ct = default);
+        Task<ExamResponse> UpsertAsync(UpsertExamRequest req, int teacherId, CancellationToken ct = default);
+        Task<int> LockAsync(LockExamsRequest req, int teacherId, CancellationToken ct = default);
+
+        Task<List<ExamResponse>> ListBySubjectTermAsync(int subjectId, int termId, int teacherId, CancellationToken ct = default);
+
     }
 }

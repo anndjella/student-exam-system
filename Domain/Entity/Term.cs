@@ -15,5 +15,18 @@ namespace Domain.Entity
         public DateOnly RegistrationStartDate { get; set; }
         public DateOnly RegistrationEndDate { get; set; }
         public ICollection<Registration> Registrations { get; set; } = new List<Registration>();
+
+        public bool IsInRegistrationWindow(DateTime now)
+        {
+            var d = DateOnly.FromDateTime(now);
+            return d >= RegistrationStartDate && d <= RegistrationEndDate;
+        }
+
+        public bool IsInTermWindow(DateTime now)
+        {
+            var d = DateOnly.FromDateTime(now);
+            return d >= StartDate && d <= EndDate;
+        }
+
     }
 }

@@ -17,13 +17,11 @@ namespace Infrastructure.Repositories
         public EnrollmentRepository(AppDbContext db) { _db = db; }
         public async Task<HashSet<(int StudentId, int SubjectId)>> ListExistingPairsAsync(
             List<int> studentIds,
-            int schoolYearId,
             List<int> subjectIds,
             CancellationToken ct)
         {
             var pairs = await _db.Enrollments
                 .Where(e => studentIds.Contains(e.StudentID)
-                            && e.SchoolYearID == schoolYearId
                             && subjectIds.Contains(e.SubjectID))
                 .Select(e => new { e.StudentID, e.SubjectID })
                 .ToListAsync(ct);
@@ -34,20 +32,21 @@ namespace Infrastructure.Repositories
         public void AddRange(IEnumerable<Enrollment> enrollments)
             => _db.Enrollments.AddRange(enrollments);
         public Task<List<Enrollment>> ListByStudentIdAsync(int studentId, CancellationToken ct)
-    => _db.Enrollments
-        .AsTracking()
-        .Where(e => e.StudentID == studentId)
-        .Include(e => e.Subject)
-        .Include(e => e.SchoolYear)
-        .ToListAsync(ct);
-
-        public Task<List<Enrollment>> ListActiveAsync(DateOnly today, CancellationToken ct)
-        {
-            return _db.Enrollments
-                .Include(e => e.SchoolYear)
-                .Where(e => e.Status == EnrollmentStatus.Active)
-                .Where(e => e.SchoolYear.EndDate < today)
+            => _db.Enrollments
+                .AsTracking()
+                .Where(e => e.StudentID == studentId)
+                .Include(e => e.Subject)
                 .ToListAsync(ct);
-        }
+
+        public Task<Enrollment?> GetAsync(int studentId, int subjectId, CancellationToken ct)
+            => _db.Enrollments
+                .Where(e => !e.IsPassed)
+                .FirstOrDefaultAsync(e => e.StudentID == studentId && e.SubjectID == subjectId);
+
+        public Task<bool> ExistsAsync(int studentId, int subjectId, CancellationToken ct)
+             => _db.Enrollments.AnyAsync(e => e.StudentID == studentId && e.SubjectID == subjectId);
+
+        public Task<bool> IsPassedAsync(int studentId, int subjectId, CancellationToken ct)
+             => _db.Enrollments.AnyAsync(e => e.StudentID == studentId && e.SubjectID == subjectId && e.IsPassed);
     }
 }

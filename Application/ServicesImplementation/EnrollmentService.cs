@@ -22,10 +22,7 @@ namespace Application.ServicesImplementation
         public async Task<BulkEnrollResult> BulkEnrollByIndexYearAsync(
             BulkEnrollByIndexYearRequest req,
             CancellationToken ct)
-        {          
-            if (!await _uow.SchoolYears.ExistsByIdAsync(req.SchoolYearId, ct))
-                throw new AppException(AppErrorCode.NotFound, $"SchoolYear {req.SchoolYearId} not found.");
-
+        {                    
             var distinctSubjectIds = req.SubjectIds.Distinct().ToList();
 
             var existingSubjects = await _uow.Subjects.GetExistingIdsAsync(distinctSubjectIds, ct);
@@ -43,7 +40,6 @@ namespace Application.ServicesImplementation
 
             var existingPairs = await _uow.Enrollments.ListExistingPairsAsync(
                 studentIds,
-                req.SchoolYearId,
                 distinctSubjectIds,
                 ct);
 
@@ -60,8 +56,8 @@ namespace Application.ServicesImplementation
                     {
                         StudentID = sid,
                         SubjectID = subId,
-                        SchoolYearID = req.SchoolYearId,
-                        Status = EnrollmentStatus.Active
+                        CreatedAt=DateTime.UtcNow,
+                        IsPassed = false
                     });
                 }
             }
@@ -80,21 +76,7 @@ namespace Application.ServicesImplementation
             );
         }
 
-        public async Task<int> ExpireActiveEnrollmentsAsync(CancellationToken ct)
-        {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-
-            var toExpire = await _uow.Enrollments.ListActiveAsync(today, ct);
-
-            foreach (var e in toExpire)
-                e.Status = EnrollmentStatus.Expired;
-
-            await _uow.CommitAsync(ct);
-
-            return toExpire.Count;
-        }
-
-        public async Task<MyEnrolledSubjectsResponse> GetMySubjectsAsync(int personId, CancellationToken ct)
+        public async Task<MyEnrolledSubjectsResponse> GetMyEnrolledSubjectsAsync(int personId, CancellationToken ct)
         {
             var student = await _uow.Students.GetByIdAsync(personId, ct);
             if (student is null)
@@ -107,7 +89,7 @@ namespace Application.ServicesImplementation
             foreach (var e in enrollments)
             {
                 var item = Mapper.EnrollmentToResponse(e);
-                if (e.Status == EnrollmentStatus.Passed) dto.Passed.Add(item);
+                if (e.IsPassed) dto.Passed.Add(item);
                 else dto.NotPassed.Add(item);
             }
 

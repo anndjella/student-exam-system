@@ -39,10 +39,10 @@ namespace Infrastructure.Repositories
             .ToListAsync(ct);
         public void Remove(TeachingAssignment assignment)
         =>_db.TeachingAssignments.Remove(assignment);
-        public Task<bool> CanTeacherGradeAsync(int teacherId, int subjectId, CancellationToken ct)
-        =>_db.TeachingAssignments.AsNoTracking().AnyAsync(
-            e => e.SubjectID == subjectId
-            && e.TeacherID == teacherId 
-            && e.CanGrade, ct);
+        //public Task<bool> CanTeacherGradeAsync(int teacherId, int subjectId, CancellationToken ct)
+        //=>_db.TeachingAssignments.AsNoTracking().AnyAsync(
+        //    e => e.SubjectID == subjectId
+        //    && e.TeacherID == teacherId 
+        //    && e.CanGrade, ct);
     }
 }

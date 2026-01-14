@@ -14,9 +14,11 @@ namespace Application.Common
         IPersonRepository People { get; }
         IUserRepository Users { get; }
         ISubjectRepository Subjects { get; }
-        ISchoolYearRepository SchoolYears { get; }
         IEnrollmentRepository Enrollments { get; }
         ITeachingAssignmentRepository TeachingAssignments { get; }
+        ITermRepository Terms { get; }
+        IRegistrationRepository Registrations { get; }
+        IExamRepository Exams { get; }
 
         Task<int> CommitAsync(CancellationToken ct = default);
     }
