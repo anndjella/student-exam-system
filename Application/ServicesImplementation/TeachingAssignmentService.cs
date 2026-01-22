@@ -1,6 +1,7 @@
 ﻿using Application.Common;
 using Application.DTO.Me.Student;
 using Application.DTO.Me.Teacher;
+using Application.DTO.Subjects;
 using Application.DTO.TeachingAssignment;
 using Application.Services;
 using Domain.Entity;
@@ -36,7 +37,7 @@ namespace Application.ServicesImplementation
             if (await _uow.Teachers.GetByIdAsync(req.TeacherID, ct) is null)    
                 throw new AppException(AppErrorCode.NotFound, $"Teacher with id {req.TeacherID} not found");
 
-            if (await _uow.Subjects.GetByIdAsync(req.SubjectID, ct) is null)
+            if (await _uow.Subjects.GetByIdWithTeachersAsync(req.SubjectID, ct) is null)
                 throw new AppException(AppErrorCode.NotFound, $"Subject with id {req.SubjectID} not found");
 
             TeachingAssignment ta = new TeachingAssignment
@@ -72,21 +73,26 @@ namespace Application.ServicesImplementation
             return Mapper.TeachingAssignmentToResponse(ta);
         }
 
-        public async Task<MyTeachingAssignmentsResponse> GetMyTeachingAssignments(int personId, CancellationToken ct)
+        public async Task<TeacherSubjectsResponse> ListTeacherSubjectsDividedAsync(int personId, CancellationToken ct)
         {
             var teacher = await _uow.Teachers.GetByIdAsync(personId, ct);
             if (teacher is null)
-                throw new AppException(AppErrorCode.NotFound, "Teacher not found.");
+                throw new AppException(AppErrorCode.NotFound, $"Teacher with id {personId} not found.");
+            var teachingAssignments = await _uow.TeachingAssignments.ListByTeacherIdWithSubjectAndTeachersAsync(teacher.ID, ct);
 
-            var teachingAssignments=await _uow.TeachingAssignments.ListByTeacherIdAsync(teacher.ID, ct);
+            var dto = new TeacherSubjectsResponse();
 
-            var dto = new MyTeachingAssignmentsResponse();
-
-            foreach (var e in teachingAssignments)
+            foreach (var ta in teachingAssignments)
             {
-                var item = Mapper.TeachingAssignmentToResponse(e);
-                if (e.CanGrade) dto.GradableSubjects.Add(item);
-                else dto.NonGradableSubjects.Add(item);
+                if (ta.Subject is null)
+                    continue;
+
+                var mapped = Mapper.SubjectToResponse(ta.Subject);
+
+                if (ta.CanGrade)
+                    dto.GradableSubjects.Add(mapped);
+                else
+                    dto.NonGradableSubjects.Add(mapped);
             }
 
             return dto;
@@ -94,7 +100,7 @@ namespace Application.ServicesImplementation
 
         public async Task<List<TeachingAssignmentResponse>> ListBySubjectAsync(int subjectId, CancellationToken ct)
         {
-            if (await _uow.Subjects.GetByIdAsync(subjectId, ct) is null)
+            if (await _uow.Subjects.GetByIdWithTeachersAsync(subjectId, ct) is null)
                 throw new AppException(AppErrorCode.NotFound, $"Subject with id {subjectId} not found");
 
             var list = await _uow.TeachingAssignments.ListBySubjectIdAsync(subjectId, ct);
@@ -122,5 +128,33 @@ namespace Application.ServicesImplementation
             await _uow.CommitAsync();
 
         }
+        //public async Task UpdateSubjectTeachersAsync(int subjectId, UpdateSubjectTeachersRequest req, CancellationToken ct)
+        //{
+        //    var subject = await _uow.Subjects.GetByIdAsync(subjectId, ct);
+        //    if (subject == null)
+        //        throw new AppException(AppErrorCode.NotFound, $"Subject with id {subjectId} not found.");
+
+        //    var currentAssignments = await _uow.TeachingAssignments.ListBySubjectIdAsync(subjectId, ct);
+
+        //    foreach (var assignment in currentAssignments)
+        //    {
+        //        _uow.TeachingAssignments.Remove(assignment);
+        //    }
+
+        //    foreach (var tInfo in req.Teachers)
+        //    {
+        //        if (!await _uow.Teachers.ExistsByIdAsync(tInfo.TeacherID, ct))               
+        //            throw new AppException(AppErrorCode.NotFound, $"Teacher with id {tInfo.TeacherID} not found.");
+
+        //        var newAssignment = new TeachingAssignment
+        //        {
+        //            SubjectID = subjectId,
+        //            TeacherID = tInfo.TeacherID,
+        //            CanGrade = tInfo.CanGrade
+        //        };
+        //        _uow.TeachingAssignments.Add(newAssignment);
+        //    }
+        //    await _uow.CommitAsync(ct);
+        //}
     }
 }

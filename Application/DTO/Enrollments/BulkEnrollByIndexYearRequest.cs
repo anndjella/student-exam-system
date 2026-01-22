@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace Application.DTO.Enrollments
 {
-    public sealed record BulkEnrollByIndexYearRequest(int IndexStartYear,int SchoolYearId, List<int> SubjectIds);
+    public sealed record BulkEnrollByIndexYearRequest(int IndexStartYear, List<int> SubjectIds);
 }

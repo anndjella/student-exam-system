@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entity
 {
-    public abstract class Person : IEntity, ISoftDelete
+    public abstract class Person : IEntity
     {
         public int ID { get; set; }
         public string FirstName { get; set; } = null!;

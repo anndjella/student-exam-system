@@ -36,5 +36,39 @@ namespace Infrastructure.Repositories
 
         public Task<bool> ExistsSignedForTermAsync(int termId, CancellationToken ct = default)
         =>_db.Exams.AnyAsync(e=>e.TermID==termId &&  e.SignedAt != null);
+
+        public Task<bool> ExistsAnyForSubjectAsync(int subjectId, CancellationToken ct = default)
+        => _db.Exams.AsNoTracking().AnyAsync(e => e.SubjectID == subjectId);
+
+        public Task<List<Exam>> ListUnsignedBySubjectTermWithRegistrationAsync(int subjectId, int termId, CancellationToken ct = default)
+        => _db.Exams
+            .Where(e => e.SubjectID == subjectId && e.TermID == termId && e.SignedAt== null)
+            .Include(e=>e.Registration)
+            .ToListAsync(ct);
+
+        public Task<List<Exam>> ListSignedByStudentIdAsync(int studentId, CancellationToken ct = default)
+        =>_db.Exams
+              .AsNoTracking()
+              .Where(e => e.StudentID == studentId && e.SignedAt != null)
+              .Include(e => e.Registration)
+                  .ThenInclude(r => r.Subject)
+              .Include(e => e.Registration)
+                  .ThenInclude(r => r.Term)
+              .Include(e => e.Teacher)
+              .OrderByDescending(e => e.SignedAt)
+              .ToListAsync(ct);
+
+        public Task<List<Exam>> ListAllBySubjectTermAsync(int termId, int subjectId, CancellationToken ct = default)
+        => _db.Exams.AsNoTracking()
+              .Where(e => e.TermID == termId && e.SubjectID==subjectId)
+              .Include(e => e.Registration)
+                  .ThenInclude(r => r.Subject)
+            .Include(e => e.Registration)
+                  .ThenInclude(r => r.Student)
+              .Include(e => e.Registration)
+                  .ThenInclude(r => r.Term)
+              .Include(e => e.Teacher)
+              .OrderByDescending(e => e.SignedAt)
+              .ToListAsync(ct);
     }
 }

@@ -9,8 +9,8 @@ namespace Domain.Entity
     public sealed class StudentStats
     {
         public int StudentID { get; set; }
-        public decimal GPA { get; set; }
-        public int ECTSCount { get; set; }
+        public decimal? GPA { get; set; }
+        public int? ECTSCount { get; set; }
     }
 
 }

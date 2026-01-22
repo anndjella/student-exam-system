@@ -35,7 +35,7 @@ namespace Application.ServicesImplementation
             return now;
         }
 
-        public async Task<RegistrationResponse> CreateAsync(int studentId, CreateRegistrationRequest req, CancellationToken ct = default)
+        public async Task<StudentRegistrationResponse> CreateAsync(int studentId, CreateRegistrationRequest req, CancellationToken ct = default)
         {
             var now= await ValidateRegistrationPreconditionsAsync(studentId,req.SubjectID, req.TermID, ct);
 
@@ -56,7 +56,7 @@ namespace Application.ServicesImplementation
                 _uow.Registrations.Add(r);
                 await _uow.CommitAsync(ct);
 
-                return Mapper.RegistrationToResponse(r);
+                return Mapper.StudentRegistrationToResponse(r);
             }
 
             if (existing.IsActive)
@@ -67,7 +67,7 @@ namespace Application.ServicesImplementation
             existing.CancelledAt = null;
 
             await _uow.CommitAsync(ct);
-            return Mapper.RegistrationToResponse(existing);
+            return Mapper.StudentRegistrationToResponse(existing);
         }
 
         public async Task CancelAsync(int studentId, int subjectId, int termId, CancellationToken ct = default)
@@ -86,11 +86,23 @@ namespace Application.ServicesImplementation
             await _uow.CommitAsync(ct);
         }
 
-        public async Task<List<RegistrationResponse>> ListMyAsync(int studentId, CancellationToken ct = default)
+        public async Task<List<StudentRegistrationResponse>> ListMyActiveAsync(int studentId, CancellationToken ct = default)
         {
-            var list = await _uow.Registrations.ListByStudentAsync(studentId, ct);
-            return list.Select(Mapper.RegistrationToResponse).ToList();
+            var list = await _uow.Registrations.ListActiveForStudentAsync(studentId, ct);
+            return list.Select(Mapper.StudentRegistrationToResponse).ToList();
         }
+
+        public async Task<List<TeacherRegistrationResponse>> ListMyActiveBySubjectAndTermAsync(int teacherId,int subjectId, int termId, CancellationToken ct = default)
+        {
+            var exists = await _uow.TeachingAssignments.ExistsAsync(teacherId, subjectId, ct);
+            if (!exists)
+                throw new AppException(AppErrorCode.Forbidden, "Teacher is not assigned to this subject and cannot see its registrations");
+
+           var list=await _uow.Registrations.ListActiveBySubjectAndTermAsync(subjectId,termId, ct);
+            return list.Select(Mapper.TeacherRegistrationToResponse).ToList();            
+        }
+
+
      
     }
 }

@@ -11,6 +11,7 @@ namespace Domain.Interfaces
     {
         //existence check
         Task<bool> ExistsByEmployeeNumAsync(string employeeNum, CancellationToken ct = default);
+        Task<bool> ExistsByIdAsync(int id, CancellationToken ct = default);
         //read
         Task<Teacher?> GetByIdAsync(int id, CancellationToken ct = default);
         Task<Teacher?> GetByIdWithUserAsync(int id, CancellationToken ct = default);

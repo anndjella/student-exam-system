@@ -1,6 +1,7 @@
 ﻿using Application.Common;
 using Application.DTO.Enrollments;
 using Application.DTO.Me.Student;
+using Application.DTO.Subjects;
 using Application.Services;
 using Domain.Entity;
 using Domain.Enums;
@@ -75,25 +76,25 @@ namespace Application.ServicesImplementation
                 EnrollmentsSkipped: skipped
             );
         }
-
-        public async Task<MyEnrolledSubjectsResponse> GetMyEnrolledSubjectsAsync(int personId, CancellationToken ct)
+        // for 'all subjects'
+        public async Task<List<SubjectResponse>> ListStudentSubjectsAsync(int studentId, CancellationToken ct = default)
         {
-            var student = await _uow.Students.GetByIdAsync(personId, ct);
-            if (student is null)
-                throw new AppException(AppErrorCode.NotFound,"Student not found.");
+            if (await _uow.Students.GetByIdAsync(studentId, ct) is null)
+                throw new AppException(AppErrorCode.NotFound, $"Student with id {studentId} not found.");
 
-            var enrollments = await _uow.Enrollments.ListByStudentIdAsync(student.ID, ct);
-
-            var dto = new MyEnrolledSubjectsResponse();
-
-            foreach (var e in enrollments)
-            {
-                var item = Mapper.EnrollmentToResponse(e);
-                if (e.IsPassed) dto.Passed.Add(item);
-                else dto.NotPassed.Add(item);
-            }
-
-            return dto;
+            var enrollments = await _uow.Enrollments.ListByStudentIdWithSubjectAndTeachersAsync(studentId, ct);
+            return enrollments
+                .Where(e=>e.Subject != null)
+                .Select(e => Mapper.SubjectToResponse(e.Subject!))
+                .ToList();
+        }
+        // for 'subjects I can register'
+        public async Task<List<SubjectResponse>> ListNotPassedAsync(int studentId, CancellationToken ct)
+        {
+            if (await _uow.Students.GetByIdAsync(studentId, ct) is null)
+                throw new AppException(AppErrorCode.NotFound, $"Student with id {studentId} not found.");
+            var enrollments=await _uow.Enrollments.ListNotPassed(studentId, ct);    
+            return enrollments.Where(e => e.Subject != null).Select(e=>Mapper.SubjectToResponse(e.Subject)).ToList();  
         }
     } 
 }

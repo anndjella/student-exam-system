@@ -31,22 +31,36 @@ namespace Infrastructure.Repositories
 
         public void AddRange(IEnumerable<Enrollment> enrollments)
             => _db.Enrollments.AddRange(enrollments);
-        public Task<List<Enrollment>> ListByStudentIdAsync(int studentId, CancellationToken ct)
+        public Task<List<Enrollment>> ListByStudentIdWithSubjectAndTeachersAsync(int studentId, CancellationToken ct)
             => _db.Enrollments
                 .AsTracking()
                 .Where(e => e.StudentID == studentId)
                 .Include(e => e.Subject)
+                .ThenInclude(e=>e.TeachingAssignments)
+                .ThenInclude(e=>e.Teacher)
                 .ToListAsync(ct);
 
-        public Task<Enrollment?> GetAsync(int studentId, int subjectId, CancellationToken ct)
-            => _db.Enrollments
-                .Where(e => !e.IsPassed)
-                .FirstOrDefaultAsync(e => e.StudentID == studentId && e.SubjectID == subjectId);
+        //public Task<Enrollment?> GetAsync(int studentId, int subjectId, CancellationToken ct)
+        //    => _db.Enrollments
+        //        .Where(e => !e.IsPassed)
+        //        .FirstOrDefaultAsync(e => e.StudentID == studentId && e.SubjectID == subjectId);
 
         public Task<bool> ExistsAsync(int studentId, int subjectId, CancellationToken ct)
              => _db.Enrollments.AnyAsync(e => e.StudentID == studentId && e.SubjectID == subjectId);
 
         public Task<bool> IsPassedAsync(int studentId, int subjectId, CancellationToken ct)
              => _db.Enrollments.AnyAsync(e => e.StudentID == studentId && e.SubjectID == subjectId && e.IsPassed);
+
+        public Task<bool> ExistsBySubjectIdAsync(int subjectId, CancellationToken ct)
+        => _db.Enrollments.AsNoTracking().AnyAsync(e => e.SubjectID == subjectId);
+
+        public Task<List<Enrollment>> ListNotPassed(int studentId, CancellationToken ct)
+        => _db.Enrollments.Where(e=>e.StudentID==studentId && !e.IsPassed).Include(e => e.Subject).ThenInclude(e => e.TeachingAssignments)
+                .ThenInclude(e => e.Teacher).ToListAsync();
+
+        public Task<List<Enrollment>> ListByStudentsAndSubjectAsync(List<int> studentIds, int subjectId, CancellationToken ct)
+        => _db.Enrollments
+            .Where(e =>e.SubjectID == subjectId && studentIds.Contains(e.StudentID))
+            .ToListAsync(ct);
     }
 }

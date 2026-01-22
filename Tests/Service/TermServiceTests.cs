@@ -4,11 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Interfaces
+namespace Tests.Service
 {
-    public interface ISoftDelete
+    internal class TermServiceTests
     {
-        bool IsDeleted { get; }
-        DateTime? DeletedAt { get; }
     }
 }

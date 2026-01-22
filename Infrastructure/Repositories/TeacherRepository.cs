@@ -21,7 +21,8 @@ namespace Infrastructure.Repositories
         public void Add(Teacher teacher) => _db.Teachers.Add(teacher);
         public Task<bool> ExistsByEmployeeNumAsync(string employeeNum, CancellationToken ct = default)
           => _db.Teachers.AnyAsync(x => x.EmployeeNumber == employeeNum, ct);
-
+        public Task<bool> ExistsByIdAsync(int id, CancellationToken ct = default)
+          => _db.Teachers.AsNoTracking().AnyAsync(x => x.ID == id, ct);
         public Task DeleteByIdAsync(int teacherId, CancellationToken ct = default)
         => _db.Teachers.Where(e => e.ID == teacherId).ExecuteDeleteAsync();
 

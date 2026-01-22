@@ -29,13 +29,10 @@ namespace Infrastructure.Repositories
                 x.TermID == termId &&
                 x.IsActive, ct);
 
-        public Task<List<Registration>> ListByStudentAsync(int studentId, CancellationToken ct = default)
+        public Task<List<Registration>> ListActiveByStudentAsync(int studentId, CancellationToken ct = default)
         => _db.Registrations.Where(x => x.StudentID == studentId)
-                .OrderByDescending(x => x.RegisteredAt)
-                .ToListAsync(ct);
-
-        public Task<List<Registration>> ListBySubjectAsync(int subjectId, CancellationToken ct = default)
-        => _db.Registrations.Where(x => x.SubjectID == subjectId)
+                .Include(x=>x.Subject)
+                .Include(x=>x.Term)
                 .OrderByDescending(x => x.RegisteredAt)
                 .ToListAsync(ct);
         public Task<List<int>> ListActiveStudentIdsAsync(int subjectId, int termId, CancellationToken ct = default)
@@ -44,8 +41,24 @@ namespace Infrastructure.Repositories
                 .Select(r => r.StudentID)
                 .Distinct()
                 .ToListAsync(ct);
+        public Task<List<Registration>> ListActiveForStudentAsync(int studentId, CancellationToken ct = default)
+            => _db.Registrations
+                    .Where(e => e.StudentID == studentId && e.IsActive)
+                    .Include(e=>e.Subject).Include(e=>e.Term)
+                    .ToListAsync();
 
         public Task<bool> ExistsAnyForTermAsync(int termId, CancellationToken ct = default)
         => _db.Registrations.AnyAsync(e => e.TermID == termId && e.IsActive);
+
+        public Task<bool> ExistsAnyForSubjectAsync(int subjectId, CancellationToken ct)
+        => _db.Registrations.AsNoTracking().AnyAsync(e => e.SubjectID == subjectId);
+
+       public Task<List<Registration>> ListActiveBySubjectAndTermAsync(int subjectId, int termId, CancellationToken ct = default)
+            => _db.Registrations
+            .Where(e => e.SubjectID == subjectId && e.TermID == termId && e.IsActive)
+            .Include(e=>e.Student)
+            .ToListAsync(ct);
+
+
     }
 }

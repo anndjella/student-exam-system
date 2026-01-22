@@ -26,6 +26,7 @@ using Api.Auth;
 using Application.Validators.Enrollment;
 using Application.DTO.Term;
 using Application.Validators.Term;
+using Microsoft.Extensions.Internal;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,7 +40,6 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateStudentValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateStudentValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateEnrollmentsValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateTermValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<UpdateTermValidator>();
 
 builder.Services.AddControllers();
 
@@ -55,7 +55,6 @@ builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
-//builder.Services.AddScoped<ISchoolYearRepository, SchoolYearRepository>();
 builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<ITeachingAssignmentRepository, TeachingAssignmentRepository>();
@@ -64,6 +63,8 @@ builder.Services.AddScoped<ITermRepository, TermRepository>();
 builder.Services.AddScoped<ITermService, TermService>();
 builder.Services.AddScoped<IRegistrationRepository, RegistrationRepository>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
+builder.Services.AddScoped<IExamRepository, ExamRepository>();
+builder.Services.AddScoped<IExamService, ExamService>();
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuthService>();
@@ -71,6 +72,7 @@ builder.Services.AddScoped<AuthService>();
 // Authorization requirements/handler
 builder.Services.AddScoped<MustChangePasswordClearedRequirement>();
 builder.Services.AddSingleton<IAuthorizationHandler, MustChangePasswordClearedHandler>();
+builder.Services.AddSingleton<IClock, Clock>();
 
 // Middleware
 builder.Services.AddTransient<ExceptionHandlingMiddleware>();
@@ -120,9 +122,10 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontDev", p =>
-        p.WithOrigins("http://127.0.0.1:5500", "http://localhost:5500")
+        p.WithOrigins("http://127.0.0.1:5500", "http://localhost:5500", "http://localhost:5173")
          .AllowAnyHeader()
          .AllowAnyMethod()
+         .AllowCredentials()
     );
 });
 

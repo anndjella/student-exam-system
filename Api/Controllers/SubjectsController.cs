@@ -25,29 +25,42 @@ namespace Api.Controllers
 
         }
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<SubjectResponse>> GetOneById(int id, CancellationToken ct)
+        public async Task<ActionResult<AdminSubjectResponse>> GetOneById(int id, CancellationToken ct)
         {
             var resp = await _svc.GetByIdAsync(id, ct);
             return resp is null ? NotFound() : Ok(resp);
         }
-        [HttpGet("{name}")]
-        public async Task<ActionResult<SubjectResponse>> GetOneByName(string name, CancellationToken ct)
+        [HttpGet("{code}")]
+        public async Task<ActionResult<AdminSubjectResponse>> SearchByCode(string code, CancellationToken ct)
         {
-            var resp = await _svc.GetByNameAsync(name, ct);
+            var resp = await _svc.GetByCodeAsync(code, ct);
             return resp is null ? NotFound() : Ok(resp);
         }
-        [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody, CustomizeValidator(RuleSet = "Update")] UpdateSubjectRequest req, CancellationToken ct)
+        [HttpGet("all")]
+        public async Task<ActionResult<AdminSubjectsResponse>> ListAll(CancellationToken ct)
         {
-            await _svc.UpdateAsync(id, req, ct);
-            return NoContent();
+            var resp = await _svc.ListAllWithTeachersAsync(ct);
+            return resp is null ? NotFound() : Ok(resp);
+        }
+        [HttpGet("active")]
+        public async Task<ActionResult<SubjectResponse>> ListActive(CancellationToken ct)
+        {
+            var resp = await _svc.ListActiveAsync(ct);
+            return resp is null ? NotFound() : Ok(resp);
         }
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id, CancellationToken ct)
         {
-            await _svc.SoftDeleteAsync(id, ct);
+            await _svc.DeleteAsync(id, ct);
             return NoContent();
         }
+        [HttpPatch("deactivate/{id:int}")]
+        public async Task<IActionResult> Deactivate(int id, CancellationToken ct)
+        {
+            await _svc.DeactivateAsync(id, ct);
+            return NoContent();
+        }
+
     }
 }

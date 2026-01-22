@@ -17,8 +17,6 @@ namespace Application.Services
         Task<List<Term>> ListForGradingAsync(CancellationToken ct);      
         Task<List<Term>> ListOpenForRegistrationAsync(CancellationToken ct);
 
-        Task UpdateAsync(int id, UpdateTermRequest req, CancellationToken ct = default);
-
         Task DeleteAsync(int id, CancellationToken ct = default);
     }
 }

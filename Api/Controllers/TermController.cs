@@ -22,14 +22,6 @@ namespace Api.Controllers
             return CreatedAtAction(nameof(GetOne), new { id = resp.TermID }, resp);
         }
 
-        [HttpPut("{id:int}")]
-        [Authorize(Roles = "StudentService")]
-        public async Task<IActionResult> Update(int id, [FromBody, CustomizeValidator(RuleSet = "Update")] UpdateTermRequest req, CancellationToken ct)
-        {
-            await _svc.UpdateAsync(id, req, ct);
-            return NoContent();
-        }
-
         [HttpGet("{id:int}")]
         //[Authorize(Roles = "StudentService,Teacher,Student")]
         [Authorize(Roles = "StudentService")]

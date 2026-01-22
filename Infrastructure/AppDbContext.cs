@@ -28,6 +28,7 @@ namespace Infrastructure
         public DbSet<Registration> Registrations => Set<Registration>();
         public DbSet<Exam> Exams => Set<Exam>();
         public DbSet<TeachingAssignment> TeachingAssignments => Set<TeachingAssignment>();
+        public DbSet<StudentStats> StudentStats=> Set<StudentStats>();
 
         [ExcludeFromCodeCoverage]
         [Obsolete]
@@ -104,7 +105,7 @@ namespace Infrastructure
 
                 b.HasOne(e => e.Registration)
                  .WithOne(r => r.Exam)
-                 .HasForeignKey<Exam>(e => new { e.StudentID, e.SubjectID, e.TermID })
+                 .HasForeignKey<Exam>(e => new { e.SubjectID, e.StudentID, e.TermID })
                  .OnDelete(DeleteBehavior.Restrict);
 
                 b.HasOne(e => e.Teacher)
@@ -117,9 +118,11 @@ namespace Infrastructure
             {
                 b.ToTable("Subject");
                 b.HasKey(s => s.ID);
-                b.Property(s => s.Name).HasMaxLength(100);       
+                b.Property(s => s.Name).HasMaxLength(100);
+                b.Property(s => s.Code).HasMaxLength(15);
+                b.HasIndex(s => s.Code).IsUnique();
+                b.Property(s => s.IsActive).HasDefaultValue(true);
                 b.HasCheckConstraint("CK_Subject_ECTS", "[ECTS] BETWEEN 1 AND 15");
-                b.HasQueryFilter(s => !s.IsDeleted);
             });
 
             modelBuilder.Entity<Term>(t =>

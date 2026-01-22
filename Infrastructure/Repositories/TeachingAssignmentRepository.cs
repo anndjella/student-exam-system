@@ -35,8 +35,16 @@ namespace Infrastructure.Repositories
         public Task<List<TeachingAssignment>> ListByTeacherIdAsync(int teacherId, CancellationToken ct)
         => _db.TeachingAssignments.Where(e => e.TeacherID == teacherId)
             .Include(e=>e.Subject)
+            .ThenInclude(e=>e.TeachingAssignments)
             .Include(e=>e.Teacher)
             .ToListAsync(ct);
+
+        public Task<List<TeachingAssignment>> ListByTeacherIdWithSubjectAndTeachersAsync(int teacherId, CancellationToken ct)
+        => _db.TeachingAssignments.Where(e => e.TeacherID == teacherId)
+            .Include(e => e.Subject)
+            .ThenInclude(e => e.TeachingAssignments)
+            .ThenInclude(e => e.Teacher).ToListAsync(ct);
+
         public void Remove(TeachingAssignment assignment)
         =>_db.TeachingAssignments.Remove(assignment);
         //public Task<bool> CanTeacherGradeAsync(int teacherId, int subjectId, CancellationToken ct)

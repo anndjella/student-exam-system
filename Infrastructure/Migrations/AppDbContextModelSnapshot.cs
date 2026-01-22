@@ -83,7 +83,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("TeacherID");
 
-                    b.HasIndex("StudentID", "SubjectID", "TermID")
+                    b.HasIndex("SubjectID", "StudentID", "TermID")
                         .IsUnique();
 
                     b.ToTable("Exam", null, t =>
@@ -171,10 +171,10 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entity.StudentStats", b =>
                 {
-                    b.Property<int>("ECTSCount")
+                    b.Property<int?>("ECTSCount")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("GPA")
+                    b.Property<decimal?>("GPA")
                         .HasColumnType("decimal(4,2)");
 
                     b.Property<int>("StudentID")
@@ -194,14 +194,18 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
 
                     b.Property<byte>("ECTS")
                         .HasColumnType("tinyint");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -209,6 +213,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
 
                     b.ToTable("Subject", null, t =>
                         {
@@ -395,7 +402,7 @@ namespace Infrastructure.Migrations
 
                     b.HasOne("Domain.Entity.Registration", "Registration")
                         .WithOne("Exam")
-                        .HasForeignKey("Domain.Entity.Exam", "StudentID", "SubjectID", "TermID")
+                        .HasForeignKey("Domain.Entity.Exam", "SubjectID", "StudentID", "TermID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

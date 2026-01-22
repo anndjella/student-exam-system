@@ -10,5 +10,6 @@ namespace Application.DTO.Subjects
     {
         public string Name { get; set; } = "";
         public byte ECTS { get; set; }
+        public string Code { get; set; } = "";
     }
 }
