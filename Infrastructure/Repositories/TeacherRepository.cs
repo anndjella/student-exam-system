@@ -36,5 +36,50 @@ namespace Infrastructure.Repositories
 
         public Task<Teacher?> GetByEmployeeNumAsync(string employeeNum, CancellationToken ct = default)
         => _db.Teachers.FirstOrDefaultAsync(x => x.EmployeeNumber == employeeNum);
+        public Task<int> CountAsync(string? query, CancellationToken ct = default)
+        {
+            query = query?.Trim();
+
+            IQueryable<Teacher> q = _db.Teachers;
+
+            q = q.Where(t => !t.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(t =>
+                    EF.Functions.Like(t.FirstName, like) ||
+                    EF.Functions.Like(t.LastName, like) ||
+                    EF.Functions.Like(t.EmployeeNumber, like));
+            }
+
+            return q.CountAsync(ct);
+        }
+
+        public Task<List<Teacher>> ListPagedAsync(int skip, int take, string? query, CancellationToken ct = default)
+        {
+            query = query?.Trim();
+
+            IQueryable<Teacher> q = _db.Teachers;
+
+            q = q.Where(t => !t.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(t =>
+                    EF.Functions.Like(t.FirstName, like) ||
+                    EF.Functions.Like(t.LastName, like) ||
+                    EF.Functions.Like(t.EmployeeNumber, like));
+            }
+
+            return q.AsNoTracking()
+                .OrderBy(t => t.LastName)
+                .ThenBy(t => t.FirstName)
+                .ThenBy(t => t.EmployeeNumber)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(ct);
+        }
     }
 }

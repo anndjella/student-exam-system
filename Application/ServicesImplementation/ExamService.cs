@@ -30,6 +30,21 @@ namespace Application.ServicesImplementation
             if (existing is not null)
                 throw new AppException(AppErrorCode.Conflict, "Exam already exists.");
 
+            var term = await _uow.Terms.GetByIdAsync(termId, ct);
+            if (term is null)
+                throw new AppException(AppErrorCode.NotFound, "Term not found.");
+
+            if (req.Date < term.StartDate || req.Date > term.EndDate)
+                throw new AppException(
+                    AppErrorCode.Validation,
+                    $"Exam date must be between {term.StartDate:yyyy-MM-dd} and {term.EndDate:yyyy-MM-dd}."
+                );
+            if(_clock.Today<=term.RegistrationEndDate)
+                throw new AppException(
+                    AppErrorCode.Conflict,
+                    "Exam cannot be created while the registration period is still open."
+                );
+
             var exam = new Exam
             {
                 StudentID = studentId,
@@ -52,10 +67,18 @@ namespace Application.ServicesImplementation
         {
             await EnsureTeacherCanGradeAsync(teacherId, req.SubjectID, ct);
 
-            var now = _clock.UtcNow;
+            var term = await _uow.Terms.GetByIdAsync(req.TermID, ct);
+            if (term is null)
+                throw new AppException(AppErrorCode.NotFound, "Term not found.");
+
+            if (_clock.Today <= term.RegistrationEndDate)
+                throw new AppException(
+                    AppErrorCode.Conflict,
+                    "Cannot lock exams while the registration period is still open."
+                );
 
             var activeRegs = await _uow.Registrations
-                .ListActiveBySubjectAndTermAsync(req.SubjectID, req.TermID, ct);
+                .ListActiveBySubjectAndTermWithExamAsync(req.SubjectID, req.TermID, ct);
 
             if (activeRegs.Count == 0) return 0;
 
@@ -68,7 +91,7 @@ namespace Application.ServicesImplementation
 
             var enrollmentByStudent = await LoadEnrollmentsByStudentAsync(unsignedExams, req.SubjectID, ct);
 
-            ApplyLock(unsignedExams, enrollmentByStudent, teacherId, now);
+            ApplyLock(unsignedExams, enrollmentByStudent, teacherId, _clock.UtcNow);
 
             await _uow.CommitAsync(ct);
             return unsignedExams.Count;

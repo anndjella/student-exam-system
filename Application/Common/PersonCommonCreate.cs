@@ -29,13 +29,13 @@ namespace Application.Common
                     .Cascade(CascadeMode.Stop)
                     .NotEmpty().WithMessage("JMBG is required.")
                     .Length(13).WithMessage("JMBG must be 13 digits.")
-                    .Must(JmbgValidation.IsAllDigits).WithMessage("JMBG must contain only digits.");
-                    //.DependentRules(() =>
-                    //{
-                    //    RuleFor(x => x.JMBG)
-                    //        .Must(JmbgValidation.RegionLooksSerbian).WithMessage("JMBG region is not for Serbia.")
-                    //        .Must(JmbgValidation.ChecksumValid).WithMessage("Check digit of JMBG is not valid.");
-                    //});
+                    .Must(JmbgValidation.IsAllDigits).WithMessage("JMBG must contain only digits.")
+                    .DependentRules(() =>
+                    {
+                        RuleFor(x => x.JMBG)
+                            .Must(JmbgValidation.RegionLooksSerbian).WithMessage("JMBG region is not for Serbia.")
+                            .Must(JmbgValidation.ChecksumValid).WithMessage("Check digit of JMBG is not valid.");
+                    });
             });
             
         }

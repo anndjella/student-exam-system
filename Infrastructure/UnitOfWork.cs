@@ -28,6 +28,7 @@ namespace Infrastructure
         public ITermRepository Terms => new TermRepository(_db);
         public IRegistrationRepository Registrations => new RegistrationRepository(_db);
         public IExamRepository Exams => new ExamRepository(_db);
+        public IStudentStatsRepository StudentStats => new StudentStatsRepository(_db);
 
         public Task<int> CommitAsync(CancellationToken ct = default)
             => _db.SaveChangesAsync(ct);

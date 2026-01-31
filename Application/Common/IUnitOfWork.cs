@@ -19,6 +19,7 @@ namespace Application.Common
         ITermRepository Terms { get; }
         IRegistrationRepository Registrations { get; }
         IExamRepository Exams { get; }
+        IStudentStatsRepository StudentStats { get; }
 
         Task<int> CommitAsync(CancellationToken ct = default);
     }

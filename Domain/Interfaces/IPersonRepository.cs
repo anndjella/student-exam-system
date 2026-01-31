@@ -10,5 +10,6 @@ namespace Domain.Interfaces
     public interface IPersonRepository
     {
         Task<bool> ExistsByJmbgAsync(string jmbg, CancellationToken ct = default);
+        Task<Person?> GetByIdAsync(int personId, CancellationToken ct = default);
     }
 }

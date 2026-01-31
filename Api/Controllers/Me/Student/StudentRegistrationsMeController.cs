@@ -29,7 +29,7 @@ namespace Api.Controllers.Me.Student
             return Ok(resp);
         }
 
-        [HttpPut("registrations/cancel/subject/{subjectId:int}/term/{termId:int}")]
+        [HttpPut("cancel/subject/{subjectId:int}/term/{termId:int}")]
         public async Task<IActionResult> Cancel(int subjectId, int termId, CancellationToken ct)
         {
             if (!User.TryGetPid(out var studentId))

@@ -17,7 +17,8 @@ namespace Domain.Interfaces
         Task<Student?> GetByIdWithUserAsync(int id, CancellationToken ct = default);
         Task<Student?> GetByIndexAsync(string indexNumber, CancellationToken ct = default);
         public Task<List<int>> ListIdsByIndexPrefixAsync(string prefix, CancellationToken ct);
-
+        Task<int> CountAsync(string? query, CancellationToken ct = default);
+        Task<List<Student>> ListPagedAsync(int skip, int take, string? query, CancellationToken ct = default);
 
         // write
         void Add(Student student);

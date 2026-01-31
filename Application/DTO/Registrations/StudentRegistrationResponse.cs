@@ -9,7 +9,9 @@ namespace Application.DTO.Registrations
 {
     public sealed class StudentRegistrationResponse
     {
+        public int SubjectID { get; set; }
         public string SubjectName { get; set; } = "";
+        public int TermID { get; set; }
         public string TermName { get; set; } = "";
     }
 }

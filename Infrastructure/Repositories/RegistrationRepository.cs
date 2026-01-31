@@ -53,9 +53,10 @@ namespace Infrastructure.Repositories
         public Task<bool> ExistsAnyForSubjectAsync(int subjectId, CancellationToken ct)
         => _db.Registrations.AsNoTracking().AnyAsync(e => e.SubjectID == subjectId);
 
-       public Task<List<Registration>> ListActiveBySubjectAndTermAsync(int subjectId, int termId, CancellationToken ct = default)
+       public Task<List<Registration>> ListActiveBySubjectAndTermWithExamAsync(int subjectId, int termId, CancellationToken ct = default)
             => _db.Registrations
             .Where(e => e.SubjectID == subjectId && e.TermID == termId && e.IsActive)
+            .Include(e=>e.Exam)
             .Include(e=>e.Student)
             .ToListAsync(ct);
 

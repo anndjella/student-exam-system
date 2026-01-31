@@ -60,7 +60,7 @@ namespace Application.ServicesImplementation
             }
 
             if (existing.IsActive)
-                throw new AppException(AppErrorCode.Conflict, "Exam is already registered for this term.");
+                throw new AppException(AppErrorCode.Conflict, "Subject is already registered for this term.");
 
             existing.IsActive = true;
             existing.RegisteredAt = now;
@@ -98,7 +98,7 @@ namespace Application.ServicesImplementation
             if (!exists)
                 throw new AppException(AppErrorCode.Forbidden, "Teacher is not assigned to this subject and cannot see its registrations");
 
-           var list=await _uow.Registrations.ListActiveBySubjectAndTermAsync(subjectId,termId, ct);
+           var list=await _uow.Registrations.ListActiveBySubjectAndTermWithExamAsync(subjectId,termId, ct);
             return list.Select(Mapper.TeacherRegistrationToResponse).ToList();            
         }
 

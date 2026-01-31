@@ -23,14 +23,26 @@ namespace Application.Common
             ID = s.ID,
             FirstName = s.FirstName,
             LastName = s.LastName,
-            GPA = s.GPA,
-            ECTSCount = s.ECTSCount,
+            DateOfBirth = s.DateOfBirth,
+            GPA = null,
+            ECTSCount = null,
+            IndexNumber = s.IndexNumber
+        };
+        public static StudentResponse StudentToResponseWithStats(Student s, StudentStats? stats) => new()
+        {
+            ID = s.ID,
+            FirstName = s.FirstName,
+            LastName = s.LastName,
+            DateOfBirth=s.DateOfBirth,
+            GPA = stats?.GPA is null ? null : (double)stats.GPA.Value,
+            ECTSCount = stats?.ECTSCount,
             IndexNumber = s.IndexNumber
         };
         public static TeacherResponse TeacherToResponse(Teacher s) => new()
         {
             ID = s.ID,
             FirstName = s.FirstName,
+            DateOfBirth=s.DateOfBirth,
             LastName = s.LastName,
             EmployeeNumber = s.EmployeeNumber,
             Title = s.Title
@@ -152,14 +164,22 @@ namespace Application.Common
         };
         internal static StudentRegistrationResponse StudentRegistrationToResponse(Registration e) => new()
         {
+            SubjectID=e.SubjectID,
             SubjectName = e.Subject != null ? e.Subject.Name : string.Empty,
+            TermID=e.TermID,
             TermName = e.Term != null ? e.Term.Name : string.Empty,
         };
         internal static TeacherRegistrationResponse TeacherRegistrationToResponse(Registration e) => new()
         {
             StudentID = e.StudentID,
             StudentName = e.Student != null ? $"{e.Student.FirstName} {e.Student.LastName}" : string.Empty,
-            StudentIndexNumber = e.Student != null ? e.Student.IndexNumber : string.Empty           
+            StudentIndexNumber = e.Student != null ? e.Student.IndexNumber : string.Empty ,
+            HasExam = e?.Exam != null,
+            ExamID =e?.Exam?.ID,
+            ExamDate=e?.Exam?.Date,
+            Grade=e?.Exam?.Grade,
+            Note = e?.Exam?.Note,
+            SignedAt = e?.Exam?.SignedAt
         };
         internal static StudServiceRegistrationResponse StudServiceRegistrationToResponse(Registration e) => new()
         {

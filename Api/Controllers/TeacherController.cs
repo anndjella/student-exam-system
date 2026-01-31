@@ -1,4 +1,5 @@
-﻿using Application.DTO.Exams;
+﻿using Application.DTO.Common;
+using Application.DTO.Exams;
 using Application.DTO.Students;
 using Application.DTO.Teachers;
 using Application.Services;
@@ -34,7 +35,7 @@ namespace Api.Controllers
             var resp = await _svc.GetByIdAsync(id, ct);
             return resp is null ? NotFound() : Ok(resp);
         }
-        [HttpGet("{year:int}/{number:int}")]
+        [HttpGet("year/{year:int}/number/{number:int}")]
         [Authorize(Roles = "StudentService")]
         public async Task<ActionResult<TeacherResponse>> GetOneByNum(int year,int number, CancellationToken ct)
         {
@@ -56,6 +57,21 @@ namespace Api.Controllers
         {
             await _svc.SoftDeleteAsync(id, ct);
             return NoContent();
+        }
+        [HttpGet]
+        [Authorize(Roles = "StudentService")]
+        public async Task<ActionResult<PagedResponse<TeacherResponse>>> List(
+                [FromQuery] int skip = 0,
+                [FromQuery] int take = 20,
+                [FromQuery] string? query = null,
+                CancellationToken ct = default)
+        {
+            if (skip < 0) skip = 0;
+            if (take <= 0) take = 20;
+            if (take > 100) take = 100;
+
+            var res = await _svc.ListAsync(skip, take, query, ct);
+            return Ok(res);
         }
     }
 }

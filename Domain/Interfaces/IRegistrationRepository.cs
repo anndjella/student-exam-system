@@ -14,7 +14,7 @@ namespace Domain.Interfaces
         Task<bool> ExistsActiveAsync(int studentId, int subjectId, int termId, CancellationToken ct = default);
         Task<List<Registration>> ListActiveForStudentAsync(int studentId, CancellationToken ct = default);
         Task<List<int>> ListActiveStudentIdsAsync(int subjectId, int termId, CancellationToken ct = default);
-        Task<List<Registration>> ListActiveBySubjectAndTermAsync(int subjectId, int termId, CancellationToken ct = default);
+        Task<List<Registration>> ListActiveBySubjectAndTermWithExamAsync(int subjectId, int termId, CancellationToken ct = default);
         Task<bool> ExistsAnyForSubjectAsync(int subjectId, CancellationToken ct);
 
         Task<bool> ExistsAnyForTermAsync(int termId, CancellationToken ct = default);

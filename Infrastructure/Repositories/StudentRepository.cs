@@ -35,5 +35,49 @@ namespace Infrastructure.Repositories
             .Select(s => s.ID)
             .ToListAsync(ct);
 
+        public Task<int> CountAsync(string? query, CancellationToken ct = default)
+        {
+            query = query?.Trim();
+
+            var q = _db.Students.AsQueryable();
+
+            q = q.Where(s => !s.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(s =>
+                    EF.Functions.Like(s.FirstName, like) ||
+                    EF.Functions.Like(s.LastName, like) ||
+                    EF.Functions.Like(s.IndexNumber, like));
+            }
+
+            return q.CountAsync(ct);
+        }
+
+        public Task<List<Student>> ListPagedAsync(int skip, int take, string? query, CancellationToken ct = default)
+        {
+            query = query?.Trim();
+
+            var q = _db.Students.AsQueryable();
+
+            q = q.Where(s => !s.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(s =>
+                    EF.Functions.Like(s.FirstName, like) ||
+                    EF.Functions.Like(s.LastName, like) ||
+                    EF.Functions.Like(s.IndexNumber, like));
+            }
+
+            return q.AsNoTracking()
+                .OrderBy(s => s.LastName).ThenBy(s => s.FirstName).ThenBy(s => s.IndexNumber)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(ct);
+        }
+
     }
 }

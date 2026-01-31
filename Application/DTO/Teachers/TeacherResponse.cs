@@ -12,6 +12,7 @@ namespace Application.DTO.Teachers
     {
         public int ID { get; set; }
         public string FirstName { get; set; } = "";
+        public DateOnly DateOfBirth { get; set; }
         public string LastName { get; set; } = "";
         public Title Title { get; set; }
         public string EmployeeNumber { get; set; } = "";

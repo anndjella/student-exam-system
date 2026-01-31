@@ -16,6 +16,9 @@ namespace Domain.Interfaces
         Task<Teacher?> GetByIdAsync(int id, CancellationToken ct = default);
         Task<Teacher?> GetByIdWithUserAsync(int id, CancellationToken ct = default);
         Task<Teacher?> GetByEmployeeNumAsync(string employeeNum, CancellationToken ct = default);
+        Task<int> CountAsync(string? query, CancellationToken ct = default);
+        Task<List<Teacher>> ListPagedAsync(int skip, int take, string? query, CancellationToken ct = default);
+
         // write
         void Add(Teacher teacher);
     }

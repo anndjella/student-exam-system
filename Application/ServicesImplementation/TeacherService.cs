@@ -1,5 +1,6 @@
 ﻿using Application.Auth;
 using Application.Common;
+using Application.DTO.Common;
 using Application.DTO.Exams;
 using Application.DTO.Students;
 using Application.DTO.Teachers;
@@ -102,7 +103,7 @@ namespace Application.ServicesImplementation
 
             if (req.EmployeeNumber is not null)
             {
-                if (t.EmployeeNumber != req.EmployeeNumber && await _uow.Students.ExistsByIndexAsync(req.EmployeeNumber, ct))
+                if (t.EmployeeNumber != req.EmployeeNumber && await _uow.Teachers.ExistsByEmployeeNumAsync(req.EmployeeNumber, ct))
                     throw new AppException(AppErrorCode.Conflict, "Employee number already exists.");
 
                 t.EmployeeNumber = req.EmployeeNumber;
@@ -110,6 +111,24 @@ namespace Application.ServicesImplementation
 
             //_uow.Teachers.Update(t);
             await _uow.CommitAsync(ct);
+        }
+
+        public async Task<PagedResponse<TeacherResponse>> ListAsync(int skip,int take,string? query,CancellationToken ct)
+        {
+            if (skip < 0) skip = 0;
+            if (take <= 0) take = 20;
+            if (take > 100) take = 100;
+
+            var total = await _uow.Teachers.CountAsync(query, ct);
+            var items = await _uow.Teachers.ListPagedAsync(skip, take, query, ct);
+
+            var respItems = items.Select(Mapper.TeacherToResponse).ToList();
+
+            return new PagedResponse<TeacherResponse>
+            {
+                Items = respItems,
+                Total = total
+            };
         }
     }
 }

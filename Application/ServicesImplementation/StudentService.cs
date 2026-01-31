@@ -8,6 +8,7 @@ using Domain.Interfaces;
 using Domain.Common;
 using Domain.Enums;
 using Application.Auth;
+using Application.DTO.Common;
 
 namespace Application.Services;
 
@@ -73,7 +74,8 @@ public sealed class StudentService : IStudentService
         var s=await _uow.Students.GetByIndexAsync(index, ct);
         if (s is null)
             throw new AppException(AppErrorCode.NotFound, $"Student with index {index} not found.");
-        return Mapper.StudentToResponse(s);
+        var stats = await _uow.StudentStats.GetByStudentIdAsync(s.ID, ct);
+        return Mapper.StudentToResponseWithStats(s,stats);
     }
 
     public async Task UpdateAsync(int id, UpdateStudentRequest req, CancellationToken ct = default)
@@ -106,5 +108,24 @@ public sealed class StudentService : IStudentService
 
         //_uow.Students.Update(s);
         await _uow.CommitAsync(ct);
+    }
+
+    public async Task<PagedResponse<StudentResponse>> ListAsync(int skip, int take,string? query,CancellationToken ct)
+    {
+        if (skip < 0) skip = 0;
+        if (take <= 0) take = 20;
+        if (take > 100) take = 100;
+
+        var total = await _uow.Students.CountAsync(query, ct);
+        var items = await _uow.Students.ListPagedAsync(skip, take, query, ct);
+
+
+        var respItems = items.Select(Mapper.StudentToResponse).ToList();
+
+        return new PagedResponse<StudentResponse>
+        {
+            Items = respItems,
+            Total = total
+        };
     }
 }

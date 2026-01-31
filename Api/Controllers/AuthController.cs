@@ -1,5 +1,6 @@
-﻿using Api.Contracts;
-using Application.Auth;
+﻿using Application.Auth;
+using Application.DTO.Auth;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -7,7 +8,7 @@ using System.Security.Claims;
 namespace Api.Controllers
 {
     [ApiController]
-    [Route("auth")]
+    [Route("api/auth")]
     public sealed class AuthController : ControllerBase
     {
         private readonly AuthService _auth; 
@@ -24,7 +25,7 @@ namespace Api.Controllers
 
         [HttpPost("change-password")]
         [Authorize]
-        public async Task<IActionResult> ChangePassword(ChangePasswordRequest req, CancellationToken ct)
+        public async Task<IActionResult> ChangePassword([FromBody, CustomizeValidator(RuleSet = "ChangePassword")] ChangePasswordRequest req, CancellationToken ct)
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 

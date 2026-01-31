@@ -2,6 +2,7 @@
 using Api.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Application.DTO.Subjects;
 
 namespace Api.Controllers.Me.Student
 {
@@ -24,7 +25,7 @@ namespace Api.Controllers.Me.Student
             return Ok(await _svc.ListStudentSubjectsAsync(studentId, ct));
         }
         [HttpGet("not-passed-subjects")]
-        public async Task<IActionResult> GetMyNotPassed(CancellationToken ct)
+        public async Task<ActionResult<SubjectResponse>> GetMyNotPassed(CancellationToken ct)
         {
             if (!User.TryGetPid(out var studentId))
                 return Unauthorized();

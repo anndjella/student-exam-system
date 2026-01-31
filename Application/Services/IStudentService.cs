@@ -1,4 +1,5 @@
-﻿using Application.DTO.Exams;
+﻿using Application.DTO.Common;
+using Application.DTO.Exams;
 using Application.DTO.Students;
 
 namespace Application.Services
@@ -8,6 +9,7 @@ namespace Application.Services
         Task<StudentResponse> CreateAsync(CreateStudentRequest req, CancellationToken ct = default);
         Task<StudentResponse?> GetByIdAsync(int id, CancellationToken ct = default);
         Task<StudentResponse?> GetByIndexAsync(string index, CancellationToken ct = default);
+        Task<PagedResponse<StudentResponse>> ListAsync(int skip, int take, string? query, CancellationToken ct);
         Task UpdateAsync(int id, UpdateStudentRequest req, CancellationToken ct = default);
         Task SoftDeleteAsync(int id, CancellationToken ct = default);
     }

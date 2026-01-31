@@ -20,7 +20,7 @@ namespace Api.Controllers.Me
             var resp = await _svc.CreateAsync(req, ct);
             return CreatedAtAction(nameof(GetOneById), new { teacherId = resp.TeacherID, subjectId = resp.SubjectID }, resp);
         }
-        [HttpGet("{teacherId:int}/{subjectId:int}")]
+        [HttpGet("teacher/{teacherId:int}/subject/{subjectId:int}")]
         public async Task<ActionResult<TeachingAssignmentResponse>> GetOneById(int teacherId,int subjectId, CancellationToken ct)
         {
             var resp = await _svc.GetAsync(teacherId,subjectId, ct);
@@ -45,7 +45,7 @@ namespace Api.Controllers.Me
             return NoContent();
         }
 
-        [HttpDelete("{teacherId:int}/{subjectId:int}")]
+        [HttpDelete("teacher/{teacherId:int}/subject/{subjectId:int}")]
         [Authorize(Roles = "StudentService")]
         public async Task<IActionResult> Delete(int teacherId, int subjectId, CancellationToken ct)
         {
