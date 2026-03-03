@@ -20,7 +20,7 @@ namespace Infrastructure.Repositories
         }
         public void Add(Teacher teacher) => _db.Teachers.Add(teacher);
         public Task<bool> ExistsByEmployeeNumAsync(string employeeNum, CancellationToken ct = default)
-          => _db.Teachers.AnyAsync(x => x.EmployeeNumber == employeeNum, ct);
+          => _db.Teachers.IgnoreQueryFilters().AnyAsync(x => x.EmployeeNumber == employeeNum, ct);
         public Task<bool> ExistsByIdAsync(int id, CancellationToken ct = default)
           => _db.Teachers.AsNoTracking().AnyAsync(x => x.ID == id, ct);
         public Task DeleteByIdAsync(int teacherId, CancellationToken ct = default)
@@ -36,13 +36,20 @@ namespace Infrastructure.Repositories
 
         public Task<Teacher?> GetByEmployeeNumAsync(string employeeNum, CancellationToken ct = default)
         => _db.Teachers.FirstOrDefaultAsync(x => x.EmployeeNumber == employeeNum);
-        public Task<int> CountAsync(string? query, CancellationToken ct = default)
+        public Task<int> CountAsync(string? query,bool onlyDeleted, CancellationToken ct = default)
         {
             query = query?.Trim();
 
             IQueryable<Teacher> q = _db.Teachers;
 
-            q = q.Where(t => !t.IsDeleted);
+            if (onlyDeleted)
+            {
+                q = q.IgnoreQueryFilters().Where(s => s.IsDeleted);
+            }
+            else
+            {
+                q = q.Where(s => !s.IsDeleted);
+            }
 
             if (!string.IsNullOrWhiteSpace(query))
             {
@@ -56,13 +63,20 @@ namespace Infrastructure.Repositories
             return q.CountAsync(ct);
         }
 
-        public Task<List<Teacher>> ListPagedAsync(int skip, int take, string? query, CancellationToken ct = default)
+        public Task<List<Teacher>> ListPagedAsync(int skip, int take, string? query, bool onlyDeleted, CancellationToken ct = default)
         {
             query = query?.Trim();
 
             IQueryable<Teacher> q = _db.Teachers;
 
-            q = q.Where(t => !t.IsDeleted);
+            if (onlyDeleted)
+            {
+                q = q.IgnoreQueryFilters().Where(s => s.IsDeleted);
+            }
+            else
+            {
+                q = q.Where(s => !s.IsDeleted);
+            }
 
             if (!string.IsNullOrWhiteSpace(query))
             {

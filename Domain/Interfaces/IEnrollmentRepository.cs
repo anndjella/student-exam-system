@@ -21,7 +21,16 @@ namespace Domain.Interfaces
         Task<bool> ExistsAsync(int studentId, int subjectId, CancellationToken ct);
         Task<bool> ExistsBySubjectIdAsync(int subjectId, CancellationToken ct);
         Task<bool> IsPassedAsync(int studentId, int subjectId, CancellationToken ct);
-        //Task<Enrollment?> GetAsync(int studentId, int subjectId, CancellationToken ct);
+        Task<int> CountByStudentAsync(int studentId, string? query, CancellationToken ct = default);
+        Task<int> CountBySubjectAsync(int subjectId, string? query, CancellationToken ct = default);
+
+        Task<List<Enrollment>> ListPagedAsync(int skip, int take, string? query, CancellationToken ct = default);
+        Task<List<Enrollment>> ListPagedBySubjectAsync(int subjectId,int skip, int take, string? query, CancellationToken ct = default);
+        Task<List<Enrollment>> ListPagedByStudentAsync(int studentId, int skip, int take, string? query, CancellationToken ct = default);
+
+        Task<Enrollment?> GetAsync(int studentId, int subjectId, CancellationToken ct);
+        void Remove(Enrollment enrollment);
+        void Add(Enrollment enrollment);
 
     }
 }

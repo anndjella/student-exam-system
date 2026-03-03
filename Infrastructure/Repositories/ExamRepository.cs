@@ -70,5 +70,8 @@ namespace Infrastructure.Repositories
               .Include(e => e.Teacher)
               .OrderByDescending(e => e.SignedAt)
               .ToListAsync(ct);
+
+        public Task<bool> ExistsAnyForSubjectAndStudentAsync(int subjectId, int studentId, CancellationToken ct = default)
+        => _db.Exams.AsNoTracking().AnyAsync(e => e.StudentID == studentId && e.SubjectID == subjectId);
     }
 }

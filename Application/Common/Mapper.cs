@@ -36,7 +36,8 @@ namespace Application.Common
             DateOfBirth=s.DateOfBirth,
             GPA = stats?.GPA is null ? null : (double)stats.GPA.Value,
             ECTSCount = stats?.ECTSCount,
-            IndexNumber = s.IndexNumber
+            IndexNumber = s.IndexNumber,
+            DeletedAt=s.DeletedAt
         };
         public static TeacherResponse TeacherToResponse(Teacher s) => new()
         {
@@ -45,7 +46,8 @@ namespace Application.Common
             DateOfBirth=s.DateOfBirth,
             LastName = s.LastName,
             EmployeeNumber = s.EmployeeNumber,
-            Title = s.Title
+            Title = s.Title,
+            DeletedAt=s.DeletedAt
         };
         internal static SubjectResponse SubjectToResponse(Subject s) => new()
         {
@@ -158,9 +160,16 @@ namespace Application.Common
         };
         internal static EnrollmentResponse EnrollmentToResponse(Enrollment e) => new()
         {
-            SubjectID = e.SubjectID,         
+            SubjectID = e.SubjectID,
+            SubjectCode=e.Subject != null ? e.Subject.Code : string.Empty,
             SubjectName = e.Subject != null ? e.Subject.Name : string.Empty,
-            SubjectECTS = e.Subject?.ECTS ?? 0
+            SubjectECTS = e.Subject?.ECTS ?? 0,
+            StudentID=e.StudentID,
+            StudentName=e.Student != null ? $"{e.Student.FirstName} {e.Student.LastName}" :string.Empty,
+            StudentIndex=e.Student != null ? e.Student.IndexNumber : string.Empty,
+            IsPassed=e.IsPassed,
+            CreatedAt=e.CreatedAt,
+            PassedAt=e.PassedAt
         };
         internal static StudentRegistrationResponse StudentRegistrationToResponse(Registration e) => new()
         {
@@ -168,6 +177,10 @@ namespace Application.Common
             SubjectName = e.Subject != null ? e.Subject.Name : string.Empty,
             TermID=e.TermID,
             TermName = e.Term != null ? e.Term.Name : string.Empty,
+            Grade = e.Exam != null ? e.Exam.Grade : null,
+            TeacherFullName = e.Exam?.Teacher != null
+                 ? $"{e.Exam.Teacher.FirstName} {e.Exam.Teacher.LastName}"
+                 : null
         };
         internal static TeacherRegistrationResponse TeacherRegistrationToResponse(Registration e) => new()
         {
@@ -188,9 +201,11 @@ namespace Application.Common
             StudentIndexNumber = e.Student != null ? e.Student.IndexNumber : string.Empty,
             SubjectName = e.Subject != null ? e.Subject.Name : string.Empty,
             SubjectID=e.SubjectID,
-            TermID=e.TermID,
+            SubjectCode= e.Subject != null ? e.Subject.Code : string.Empty,
+            TermID =e.TermID,
             TermName = e.Term != null ? e.Term.Name : string.Empty,
-            RegisteredAt=e.RegisteredAt 
+            RegisteredAt=e.RegisteredAt,
+            CancelledAt=e.CancelledAt
         };
         internal static TermResponse TermToResponse(Term term) => new()
         {
@@ -201,6 +216,16 @@ namespace Application.Common
             RegistrationEndDate = term.RegistrationEndDate,
             RegistrationStartDate = term.RegistrationStartDate
         };
-
+        internal static TeacherTermResponse TermToTeacherResponse(Term t, DateOnly today) => new()
+        {
+            TermID = t.ID,
+            TermName = t.Name,
+            StartDate = t.StartDate,
+            EndDate = t.EndDate,
+            RegistrationStartDate = t.RegistrationStartDate,
+            RegistrationEndDate = t.RegistrationEndDate,
+            IsRegistrationOpen = t.IsInRegistrationWindow(today),
+            CanEnterGrades = t.CanEnterGrades(today)
+        };
     }
 }

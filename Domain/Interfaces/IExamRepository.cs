@@ -20,6 +20,7 @@ namespace Domain.Interfaces
         Task<bool> ExistsAnyForTermAsync(int termId, CancellationToken ct = default);
         Task<bool> ExistsAnyForSubjectAsync(int subjectId, CancellationToken ct=default);
         Task<bool> ExistsSignedForTermAsync(int termId, CancellationToken ct = default);
+        Task<bool> ExistsAnyForSubjectAndStudentAsync(int subjectId, int studentId, CancellationToken ct = default);
         void Add(Exam exam);
     }
 }

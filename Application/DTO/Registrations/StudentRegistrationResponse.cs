@@ -13,5 +13,7 @@ namespace Application.DTO.Registrations
         public string SubjectName { get; set; } = "";
         public int TermID { get; set; }
         public string TermName { get; set; } = "";
+        public byte? Grade { get; set; }
+        public string? TeacherFullName { get; set; }
     }
 }

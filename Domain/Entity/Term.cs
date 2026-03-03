@@ -16,17 +16,13 @@ namespace Domain.Entity
         public DateOnly RegistrationEndDate { get; set; }
         public ICollection<Registration> Registrations { get; set; } = new List<Registration>();
 
-        public bool IsInRegistrationWindow(DateTime now)
-        {
-            var d = DateOnly.FromDateTime(now);
-            return d >= RegistrationStartDate && d <= RegistrationEndDate;
-        }
+        public bool IsInRegistrationWindow(DateOnly today)
+        => today >= RegistrationStartDate && today <= RegistrationEndDate;
 
-        public bool IsInTermWindow(DateTime now)
-        {
-            var d = DateOnly.FromDateTime(now);
-            return d >= StartDate && d <= EndDate;
-        }
+        public bool IsInTermWindow(DateOnly today)
+         => today >= StartDate && today <= EndDate;
+        public bool CanEnterGrades(DateOnly today)
+        => today > RegistrationEndDate && today >= StartDate;
 
     }
 }

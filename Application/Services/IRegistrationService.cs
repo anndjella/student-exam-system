@@ -1,4 +1,5 @@
-﻿using Application.DTO.Registrations;
+﻿using Application.DTO.Common;
+using Application.DTO.Registrations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace Application.Services
         Task<StudentRegistrationResponse> CreateAsync(int studentId, CreateRegistrationRequest req, CancellationToken ct = default);
         Task CancelAsync(int studentId, int subjectId, int termId, CancellationToken ct = default);
         Task<List<StudentRegistrationResponse>> ListMyActiveAsync(int studentId, CancellationToken ct = default);
-        Task<List<TeacherRegistrationResponse>> ListMyActiveBySubjectAndTermAsync(int teacherId, int subjectId, int termId, CancellationToken ct = default); 
+        Task<List<TeacherRegistrationResponse>> ListMyActiveBySubjectAndTermAsync(int teacherId, int subjectId, int termId, CancellationToken ct = default);
+        Task<PagedResponse<StudServiceRegistrationResponse>> ListPagedAsync(int subjectId,int termId,int skip,int take,string? query,CancellationToken ct = default);     
     }
 }

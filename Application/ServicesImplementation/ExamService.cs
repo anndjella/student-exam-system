@@ -34,12 +34,13 @@ namespace Application.ServicesImplementation
             if (term is null)
                 throw new AppException(AppErrorCode.NotFound, "Term not found.");
 
-            if (req.Date < term.StartDate || req.Date > term.EndDate)
+            if (!term.IsInTermWindow(_clock.Today))
                 throw new AppException(
                     AppErrorCode.Validation,
                     $"Exam date must be between {term.StartDate:yyyy-MM-dd} and {term.EndDate:yyyy-MM-dd}."
                 );
-            if(_clock.Today<=term.RegistrationEndDate)
+
+            if (term.IsInRegistrationWindow(_clock.Today))
                 throw new AppException(
                     AppErrorCode.Conflict,
                     "Exam cannot be created while the registration period is still open."
@@ -71,7 +72,7 @@ namespace Application.ServicesImplementation
             if (term is null)
                 throw new AppException(AppErrorCode.NotFound, "Term not found.");
 
-            if (_clock.Today <= term.RegistrationEndDate)
+            if (term.IsInRegistrationWindow(_clock.Today))
                 throw new AppException(
                     AppErrorCode.Conflict,
                     "Cannot lock exams while the registration period is still open."

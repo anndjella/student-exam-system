@@ -10,6 +10,7 @@ namespace Domain.Interfaces
     public interface IStudentStatsRepository
     {
         Task<StudentStats?> GetByStudentIdAsync(int studentId, CancellationToken ct = default);
+        Task<List<StudentStats>> ListByStudentIdsAsync(List<int> studentIds, CancellationToken ct = default);
 
     }
 }

@@ -38,7 +38,7 @@ namespace Api.Controllers.Me
             var resp = await _svc.ListBySubjectAsync(subjectId, ct);
             return resp is null ? NotFound() : Ok(resp);
         }
-        [HttpPut("{teacherId:int}/{subjectId:int}/can-grade")]
+        [HttpPut("teacher/{teacherId:int}/subject/{subjectId:int}/can-grade")]
         public async Task<IActionResult> Update(CreateTeachingAssignmentRequest req, CancellationToken ct)
         {
             await _svc.UpdateCanGradeAsync(req, ct);

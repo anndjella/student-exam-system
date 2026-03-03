@@ -66,17 +66,43 @@ namespace Application.ServicesImplementation
             await _uow.CommitAsync(ct);
         }
 
-        public Task<List<Term>> ListAsync(UserRole role, CancellationToken ct)
-        => role switch
+        //public Task<List<Term>> ListAsync(UserRole role, CancellationToken ct)
+        //=> role switch
+        //    {
+        //        UserRole.StudentService => _uow.Terms.ListAllAsync(ct),
+        //        UserRole.Student or UserRole.Teacher=> _uow.Terms.ListCurrentAndFutureAsync(_clock.Today, ct),
+        //        _ => throw new AppException(AppErrorCode.Forbidden, "Role not supported.")
+        //    };       
+        //public async Task<List<Term>> ListForGradingAsync(CancellationToken ct)
+        //=> await _uow.Terms.ListCurrentAndPrev2Async(_clock.Today, ct);
+
+        //public async Task<List<Term>> ListOpenForRegistrationAsync(CancellationToken ct)
+        //=> await _uow.Terms.ListOpenForRegistrationAsync(_clock.Today, ct);
+        public async Task<List<TermResponse>> ListAsync(UserRole role, CancellationToken ct)
+        {
+            List<Term> terms = role switch
             {
-                UserRole.StudentService => _uow.Terms.ListAllAsync(ct),
-                UserRole.Student or UserRole.Teacher=> _uow.Terms.ListCurrentAndFutureAsync(_clock.Today, ct),
+                UserRole.StudentService => await _uow.Terms.ListAllAsync(ct),
+                UserRole.Student or UserRole.Teacher => await _uow.Terms.ListCurrentAndFutureAsync(_clock.Today, ct),
                 _ => throw new AppException(AppErrorCode.Forbidden, "Role not supported.")
-            };       
-        public async Task<List<Term>> ListForGradingAsync(CancellationToken ct)
-        => await _uow.Terms.ListCurrentAndPrev2Async(_clock.Today, ct);
-        
-        public async Task<List<Term>> ListOpenForRegistrationAsync(CancellationToken ct)
-        => await _uow.Terms.ListOpenForRegistrationAsync(_clock.Today, ct);
+            };
+
+            return terms.Select(Mapper.TermToResponse).ToList();
+        }
+
+        public async Task<List<TeacherTermResponse>> ListForGradingAsync(CancellationToken ct)
+        {
+            var terms = await _uow.Terms.ListForTeacherGradingAsync(_clock.Today, ct);
+            var today = _clock.Today;
+
+            return terms.Select(t => Mapper.TermToTeacherResponse(t, today)).ToList();
+        }
+
+        public async Task<List<TermResponse>> ListOpenForRegistrationAsync(CancellationToken ct)
+        {
+            var terms = await _uow.Terms.ListOpenForRegistrationAsync(_clock.Today, ct);
+            return terms.Select(Mapper.TermToResponse).ToList();
+        }
+
     }
 }

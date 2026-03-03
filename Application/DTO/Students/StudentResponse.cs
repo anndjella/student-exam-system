@@ -15,5 +15,6 @@ namespace Application.DTO.Students
         public double? GPA { get; set; }
         public int? ECTSCount { get; set; }
         public string IndexNumber { get; set; } = "";
+        public DateTime? DeletedAt { get; set; }
     }
 }

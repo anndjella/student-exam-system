@@ -22,7 +22,8 @@ namespace Infrastructure.Repositories
 
         public Task<bool> ExistsByCode(string code, CancellationToken ct)
          => _db.Subjects.AsNoTracking().AnyAsync(x => x.Name.ToLower() == code.ToLower(), ct);
-
+        public Task<bool> ExistsById(int id, CancellationToken ct)
+       => _db.Subjects.AsNoTracking().AnyAsync(x => x.ID==id, ct);
         public Task<Subject?> GetByIdWithTeachersAsync(int id, CancellationToken ct = default)
         =>_db.Subjects.Include(e=>e.TeachingAssignments).ThenInclude(e=>e.Teacher).FirstOrDefaultAsync(x=>x.ID == id, ct);
         public Task<Subject?> GetByCodeWithTeachersAsync(string code, CancellationToken ct = default)
@@ -35,9 +36,53 @@ namespace Infrastructure.Repositories
         public void Remove(Subject subject)
         => _db.Subjects.Remove(subject);
 
-        public Task<List<Subject>> ListAllWithTeachersAsync(CancellationToken ct = default)
-        => _db.Subjects.AsNoTracking()
-              .Include(e => e.TeachingAssignments)
-            .ThenInclude(e => e.Teacher).ToListAsync(ct);
+        //public Task<List<Subject>> ListAllWithTeachersAsync(CancellationToken ct = default)
+        //=> _db.Subjects.AsNoTracking()
+        //      .Include(e => e.TeachingAssignments)
+        //    .ThenInclude(e => e.Teacher).ToListAsync(ct);
+        public Task<int> CountAdminAsync(bool isActive, string? query, CancellationToken ct = default)
+        {
+            query = query?.Trim();
+
+            IQueryable<Subject> q = _db.Subjects;
+
+            q = q.Where(s => s.IsActive == isActive);
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(s =>
+                    EF.Functions.Like(s.Code, like) ||
+                    EF.Functions.Like(s.Name, like));
+            }
+
+            return q.CountAsync(ct);
+        }
+
+        public Task<List<Subject>> ListPagedWithTeachersAsync(int skip, int take, bool isActive, string? query, CancellationToken ct = default)
+        {
+            query = query?.Trim();
+
+            IQueryable<Subject> q = _db.Subjects
+                .Include(s => s.TeachingAssignments)
+                    .ThenInclude(ta => ta.Teacher)
+                .AsNoTracking()
+                .Where(s => s.IsActive == isActive);
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(s => EF.Functions.Like(s.Code, like) || EF.Functions.Like(s.Name, like));
+            }
+
+            return q.OrderBy(s => s.Code)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(ct);
+        }
+
+
+        public Task<Subject?> GetByCodeAsync(string subjectCode, CancellationToken ct)
+        =>_db.Subjects.AsNoTracking().FirstOrDefaultAsync(e=>e.Code==subjectCode, ct);
     }
 }

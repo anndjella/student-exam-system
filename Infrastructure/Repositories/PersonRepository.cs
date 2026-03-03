@@ -15,7 +15,7 @@ namespace Infrastructure.Repositories
         private readonly AppDbContext _db;
         public PersonRepository(AppDbContext db) => _db = db;
         public Task<bool> ExistsByJmbgAsync(string jmbg, CancellationToken ct = default)
-         =>  _db.People.AnyAsync(e=>e.JMBG== jmbg,ct);
+         =>  _db.People.IgnoreQueryFilters().AnyAsync(e=>e.JMBG== jmbg,ct);
 
         public Task<Person?> GetByIdAsync(int personId, CancellationToken ct = default)
         => _db.People.FirstOrDefaultAsync(e => e.ID == personId, ct);

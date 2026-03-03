@@ -16,5 +16,6 @@ namespace Application.DTO.Teachers
         public string LastName { get; set; } = "";
         public Title Title { get; set; }
         public string EmployeeNumber { get; set; } = "";
+        public DateTime? DeletedAt { get; set; }
     }
 }

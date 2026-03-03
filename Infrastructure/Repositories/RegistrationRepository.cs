@@ -41,24 +41,81 @@ namespace Infrastructure.Repositories
                 .Select(r => r.StudentID)
                 .Distinct()
                 .ToListAsync(ct);
-        public Task<List<Registration>> ListActiveForStudentAsync(int studentId, CancellationToken ct = default)
+        public Task<List<Registration>> ListActiveForStudentWithExamAsync(int studentId, CancellationToken ct = default)
             => _db.Registrations
                     .Where(e => e.StudentID == studentId && e.IsActive)
                     .Include(e=>e.Subject).Include(e=>e.Term)
-                    .ToListAsync();
+                    .Include(e=>e.Exam)
+                     .ThenInclude(x => x!.Teacher)
+                    .ToListAsync(ct);
 
         public Task<bool> ExistsAnyForTermAsync(int termId, CancellationToken ct = default)
         => _db.Registrations.AnyAsync(e => e.TermID == termId && e.IsActive);
 
-        public Task<bool> ExistsAnyForSubjectAsync(int subjectId, CancellationToken ct)
+        public Task<bool> ExistsAnyForSubjectAsync(int subjectId, CancellationToken ct = default)
         => _db.Registrations.AsNoTracking().AnyAsync(e => e.SubjectID == subjectId);
+        public Task<bool> ExistsAnyForSubjectAndStudentAsync(int subjectId,int studentId, CancellationToken ct= default)
+        => _db.Registrations.AsNoTracking().AnyAsync(e => e.SubjectID == subjectId && e.StudentID==studentId);
 
-       public Task<List<Registration>> ListActiveBySubjectAndTermWithExamAsync(int subjectId, int termId, CancellationToken ct = default)
+        public Task<List<Registration>> ListActiveBySubjectAndTermWithExamAsync(int subjectId, int termId, CancellationToken ct = default)
             => _db.Registrations
             .Where(e => e.SubjectID == subjectId && e.TermID == termId && e.IsActive)
             .Include(e=>e.Exam)
             .Include(e=>e.Student)
             .ToListAsync(ct);
+        public Task<int> CountAsync(
+            int subjectId,
+            int termId,
+            string? query,
+            CancellationToken ct = default)
+        {
+            query = query?.Trim();
+
+            IQueryable<Registration> q = _db.Registrations
+                .Include(r => r.Student)
+                .Include(r => r.Subject)
+                .Include(r => r.Term);
+
+            q = q.Where(r => r.SubjectID == subjectId && r.TermID == termId);
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(r => EF.Functions.Like(r.Student.IndexNumber, like));
+            }
+
+            return q.CountAsync(ct);
+        }
+
+        public async Task<List<Registration>> ListPagedAsync(
+            int subjectId,
+            int termId,
+            int skip,
+            int take,
+            string? query,
+            CancellationToken ct = default)
+        {
+            query = query?.Trim();
+
+            IQueryable<Registration> q = _db.Registrations
+                .Include(r => r.Student)
+                .Include(r => r.Subject)
+                .Include(r => r.Term);
+
+            q = q.Where(r => r.SubjectID == subjectId && r.TermID == termId);
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(r => EF.Functions.Like(r.Student.IndexNumber, like));
+            }
+
+            return await q
+                .OrderBy(r => r.Student.IndexNumber)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(ct);
+        }
 
 
     }

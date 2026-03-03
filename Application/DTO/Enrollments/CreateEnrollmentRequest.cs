@@ -8,7 +8,7 @@ namespace Application.DTO.Enrollments
 {
     public sealed class CreateEnrollmentRequest
     {
-        //public string IndexNumber { get; set; } = "";
-        //public
+        public string StudentIndex { get; set; } = "";
+        public string SubjectCode { get; set; } = "";
     }
 }

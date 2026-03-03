@@ -13,9 +13,9 @@ namespace Application.Services
     {
         Task<TermResponse> CreateAsync(CreateTermRequest req, CancellationToken ct = default);
         Task<TermResponse?> GetByIdAsync(int id, CancellationToken ct = default);
-        Task<List<Term>> ListAsync(UserRole role, CancellationToken ct);
-        Task<List<Term>> ListForGradingAsync(CancellationToken ct);      
-        Task<List<Term>> ListOpenForRegistrationAsync(CancellationToken ct);
+        Task<List<TermResponse>> ListAsync(UserRole role, CancellationToken ct);
+        Task<List<TeacherTermResponse>> ListForGradingAsync(CancellationToken ct);      
+        Task<List<TermResponse>> ListOpenForRegistrationAsync(CancellationToken ct);
 
         Task DeleteAsync(int id, CancellationToken ct = default);
     }

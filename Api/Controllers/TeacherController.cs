@@ -64,13 +64,14 @@ namespace Api.Controllers
                 [FromQuery] int skip = 0,
                 [FromQuery] int take = 20,
                 [FromQuery] string? query = null,
+                [FromQuery] bool onlyDeleted = false,
                 CancellationToken ct = default)
         {
             if (skip < 0) skip = 0;
             if (take <= 0) take = 20;
             if (take > 100) take = 100;
 
-            var res = await _svc.ListAsync(skip, take, query, ct);
+            var res = await _svc.ListAsync(skip, take, query, onlyDeleted, ct);
             return Ok(res);
         }
     }

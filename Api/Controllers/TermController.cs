@@ -49,7 +49,7 @@ namespace Api.Controllers
         }
         [HttpGet("for-grading")]
         [Authorize(Roles = "Teacher")]
-        public async Task<ActionResult<List<TermResponse>>> ListForGrading(CancellationToken ct)
+        public async Task<ActionResult<List<TeacherTermResponse>>> ListForGrading(CancellationToken ct)
         {
            var resp=await _svc.ListForGradingAsync(ct);
            return resp is null ? NotFound() : Ok(resp);

@@ -16,7 +16,7 @@ namespace Application.Validators.Enrollment
             {
                 RuleFor(e => e.IndexStartYear).
                         NotNull().WithMessage("Index start year can not be null").
-                        GreaterThan(1980).WithMessage("Index start year must be grater than 1980").
+                        GreaterThan(1900).WithMessage("Index start year must be grater than 1980").
                         LessThan(DateTime.Now.Year).WithMessage("Future enrollments can not be made.");
 
                 RuleFor(e => e.SubjectIds)
@@ -24,6 +24,14 @@ namespace Application.Validators.Enrollment
                     .WithMessage("SubjectId is required.")
                     .NotEmpty()
                     .WithMessage("At least one subject must be selected.");
+
+                RuleFor(e => e.SubjectIds)
+                 .Must(ids => ids.Distinct().Count() == ids.Count)
+                 .WithMessage("SubjectIds must not contain duplicates.");
+
+                RuleFor(e => e.SubjectIds)
+                    .Must(ids => ids.Count <= 50)
+                    .WithMessage("Too many subjects selected.");
             });
         }
     }

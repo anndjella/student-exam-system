@@ -23,7 +23,19 @@ namespace Application.Validators.Student
                             .NotEmpty()
                             .MaximumLength(9)
                             .Matches(@"^[0-9]{4}/[0-9]{4}$")
-                            .WithMessage("Format of an Index Number must be YYYY/Number, e.g., 2024/1234.");
+                            .WithMessage("Format of an Index Number must be YYYY/Number, e.g., 2024/1234.")
+                            .Must(index =>
+                            {
+                                var year = int.Parse(index.Substring(0, 4));
+                                return year >= 1900;
+                            })
+                            .WithMessage("Index year cannot be earlier than 1900.")
+                            .Must(index =>
+                            {
+                                var year = int.Parse(index.Substring(0, 4));
+                                return year <= DateTime.UtcNow.Year;
+                            })
+                            .WithMessage("Index year cannot be in the future.");
 
             });
         }

@@ -1,4 +1,5 @@
-﻿using Application.DTO.Students;
+﻿using Application.DTO.Common;
+using Application.DTO.Students;
 using Application.DTO.Subjects;
 using Application.Services;
 using FluentValidation.AspNetCore;
@@ -36,14 +37,30 @@ namespace Api.Controllers
             var resp = await _svc.GetByCodeAsync(code, ct);
             return resp is null ? NotFound() : Ok(resp);
         }
-        [HttpGet("all")]
-        public async Task<ActionResult<AdminSubjectsResponse>> ListAll(CancellationToken ct)
+        //[HttpGet("all")]
+        //public async Task<ActionResult<AdminSubjectsResponse>> ListAll(CancellationToken ct)
+        //{
+        //    var resp = await _svc.ListAllWithTeachersAsync(ct);
+        //    return resp is null ? NotFound() : Ok(resp);
+        //}
+        [HttpGet]
+        public async Task<ActionResult<PagedResponse<AdminSubjectResponse>>> List(
+            [FromQuery] bool active = true,
+            [FromQuery] int skip = 0,
+            [FromQuery] int take = 20,
+            [FromQuery] string? query = null,
+            CancellationToken ct = default)
         {
-            var resp = await _svc.ListAllWithTeachersAsync(ct);
-            return resp is null ? NotFound() : Ok(resp);
+            if (skip < 0) skip = 0;
+            if (take <= 0) take = 20;
+            if (take > 100) take = 100;
+
+            var resp = await _svc.ListPagedAsync(active, skip, take, query, ct);
+            return Ok(resp);
         }
+
         [HttpGet("active")]
-        public async Task<ActionResult<SubjectResponse>> ListActive(CancellationToken ct)
+        public async Task<ActionResult<List<SubjectResponse>>> ListActive(CancellationToken ct)
         {
             var resp = await _svc.ListActiveAsync(ct);
             return resp is null ? NotFound() : Ok(resp);

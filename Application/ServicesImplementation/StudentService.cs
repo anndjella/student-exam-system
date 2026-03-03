@@ -21,6 +21,9 @@ public sealed class StudentService : IStudentService
     }
     public async Task<StudentResponse> CreateAsync(CreateStudentRequest req, CancellationToken ct = default)
     {
+        if (!JmbgParser.TryGetDateOfBirth(req.JMBG, out var dob, out var dobError))
+            throw new AppException(AppErrorCode.Validation, dobError);
+
         if (await _uow.People.ExistsByJmbgAsync(req.JMBG, ct))
             throw new AppException(AppErrorCode.Conflict, "Person with this JMBG already exists.");
 
@@ -32,7 +35,7 @@ public sealed class StudentService : IStudentService
             JMBG = req.JMBG,
             FirstName = req.FirstName,
             LastName = req.LastName,
-            DateOfBirth = JmbgParser.GetDateOfBirth(req.JMBG),
+            DateOfBirth = dob,
             IndexNumber = req.IndexNumber
         };
 
@@ -110,17 +113,26 @@ public sealed class StudentService : IStudentService
         await _uow.CommitAsync(ct);
     }
 
-    public async Task<PagedResponse<StudentResponse>> ListAsync(int skip, int take,string? query,CancellationToken ct)
+    public async Task<PagedResponse<StudentResponse>> ListAsync(int skip, int take,string? query,bool onlyDeleted,CancellationToken ct)
     {
         if (skip < 0) skip = 0;
         if (take <= 0) take = 20;
         if (take > 100) take = 100;
 
-        var total = await _uow.Students.CountAsync(query, ct);
-        var items = await _uow.Students.ListPagedAsync(skip, take, query, ct);
+        var total = await _uow.Students.CountAsync(query, onlyDeleted, ct);
+        var items = await _uow.Students.ListPagedAsync(skip, take, query, onlyDeleted, ct);
 
+        var ids = items.Select(s => s.ID).ToList();
 
-        var respItems = items.Select(Mapper.StudentToResponse).ToList();
+        var statsList = await _uow.StudentStats.ListByStudentIdsAsync(ids, ct);
+
+        var statsByStudentId = statsList.ToDictionary(x => x.StudentID);
+
+        var respItems = items.Select(s =>
+        {
+            statsByStudentId.TryGetValue(s.ID, out var st);
+            return Mapper.StudentToResponseWithStats(s, st);
+        }).ToList();
 
         return new PagedResponse<StudentResponse>
         {

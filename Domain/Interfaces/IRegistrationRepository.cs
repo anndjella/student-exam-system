@@ -12,13 +12,15 @@ namespace Domain.Interfaces
     {
         Task<Registration?> GetAsync(int studentId, int subjectId, int termId, CancellationToken ct = default);
         Task<bool> ExistsActiveAsync(int studentId, int subjectId, int termId, CancellationToken ct = default);
-        Task<List<Registration>> ListActiveForStudentAsync(int studentId, CancellationToken ct = default);
+        Task<List<Registration>> ListActiveForStudentWithExamAsync(int studentId, CancellationToken ct = default);
         Task<List<int>> ListActiveStudentIdsAsync(int subjectId, int termId, CancellationToken ct = default);
         Task<List<Registration>> ListActiveBySubjectAndTermWithExamAsync(int subjectId, int termId, CancellationToken ct = default);
-        Task<bool> ExistsAnyForSubjectAsync(int subjectId, CancellationToken ct);
+        Task<bool> ExistsAnyForSubjectAsync(int subjectId, CancellationToken ct=default);
 
         Task<bool> ExistsAnyForTermAsync(int termId, CancellationToken ct = default);
-
+        Task<bool> ExistsAnyForSubjectAndStudentAsync(int subjectId, int studentId, CancellationToken ct=default);
+        Task<int> CountAsync(int subjectId,int termId,string? query,CancellationToken ct = default);      
+        Task<List<Registration>> ListPagedAsync(int subjectId, int termId, int skip, int take, string? query, CancellationToken ct = default);
         void Add(Registration r);
     }
 }

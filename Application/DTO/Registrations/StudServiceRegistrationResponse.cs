@@ -12,9 +12,11 @@ namespace Application.DTO.Registrations
         public string StudentName { get; set; } = "";
         public string StudentIndexNumber { get; set; } = "";
         public int SubjectID { get; set; }
+        public string SubjectCode { get; set; } = "";
         public string SubjectName { get; set; } = "";
         public int TermID { get; set; }
         public string TermName { get; set; } = "";
         public DateTime RegisteredAt { get; set; }
+        public DateTime? CancelledAt { get; set; }
     }
 }

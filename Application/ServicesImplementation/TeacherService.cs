@@ -26,6 +26,9 @@ namespace Application.ServicesImplementation
         }
         public async Task<TeacherResponse> CreateAsync(CreateTeacherRequest req, CancellationToken ct = default)
         {
+            if (!JmbgParser.TryGetDateOfBirth(req.JMBG, out var dob, out var dobError))
+                throw new AppException(AppErrorCode.Validation, dobError);
+
             if (await _uow.People.ExistsByJmbgAsync(req.JMBG, ct))
                 throw new AppException(AppErrorCode.Conflict,"Person with this JMBG already exists.");
             if (await _uow.Teachers.ExistsByEmployeeNumAsync(req.EmployeeNumber, ct))
@@ -36,7 +39,7 @@ namespace Application.ServicesImplementation
                 JMBG = req.JMBG,
                 FirstName = req.FirstName,
                 LastName = req.LastName,
-                DateOfBirth = JmbgParser.GetDateOfBirth(req.JMBG),
+                DateOfBirth = dob,
                 EmployeeNumber = req.EmployeeNumber,
                 Title=req.Title
             };
@@ -113,14 +116,14 @@ namespace Application.ServicesImplementation
             await _uow.CommitAsync(ct);
         }
 
-        public async Task<PagedResponse<TeacherResponse>> ListAsync(int skip,int take,string? query,CancellationToken ct)
+        public async Task<PagedResponse<TeacherResponse>> ListAsync(int skip,int take,string? query, bool onlyDeleted, CancellationToken ct)
         {
             if (skip < 0) skip = 0;
             if (take <= 0) take = 20;
             if (take > 100) take = 100;
 
-            var total = await _uow.Teachers.CountAsync(query, ct);
-            var items = await _uow.Teachers.ListPagedAsync(skip, take, query, ct);
+            var total = await _uow.Teachers.CountAsync(query, onlyDeleted, ct);
+            var items = await _uow.Teachers.ListPagedAsync(skip, take, query, onlyDeleted, ct);
 
             var respItems = items.Select(Mapper.TeacherToResponse).ToList();
 

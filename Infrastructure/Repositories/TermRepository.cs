@@ -20,6 +20,8 @@ namespace Infrastructure.Repositories
 
         public Task<Term?> GetByIdAsync(int termId, CancellationToken ct)
         => _db.Terms.FirstOrDefaultAsync(e=>e.ID == termId, ct);
+        public Task<bool> ExistsById(int termId, CancellationToken ct)
+            => _db.Terms.AsNoTracking().AnyAsync(e=>e.ID==termId, ct);
         public Task<bool> ExistsOverlapAsync(DateOnly start, DateOnly end,int? excludeId, CancellationToken ct)
         => _db.Terms.AnyAsync
             (t => (excludeId == null || t.ID != excludeId) &&
@@ -44,12 +46,14 @@ namespace Infrastructure.Repositories
          => _db.Terms
             .Where(t => t.RegistrationStartDate <= today && t.RegistrationEndDate >= today)
             .ToListAsync(ct);
-        public async Task<List<Term>> ListCurrentAndPrev2Async(DateOnly today, CancellationToken ct)
+        public async Task<List<Term>> ListForTeacherGradingAsync(DateOnly today, CancellationToken ct)
         {
-            var current = await _db.Terms
+            var registrationOpen = await _db.Terms
+                .Where(t => t.RegistrationStartDate <= today && t.RegistrationEndDate >= today)
+                .ToListAsync(ct);
+
+            var termActiveNow = await _db.Terms
                 .Where(t => t.StartDate <= today && t.EndDate >= today)
-                .OrderByDescending(t => t.StartDate)
-                .Take(1)
                 .ToListAsync(ct);
 
             var prev2 = await _db.Terms
@@ -58,10 +62,15 @@ namespace Infrastructure.Repositories
                 .Take(2)
                 .ToListAsync(ct);
 
-            return current
+            var all = registrationOpen
+                .Concat(termActiveNow)
                 .Concat(prev2)
+                .GroupBy(t => t.ID)
+                .Select(g => g.First())
                 .OrderByDescending(t => t.StartDate)
                 .ToList();
+
+            return all;
         }
 
     }

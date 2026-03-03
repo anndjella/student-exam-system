@@ -35,13 +35,20 @@ namespace Infrastructure.Repositories
             .Select(s => s.ID)
             .ToListAsync(ct);
 
-        public Task<int> CountAsync(string? query, CancellationToken ct = default)
+        public Task<int> CountAsync(string? query, bool onlyDeleted, CancellationToken ct = default)
         {
             query = query?.Trim();
 
-            var q = _db.Students.AsQueryable();
+            IQueryable<Student> q = _db.Students.AsQueryable();
 
-            q = q.Where(s => !s.IsDeleted);
+            if (onlyDeleted)
+            {
+                q = q.IgnoreQueryFilters().Where(s => s.IsDeleted);
+            }
+            else
+            {
+                q = q.Where(s => !s.IsDeleted);
+            }
 
             if (!string.IsNullOrWhiteSpace(query))
             {
@@ -55,13 +62,20 @@ namespace Infrastructure.Repositories
             return q.CountAsync(ct);
         }
 
-        public Task<List<Student>> ListPagedAsync(int skip, int take, string? query, CancellationToken ct = default)
+        public Task<List<Student>> ListPagedAsync(int skip ,int take, string? query, bool onlyDeleted, CancellationToken ct = default)
         {
             query = query?.Trim();
 
-            var q = _db.Students.AsQueryable();
+            IQueryable<Student> q = _db.Students.AsQueryable();
 
-            q = q.Where(s => !s.IsDeleted);
+            if (onlyDeleted)
+            {
+                q = q.IgnoreQueryFilters().Where(s => s.IsDeleted);
+            }
+            else
+            {
+                q = q.Where(s => !s.IsDeleted);
+            }
 
             if (!string.IsNullOrWhiteSpace(query))
             {
