@@ -71,6 +71,20 @@ namespace Infrastructure.Repositories
               .OrderByDescending(e => e.SignedAt)
               .ToListAsync(ct);
 
+        public Task<List<Exam>> ListAllBySubjectTermForTeacherAsync(
+            int subjectId,
+            int termId,
+            int teacherId,
+            CancellationToken ct = default)
+        => _db.Exams.AsNoTracking()
+            .Where(e => e.TermID == termId && e.SubjectID == subjectId && e.SignedAt != null)
+            .Where(e => _db.TeachingAssignments.Any(ta =>
+                ta.TeacherID == teacherId && ta.SubjectID == subjectId
+            ))
+            .Include(e=> e.Registration).ThenInclude(e=>e.Student)
+            .OrderByDescending(e => e.SignedAt)
+            .ToListAsync(ct);
+
         public Task<bool> ExistsAnyForSubjectAndStudentAsync(int subjectId, int studentId, CancellationToken ct = default)
         => _db.Exams.AsNoTracking().AnyAsync(e => e.StudentID == studentId && e.SubjectID == subjectId);
     }

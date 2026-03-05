@@ -2,6 +2,7 @@
 using Application.DTO.Exams;
 using Application.DTO.Me.Student;
 using Application.DTO.Me.StudService;
+using Application.DTO.Me.Teacher;
 using Application.Services;
 using Domain.Entity;
 using Domain.Enums;
@@ -16,7 +17,7 @@ namespace Application.ServicesImplementation
         private readonly IClock _clock;
         public ExamService(IUnitOfWork uow, IClock clock) {_uow = uow; _clock = clock; }
 
-        public async Task<ExamResponse> CreateAsync(int subjectId,int termId,int studentId,CreateExamRequest req, int teacherId, CancellationToken ct = default)
+        public async Task<TeacherExamItemResponse> CreateAsync(int subjectId,int termId,int studentId,CreateExamRequest req, int teacherId, CancellationToken ct = default)
         {
             var ta = await _uow.TeachingAssignments.GetAsync(teacherId, subjectId, ct);
             if (ta is null || !ta.CanGrade)
@@ -34,13 +35,13 @@ namespace Application.ServicesImplementation
             if (term is null)
                 throw new AppException(AppErrorCode.NotFound, "Term not found.");
 
-            if (!term.IsInTermWindow(_clock.Today))
+            if (!term.IsInTermWindow(req.Date))
                 throw new AppException(
                     AppErrorCode.Validation,
                     $"Exam date must be between {term.StartDate:yyyy-MM-dd} and {term.EndDate:yyyy-MM-dd}."
                 );
 
-            if (term.IsInRegistrationWindow(_clock.Today))
+            if (term.IsInRegistrationWindow(req.Date))
                 throw new AppException(
                     AppErrorCode.Conflict,
                     "Exam cannot be created while the registration period is still open."
@@ -61,7 +62,7 @@ namespace Application.ServicesImplementation
             _uow.Exams.Add(exam);
             await _uow.CommitAsync(ct);
 
-            return Mapper.ExamToResponse(exam);
+            return Mapper.ExamToTeacherResponse(exam);
         }
 
         public async Task<int> LockAsync(LockExamsRequest req, int teacherId, CancellationToken ct = default)
@@ -166,17 +167,35 @@ namespace Application.ServicesImplementation
                 }
             }
         }
-        public async Task<List<ExamResponse>> ListBySubjectTermAsync(int subjectId, int termId, int teacherId, CancellationToken ct = default)
+        public async Task<TeacherExamsResponse> ListBySubjectTermAsync(int subjectId, int termId, int teacherId, CancellationToken ct = default)
         {
             var ta = await _uow.TeachingAssignments.GetAsync(teacherId, subjectId, ct);
             if (ta is null)
-                throw new AppException(AppErrorCode.Forbidden, "Teacher is not assigned to this subject.");
+                throw new AppException(AppErrorCode.Forbidden, "Teacher cannot view this subject.");
 
-            var list = await _uow.Exams.ListBySubjectTermAsync(subjectId, termId, ct);
-            return list.Select(Mapper.ExamToResponse).ToList();
+            var exams = await _uow.Exams.ListAllBySubjectTermForTeacherAsync(subjectId, termId,teacherId, ct);
+
+            var mine = new List<TeacherExamItemResponse>();
+            var others = new List<TeacherExamItemResponse>();
+
+            foreach (var exam in exams)
+            {
+                var dto = Mapper.ExamToTeacherResponse(exam);
+
+                if (exam.TeacherID == teacherId)
+                    mine.Add(dto);
+                else
+                    others.Add(dto);
+            }
+
+            return new TeacherExamsResponse
+            {
+                Mine = mine,
+                Others = others
+            };
         }
 
-        public async Task<ExamResponse> UpdateAsync(int subjectId, int termId, int studentId,UpdateExamRequest req, int teacherId, CancellationToken ct = default)
+        public async Task<TeacherExamItemResponse> UpdateAsync(int subjectId, int termId, int studentId,UpdateExamRequest req, int teacherId, CancellationToken ct = default)
         {
             var ta = await _uow.TeachingAssignments.GetAsync(teacherId, subjectId, ct);
             if (ta is null || !ta.CanGrade)
@@ -193,7 +212,7 @@ namespace Application.ServicesImplementation
             exam.Note = req.Note;
 
             await _uow.CommitAsync(ct);
-            return Mapper.ExamToResponse(exam);
+            return Mapper.ExamToTeacherResponse(exam);
 
         }
 

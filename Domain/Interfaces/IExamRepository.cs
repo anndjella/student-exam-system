@@ -15,6 +15,7 @@ namespace Domain.Interfaces
         Task<List<Exam>> ListUnsignedBySubjectTermWithRegistrationAsync(int subjectId, int termId,CancellationToken ct = default);
         Task<List<Exam>> ListSignedByStudentIdAsync(int studentId, CancellationToken ct = default);
         Task<List<Exam>> ListAllBySubjectTermAsync(int termId, int subjectId, CancellationToken ct = default);
+        public Task<List<Exam>> ListAllBySubjectTermForTeacherAsync(int subjectId, int termId, int teacherId, CancellationToken ct = default);
         //Task<List<Exam>> ListSignedByStudentIndexNumberAsync(int studentId, CancellationToken ct = default);
 
         Task<bool> ExistsAnyForTermAsync(int termId, CancellationToken ct = default);

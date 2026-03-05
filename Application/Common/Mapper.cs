@@ -85,25 +85,27 @@ namespace Application.Common
                     })
                     .ToList()
         };
-
-        public static ExamResponse ExamToResponse(Exam e) => new()
+        public static TeacherExamItemResponse ExamToTeacherResponse(Exam e) => new()
         {
             ID = e.ID,
-            StudentID =  e.StudentID,
+            StudentId = e.StudentID,
+            StudentFullName = $"{e.Registration?.Student?.FirstName}  {e.Registration?.Student?.LastName}" ?? string.Empty,
+            StudentIndexNum = e.Registration?.Student?.IndexNumber ?? string.Empty,
 
-            SubjectID = e.SubjectID,
-            SubjectName = e.Registration?.Subject?.Name ?? string.Empty,
+            //SubjectID = e.SubjectID,
+            //SubjectName = e.Registration?.Subject?.Name ?? string.Empty,
 
-            TermId = e.TermID,
-            TermName = e.Registration?.Term?.Name ?? string.Empty,
+            //TermId = e.TermID,
+            //TermName = e.Registration?.Term?.Name ?? string.Empty,
 
-            TeacherID = e.TeacherID,
-            TeacherFullName = e.Teacher != null
-                 ? $"{e.Teacher.FirstName} {e.Teacher.LastName}"
-                 : string.Empty,
+            //TeacherID = e.TeacherID,
+            EnteredByTeacherName = e.Teacher != null
+            ? $"{e.Teacher.FirstName} {e.Teacher.LastName}"
+            : string.Empty,
+            EnteredByEmployeeNumber=e.Teacher != null ? e.Teacher.EmployeeNumber : string.Empty,
 
             Grade = e.Grade,
-            Date = e.Date,
+            ExamDate = e.Date,
             Note = e.Note,
             SignedAt = e.SignedAt
         };
@@ -127,17 +129,12 @@ namespace Application.Common
             StudentName =$"{e.Registration?.Student?.FirstName}  {e.Registration?.Student?.LastName}" ?? string.Empty,
             StudentIndexNum=e.Registration?.Student?.IndexNumber ?? string.Empty,
             
-            SubjectCode = e.Registration?.Subject?.Code ?? string.Empty,
-            SubjectName = e.Registration?.Subject?.Name ?? string.Empty,
-            SubjectECTS = e.Registration?.Subject?.ECTS ?? 0,
-
             Date = e.Date,
             Grade = e?.Grade,
             Note = e?.Note,
             SignedAt=e?.SignedAt,
             TeacherEmployeeNum=e?.Teacher?.EmployeeNumber ?? string.Empty,
             TeacherName = $"{e?.Teacher?.FirstName} {e?.Teacher?.LastName}",
-            TermName = e?.Registration?.Term?.Name ?? string.Empty
         };
 
         public static Student CreateToStudent(CreateStudentRequest req, int id) => new()
@@ -199,11 +196,8 @@ namespace Application.Common
             StudentID = e.StudentID,
             StudentName = e.Student != null ? $"{e.Student.FirstName} {e.Student.LastName}" : string.Empty,
             StudentIndexNumber = e.Student != null ? e.Student.IndexNumber : string.Empty,
-            SubjectName = e.Subject != null ? e.Subject.Name : string.Empty,
             SubjectID=e.SubjectID,
-            SubjectCode= e.Subject != null ? e.Subject.Code : string.Empty,
             TermID =e.TermID,
-            TermName = e.Term != null ? e.Term.Name : string.Empty,
             RegisteredAt=e.RegisteredAt,
             CancelledAt=e.CancelledAt
         };
