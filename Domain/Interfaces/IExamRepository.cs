@@ -22,6 +22,11 @@ namespace Domain.Interfaces
         Task<bool> ExistsAnyForSubjectAsync(int subjectId, CancellationToken ct=default);
         Task<bool> ExistsSignedForTermAsync(int termId, CancellationToken ct = default);
         Task<bool> ExistsAnyForSubjectAndStudentAsync(int subjectId, int studentId, CancellationToken ct = default);
+        Task<int> CountPagedAsync(int subjectId,int termId,string? query,CancellationToken ct = default);
+
+        Task<List<Exam>> ListPagedAsync(int subjectId,int termId,int skip,int take,string? query,CancellationToken ct = default);
+
+        Task<int> CountUnsignedBySubjectTermAsync(int subjectId, int termId, CancellationToken ct = default);
         void Add(Exam exam);
     }
 }

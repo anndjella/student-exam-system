@@ -16,10 +16,15 @@ namespace Api.Controllers
         private readonly IExamService _svc;
         public ExamController(IExamService svc) => _svc = svc;
         [HttpGet("term/{termId:int}/subject/{subjectId:int}")]
-        public async Task<ActionResult<StudentServiceExamsResponse>> ListAll(int subjectId,int termId,
-           CancellationToken ct)
+        public async Task<ActionResult<StudentServiceExamsResponse>> ListPaged(
+          int subjectId,
+          int termId,
+          [FromQuery] int skip = 0,
+          [FromQuery] int take = 20,
+          [FromQuery] string? query = null,
+          CancellationToken ct = default)
         {
-            var res = await _svc.ListAllBySubjectTermAsync(subjectId, termId, ct);
+            var res = await _svc.ListPagedAsync(subjectId, termId, skip, take, query, ct);
             return Ok(res);
         }
     }

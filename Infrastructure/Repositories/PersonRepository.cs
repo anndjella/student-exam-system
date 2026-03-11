@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Domain.Entity;
 using Domain.Interfaces;
+using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories

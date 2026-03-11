@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Infrastructure
+namespace Infrastructure.Data
 {
     public class AppDbContext : DbContext
     {

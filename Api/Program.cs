@@ -1,32 +1,34 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Infrastructure;
-using Application.Services;
-using Domain.Interfaces;
-using Infrastructure.Repositories;
-using Application.DTO.Students;
-using FluentValidation;
-using Application.Common;
-using FluentValidation.AspNetCore;
-using Application.ServicesImplementation;
-using Application.Validators.Student;
-using Application.Validators.Teacher;
-using Application.Validators.Subject;
-using Application.Validators.Exam;
+﻿using Api.Auth;
 using Api.Middleware;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-using Microsoft.AspNetCore.Identity;
-using Domain.Common;
 using Application.Auth;
-using Microsoft.AspNetCore.Authorization;
+using Application.Common;
+using Application.DTO.Students;
+using Application.DTO.Term;
+using Application.Services;
+using Application.ServicesImplementation;
+using Application.Validators.Enrollment;
+using Application.Validators.Exam;
+using Application.Validators.Student;
+using Application.Validators.Subject;
+using Application.Validators.Teacher;
+using Application.Validators.Term;
+using Domain.Common;
+using Domain.Interfaces;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Infrastructure;
+using Infrastructure.Data;
+using Infrastructure.Repositories;
+using Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Internal;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Api.Auth;
-using Application.Validators.Enrollment;
-using Application.DTO.Term;
-using Application.Validators.Term;
-using Microsoft.Extensions.Internal;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -172,6 +174,15 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
+
+    var peopleSeeder = new PeopleUsersSeeder(db);
+    await peopleSeeder.SeedAsync();
+
+    var enrollmentSeeder = new EnrollmentSeeder(db);
+    await enrollmentSeeder.SeedAsync();
+
+    var registrationsExamsSeeder = new RegistrationsExamsSeeder(db);
+    await registrationsExamsSeeder.SeedAsync(2002);
 }
 
 app.UseRouting();

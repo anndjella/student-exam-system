@@ -1,5 +1,6 @@
 ﻿using Domain.Entity;
 using Domain.Interfaces;
+using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -87,5 +88,76 @@ namespace Infrastructure.Repositories
 
         public Task<bool> ExistsAnyForSubjectAndStudentAsync(int subjectId, int studentId, CancellationToken ct = default)
         => _db.Exams.AsNoTracking().AnyAsync(e => e.StudentID == studentId && e.SubjectID == subjectId);
+
+        public Task<int> CountUnsignedBySubjectTermAsync(int subjectId, int termId, CancellationToken ct = default)
+        => _db.Exams
+        .AsNoTracking()
+        .CountAsync(e => e.SubjectID == subjectId
+                      && e.TermID == termId
+                      && e.SignedAt == null, ct);
+
+        public Task<int> CountPagedAsync(
+            int subjectId,
+            int termId,
+            string? query,
+            CancellationToken ct = default)
+        {
+            query = query?.Trim();
+
+            IQueryable<Exam> q = _db.Exams
+                .AsNoTracking()
+                .Include(e => e.Registration)
+                    .ThenInclude(r => r.Student)
+                .Include(e => e.Registration)
+                    .ThenInclude(r => r.Subject)
+                .Include(e => e.Registration)
+                    .ThenInclude(r => r.Term)
+                .Include(e => e.Teacher);
+
+            q = q.Where(e => e.SubjectID == subjectId && e.TermID == termId);
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(e => EF.Functions.Like(e.Registration.Student.IndexNumber, like));
+            }
+
+            return q.CountAsync(ct);
+        }
+
+        public async Task<List<Exam>> ListPagedAsync(
+            int subjectId,
+            int termId,
+            int skip,
+            int take,
+            string? query,
+            CancellationToken ct = default)
+        {
+            query = query?.Trim();
+
+            IQueryable<Exam> q = _db.Exams
+                .AsNoTracking()
+                .Include(e => e.Registration)
+                    .ThenInclude(r => r.Student)
+                .Include(e => e.Registration)
+                    .ThenInclude(r => r.Subject)
+                .Include(e => e.Registration)
+                    .ThenInclude(r => r.Term)
+                .Include(e => e.Teacher);
+
+            q = q.Where(e => e.SubjectID == subjectId && e.TermID == termId);
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(e => EF.Functions.Like(e.Registration.Student.IndexNumber, like));
+            }
+
+            return await q
+                .OrderBy(e => e.Registration.Student.IndexNumber)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(ct);
+        }
     }
 }

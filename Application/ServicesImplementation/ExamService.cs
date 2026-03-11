@@ -216,9 +216,9 @@ namespace Application.ServicesImplementation
 
         }
 
-        public async Task<StudentExamsResponse> ListMySignedAsync(int personId, CancellationToken ct = default)
+        public async Task<StudentExamsResponse> ListMySignedAsync(int studentId, CancellationToken ct = default)
         {
-            var student = await _uow.Students.GetByIdAsync(personId, ct);
+            var student = await _uow.Students.GetByIdAsync(studentId, ct);
             if (student is null)
                 throw new AppException(AppErrorCode.NotFound, "Student not found.");
 
@@ -238,14 +238,36 @@ namespace Application.ServicesImplementation
 
             return resp;
         }
-
-        public async Task<StudentServiceExamsResponse> ListAllBySubjectTermAsync(int subjectId, int termId, CancellationToken ct = default)
+        public async Task<StudentServiceExamsResponse> ListPagedAsync(
+            int subjectId,
+            int termId,
+            int skip,
+            int take,
+            string? query,
+            CancellationToken ct = default)
         {
-            var exams = await _uow.Exams.ListAllBySubjectTermAsync(termId, subjectId, ct);
+            if (skip < 0) skip = 0;
+            if (take <= 0) take = 20;
+            if (take > 100) take = 100;
+
+            query = query?.Trim();
+
+            var existsSubject = await _uow.Subjects.ExistsById(subjectId, ct);
+            if (!existsSubject)
+                throw new AppException(AppErrorCode.NotFound, $"Subject with id {subjectId} not found.");
+
+            var existsTerm = await _uow.Terms.ExistsById(termId, ct);
+            if (!existsTerm)
+                throw new AppException(AppErrorCode.NotFound, $"Term with id {termId} not found.");
+
+            var total = await _uow.Exams.CountPagedAsync(subjectId, termId, query, ct);
+            var unsignedCount = await _uow.Exams.CountUnsignedBySubjectTermAsync(subjectId, termId, ct);
+            var exams = await _uow.Exams.ListPagedAsync(subjectId, termId, skip, take, query, ct);
 
             return new StudentServiceExamsResponse
             {
-                UnsignedCount = exams.Count(e => e.SignedAt == null),
+                UnsignedCount = unsignedCount,
+                Total = total,
                 Exams = exams.Select(Mapper.StudServiceExamToResponse).ToList()
             };
         }

@@ -10,6 +10,7 @@ namespace Application.DTO.Me.StudService
     public sealed class StudentServiceExamsResponse
     {
         public int UnsignedCount { get; set; }
+        public int Total { get; set; }
         public List<StudServiceExamItemResponse> Exams { get; set; } = new();
     }
 }
