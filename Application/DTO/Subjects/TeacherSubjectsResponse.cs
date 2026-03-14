@@ -1,11 +1,10 @@
-﻿using Application.DTO.Subjects;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.DTO.Me.Teacher
+namespace Application.DTO.Subjects
 {
     public sealed class TeacherSubjectsResponse
     {

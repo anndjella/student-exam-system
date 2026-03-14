@@ -46,6 +46,7 @@ namespace Infrastructure.Repositories
             query = query?.Trim();
 
             IQueryable<Enrollment> q = _db.Enrollments
+                .IgnoreQueryFilters()
                 .Include(e => e.Student)
                 .Include(e => e.Subject);
 
@@ -71,6 +72,7 @@ namespace Infrastructure.Repositories
             query = query?.Trim();
 
             IQueryable<Enrollment> q = _db.Enrollments
+                .IgnoreQueryFilters()     
                 .Where(e => e.StudentID == studentId)
                 .Include(e => e.Student)
                 .Include(e => e.Subject);

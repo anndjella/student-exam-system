@@ -1,6 +1,5 @@
 ﻿using Application.Common;
 using Application.DTO.Common;
-using Application.DTO.Me.Teacher;
 using Application.DTO.Students;
 using Application.DTO.Subjects;
 using Application.Services;
@@ -61,7 +60,7 @@ namespace Application.ServicesImplementation
             _uow.Subjects.Remove(s);
             await _uow.CommitAsync(ct);
         }
-        public async Task<AdminSubjectResponse?> GetByIdAsync(int id, CancellationToken ct = default)
+        public async Task<StudServiceSubjectResponse?> GetByIdAsync(int id, CancellationToken ct = default)
         {
             var s = await _uow.Subjects.GetByIdWithTeachersAsync(id, ct);
             return s is null ?
@@ -69,32 +68,20 @@ namespace Application.ServicesImplementation
                 : Mapper.SubjectToAdminResponse(s);
         }
 
-        public async Task<AdminSubjectResponse?> GetByCodeAsync(string code, CancellationToken ct = default)
+        public async Task<StudServiceSubjectResponse?> GetByCodeAsync(string code, CancellationToken ct = default)
         {
             var s = await _uow.Subjects.GetByCodeWithTeachersAsync(code, ct);
             return s is null ?
                 throw new AppException(AppErrorCode.NotFound, $"Subject with code {code} not found.")
                 : Mapper.SubjectToAdminResponse(s);
         }
-
-        //public async Task<AdminSubjectsResponse> ListAllWithTeachersAsync(CancellationToken ct)
-        //{
-        //    var res= (await _uow.Subjects.ListAllWithTeachersAsync(ct)).Select(Mapper.SubjectToAdminResponse).ToList();
-        //    var dto = new AdminSubjectsResponse();
-        //    foreach(var item in res)
-        //    {
-        //        if(item.IsActive) dto.Active.Add(item);
-        //        else dto.Inactive.Add(item);                   
-        //    }
-        //    return dto;
-        //}
-        public async Task<PagedResponse<AdminSubjectResponse>> ListPagedAsync( bool isActive, int skip, int take, string? query, CancellationToken ct)
+        public async Task<PagedResponse<StudServiceSubjectResponse>> ListPagedAsync( bool isActive, int skip, int take, string? query, CancellationToken ct)
         {
             var total = await _uow.Subjects.CountAdminAsync(isActive, query, ct);
 
             var page = await _uow.Subjects.ListPagedWithTeachersAsync(skip, take, isActive, query, ct);
 
-            return new PagedResponse<AdminSubjectResponse>
+            return new PagedResponse<StudServiceSubjectResponse>
             {
                 Items = page.Select(Mapper.SubjectToAdminResponse).ToList(),
                 Total = total
@@ -103,8 +90,8 @@ namespace Application.ServicesImplementation
 
 
 
-        public async Task<List<SubjectResponse>> ListActiveAsync(CancellationToken ct=default)
-        => (await _uow.Subjects.ListActiveAsync(ct)).Select(Mapper.SubjectToResponse).ToList();
+        public async Task<List<SimpleSubjectResponse>> ListAllIncludingInactiveAsync(CancellationToken ct=default)
+        => (await _uow.Subjects.ListAllIncludingInactiveAsync(ct)).Select(Mapper.SubjectToSimpleSubjectResponse).ToList();
 
         public async Task DeactivateAsync(int id, CancellationToken ct)
         {

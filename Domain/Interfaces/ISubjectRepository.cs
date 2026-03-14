@@ -19,7 +19,7 @@ namespace Domain.Interfaces
         Task<List<int>> GetExistingIdsAsync(List<int> ids, CancellationToken ct);
         Task<Subject?> GetByCodeWithTeachersAsync(string code, CancellationToken ct = default);
         Task<Subject?> GetByCodeAsync(string subjectCode, CancellationToken ct=default);
-        Task<List<Subject>> ListActiveAsync(CancellationToken ct = default);
+        Task<List<Subject>> ListAllIncludingInactiveAsync(CancellationToken ct = default);
         //Task<List<Subject>> ListAllWithTeachersAsync(CancellationToken ct=default);
         Task<int> CountAdminAsync(bool isActive, string? query, CancellationToken ct = default);
         Task<List<Subject>> ListPagedWithTeachersAsync(int skip, int take, bool isActive, string? query, CancellationToken ct = default);

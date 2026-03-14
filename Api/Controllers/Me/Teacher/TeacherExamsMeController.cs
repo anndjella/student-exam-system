@@ -1,6 +1,5 @@
 ﻿using Api.Common;
 using Application.DTO.Exams;
-using Application.DTO.Me.Teacher;
 using Application.Services;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
@@ -23,7 +22,7 @@ namespace Api.Controllers.Me.Teacher
              int subjectId,
              int termId,
              int studentId,
-                [FromBody] CreateExamRequest req,
+                [FromBody, CustomizeValidator(RuleSet = "Create")] CreateExamRequest req,
                 CancellationToken ct)
         {
             if (!User.TryGetPid(out var teacherId))
@@ -41,7 +40,7 @@ namespace Api.Controllers.Me.Teacher
             var lockedCount = await _svc.LockAsync(req, teacherId, ct);
             return Ok(lockedCount);
         }
-        [HttpPatch("subject/{subjectId:int}/term/{termId:int}/student/{studentId:int}")]
+        [HttpPatch("{examId:int}")]
         public async Task<ActionResult<TeacherExamItemResponse>> Update(
             int subjectId,
             int termId,

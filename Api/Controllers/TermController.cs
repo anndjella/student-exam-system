@@ -23,7 +23,6 @@ namespace Api.Controllers
         }
 
         [HttpGet("{id:int}")]
-        //[Authorize(Roles = "StudentService,Teacher,Student")]
         [Authorize(Roles = "StudentService")]
 
         public async Task<ActionResult<TermResponse>> GetOne(int id, CancellationToken ct)
@@ -47,12 +46,12 @@ namespace Api.Controllers
 
             return Forbid();
         }
-        [HttpGet("for-grading")]
+        [HttpGet("for-exams-view")]
         [Authorize(Roles = "Teacher")]
-        public async Task<ActionResult<List<TeacherTermResponse>>> ListForGrading(CancellationToken ct)
+        public async Task<ActionResult<List<TermResponse>>> ListForExamsView(CancellationToken ct)
         {
-           var resp=await _svc.ListForGradingAsync(ct);
-           return resp is null ? NotFound() : Ok(resp);
+            var resp = await _svc.ListForTeacherExamsViewAsync(ct);
+            return resp is null ? NotFound() : Ok(resp);
         }
         [HttpGet("open-for-registration")]
         [Authorize(Roles = "Student")]

@@ -9,14 +9,6 @@ namespace Domain.Common
     public static class JmbgValidation
     {
         public static bool IsAllDigits(string s) => s.All(char.IsDigit) && s.Length == 13;
-        public static bool ChecksumValid(string jmbg)
-        {
-            var d = jmbg.Select(c => c - '0').ToArray();
-            int m = 11 - ((7 * (d[0] + d[6]) + 6 * (d[1] + d[7]) + 5 * (d[2] + d[8]) +
-                           4 * (d[3] + d[9]) + 3 * (d[4] + d[10]) + 2 * (d[5] + d[11])) % 11);
-            int k = (m >= 1 && m <= 9) ? m : 0;
-            return d[12] == k;
-        }
 
         public static bool RegionLooksSerbian(string jmbg)
         {

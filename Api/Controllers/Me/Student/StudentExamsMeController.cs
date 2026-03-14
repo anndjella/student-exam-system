@@ -1,5 +1,5 @@
 ﻿using Api.Common;
-using Application.DTO.Me.Student;
+using Application.DTO.Exams;
 using Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

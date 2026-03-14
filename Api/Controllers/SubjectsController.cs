@@ -26,25 +26,19 @@ namespace Api.Controllers
 
         }
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<AdminSubjectResponse>> GetOneById(int id, CancellationToken ct)
+        public async Task<ActionResult<StudServiceSubjectResponse>> GetOneById(int id, CancellationToken ct)
         {
             var resp = await _svc.GetByIdAsync(id, ct);
             return resp is null ? NotFound() : Ok(resp);
         }
         [HttpGet("{code}")]
-        public async Task<ActionResult<AdminSubjectResponse>> SearchByCode(string code, CancellationToken ct)
+        public async Task<ActionResult<StudServiceSubjectResponse>> SearchByCode(string code, CancellationToken ct)
         {
             var resp = await _svc.GetByCodeAsync(code, ct);
             return resp is null ? NotFound() : Ok(resp);
         }
-        //[HttpGet("all")]
-        //public async Task<ActionResult<AdminSubjectsResponse>> ListAll(CancellationToken ct)
-        //{
-        //    var resp = await _svc.ListAllWithTeachersAsync(ct);
-        //    return resp is null ? NotFound() : Ok(resp);
-        //}
         [HttpGet]
-        public async Task<ActionResult<PagedResponse<AdminSubjectResponse>>> List(
+        public async Task<ActionResult<PagedResponse<StudServiceSubjectResponse>>> List(
             [FromQuery] bool active = true,
             [FromQuery] int skip = 0,
             [FromQuery] int take = 20,
@@ -59,10 +53,10 @@ namespace Api.Controllers
             return Ok(resp);
         }
 
-        [HttpGet("active")]
-        public async Task<ActionResult<List<SubjectResponse>>> ListActive(CancellationToken ct)
+        [HttpGet("all")]
+        public async Task<ActionResult<List<SimpleSubjectResponse>>> ListAllIncludingInactive(CancellationToken ct)
         {
-            var resp = await _svc.ListActiveAsync(ct);
+            var resp = await _svc.ListAllIncludingInactiveAsync(ct);
             return resp is null ? NotFound() : Ok(resp);
         }
 

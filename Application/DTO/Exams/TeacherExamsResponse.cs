@@ -1,11 +1,10 @@
-﻿using Application.DTO.Exams;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.DTO.Me.Teacher
+namespace Application.DTO.Exams
 {
     public sealed class TeacherExamsResponse
     {

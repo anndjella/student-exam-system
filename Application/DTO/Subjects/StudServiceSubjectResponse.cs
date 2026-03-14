@@ -7,22 +7,17 @@ using System.Threading.Tasks;
 
 namespace Application.DTO.Subjects
 {
-    public sealed class AdminSubjectsResponse
-    {
-        public List<AdminSubjectResponse> Active { get; set; } = new();
-        public List<AdminSubjectResponse> Inactive { get;set; } = new();
-    }
-    public sealed class AdminSubjectResponse
+    public sealed class StudServiceSubjectResponse
     {
         public int ID { get; set; }
         public string Code { get; set; } = "";
         public string Name { get; set; } = "";
         public int ECTS { get; set; }
         public bool IsActive{ get; set; }
-        public List<AdminSubjectTeacherItem> Teachers { get; set; } = new();
+        public List<StudServiceSubjectTeacherItem> Teachers { get; set; } = new();
     }
 
-    public sealed class AdminSubjectTeacherItem
+    public sealed class StudServiceSubjectTeacherItem
     {
         public int ID { get; set; }
         public string FirstName { get; set; } = "";

@@ -1,7 +1,6 @@
 ﻿using Application.Common;
 using Application.DTO.Common;
 using Application.DTO.Enrollments;
-using Application.DTO.Me.Student;
 using Application.DTO.Subjects;
 using Application.DTO.Teachers;
 using Application.Services;
@@ -105,24 +104,6 @@ namespace Application.ServicesImplementation
             return enrollments.Where(e => e.Subject != null).Select(e=>Mapper.SubjectToResponse(e.Subject)).ToList();  
         }
 
-        //public async Task<PagedResponse<EnrollmentResponse>> ListAsync(int skip, int take, string? query, CancellationToken ct)
-        //{
-        //    if (skip < 0) skip = 0;
-        //    if (take <= 0) take = 20;
-        //    if (take > 100) take = 100;
-
-        //    var total = await _uow.Enrollments.CountAsync(query, ct);
-        //    var items = await _uow.Enrollments.ListPagedAsync(skip, take, query, ct);
-
-        //    var respItems = items.Select(Mapper.EnrollmentToResponse).ToList();
-
-        //    return new PagedResponse<EnrollmentResponse>
-        //    {
-        //        Items = respItems,
-        //        Total = total
-        //    };
-        //}
-
         public async Task DeleteAsync(int studentId, int subjectId, CancellationToken ct = default)
         {
             var enrollment = await _uow.Enrollments.GetAsync(studentId, subjectId, ct) ??
@@ -147,6 +128,9 @@ namespace Application.ServicesImplementation
             var subject = await _uow.Subjects.GetByCodeAsync(req.SubjectCode, ct);
             if (subject is null)
                 throw new AppException(AppErrorCode.NotFound, $"Subject with code {req.SubjectCode} not found.");
+
+            if(!subject.IsActive)
+                throw new AppException(AppErrorCode.Conflict, $"Subject with code {req.SubjectCode} is not active.");
 
             var exists = await _uow.Enrollments.ExistsAsync(student.ID, subject.ID, ct);
             if (exists)

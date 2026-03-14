@@ -35,9 +35,6 @@ namespace Infrastructure.Repositories
         public Task<bool> ExistsAnyForTermAsync(int termId, CancellationToken ct = default)
          => _db.Exams.AnyAsync(e => e.TermID == termId);
 
-        public Task<bool> ExistsSignedForTermAsync(int termId, CancellationToken ct = default)
-        =>_db.Exams.AnyAsync(e=>e.TermID==termId &&  e.SignedAt != null);
-
         public Task<bool> ExistsAnyForSubjectAsync(int subjectId, CancellationToken ct = default)
         => _db.Exams.AsNoTracking().AnyAsync(e => e.SubjectID == subjectId);
 
@@ -49,6 +46,7 @@ namespace Infrastructure.Repositories
 
         public Task<List<Exam>> ListSignedByStudentIdAsync(int studentId, CancellationToken ct = default)
         =>_db.Exams
+            .IgnoreQueryFilters()
               .AsNoTracking()
               .Where(e => e.StudentID == studentId && e.SignedAt != null)
               .Include(e => e.Registration)
@@ -58,31 +56,20 @@ namespace Infrastructure.Repositories
               .Include(e => e.Teacher)
               .OrderByDescending(e => e.SignedAt)
               .ToListAsync(ct);
-
-        public Task<List<Exam>> ListAllBySubjectTermAsync(int termId, int subjectId, CancellationToken ct = default)
-        => _db.Exams.AsNoTracking()
-              .Where(e => e.TermID == termId && e.SubjectID==subjectId)
-              .Include(e => e.Registration)
-                  .ThenInclude(r => r.Subject)
-            .Include(e => e.Registration)
-                  .ThenInclude(r => r.Student)
-              .Include(e => e.Registration)
-                  .ThenInclude(r => r.Term)
-              .Include(e => e.Teacher)
-              .OrderByDescending(e => e.SignedAt)
-              .ToListAsync(ct);
-
         public Task<List<Exam>> ListAllBySubjectTermForTeacherAsync(
             int subjectId,
             int termId,
             int teacherId,
             CancellationToken ct = default)
-        => _db.Exams.AsNoTracking()
+        => _db.Exams
+            .IgnoreQueryFilters()
+            .AsNoTracking()
             .Where(e => e.TermID == termId && e.SubjectID == subjectId && e.SignedAt != null)
             .Where(e => _db.TeachingAssignments.Any(ta =>
                 ta.TeacherID == teacherId && ta.SubjectID == subjectId
             ))
             .Include(e=> e.Registration).ThenInclude(e=>e.Student)
+            .Include(e => e.Teacher)
             .OrderByDescending(e => e.SignedAt)
             .ToListAsync(ct);
 
@@ -105,6 +92,7 @@ namespace Infrastructure.Repositories
             query = query?.Trim();
 
             IQueryable<Exam> q = _db.Exams
+                .IgnoreQueryFilters()
                 .AsNoTracking()
                 .Include(e => e.Registration)
                     .ThenInclude(r => r.Student)
@@ -136,6 +124,7 @@ namespace Infrastructure.Repositories
             query = query?.Trim();
 
             IQueryable<Exam> q = _db.Exams
+                .IgnoreQueryFilters()
                 .AsNoTracking()
                 .Include(e => e.Registration)
                     .ThenInclude(r => r.Student)

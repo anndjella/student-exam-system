@@ -18,10 +18,6 @@ namespace Application.Validators.Exam
                    .Must(g => g is null || (g >= 5 && g <= 10))
                    .WithMessage("Grade must be between 5 and 10 or null.");
 
-                RuleFor(x => x.Date)
-                   .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow))
-                    .WithMessage("Date cannot be in the future.");
-
                 RuleFor(x => x.Note)
                    .MaximumLength(500)
                    .WithMessage("Note is too long");

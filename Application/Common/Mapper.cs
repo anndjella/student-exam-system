@@ -49,6 +49,12 @@ namespace Application.Common
             Title = s.Title,
             DeletedAt=s.DeletedAt
         };
+        internal static SimpleSubjectResponse SubjectToSimpleSubjectResponse(Subject s) => new()
+        {
+            ID = s.ID,
+            Name = s.Name,
+            Code = s.Code
+        };
         internal static SubjectResponse SubjectToResponse(Subject s) => new()
         {
             ID = s.ID,
@@ -65,7 +71,7 @@ namespace Application.Common
                     })
                     .ToList()
         };
-        internal static AdminSubjectResponse SubjectToAdminResponse(Subject s) => new()
+        internal static StudServiceSubjectResponse SubjectToAdminResponse(Subject s) => new()
         {
             ID = s.ID,
             Name = s.Name,
@@ -74,7 +80,7 @@ namespace Application.Common
             IsActive=s.IsActive,
             Teachers = (s.TeachingAssignments ?? Enumerable.Empty<TeachingAssignment>())
                     .Where(ta => ta.Teacher != null)
-                    .Select(ta => new AdminSubjectTeacherItem
+                    .Select(ta => new StudServiceSubjectTeacherItem
                     {
                         ID = ta.TeacherID,
                         FirstName = ta.Teacher!.FirstName,
@@ -209,17 +215,6 @@ namespace Application.Common
             EndDate = term.EndDate,
             RegistrationEndDate = term.RegistrationEndDate,
             RegistrationStartDate = term.RegistrationStartDate
-        };
-        internal static TeacherTermResponse TermToTeacherResponse(Term t, DateOnly today) => new()
-        {
-            TermID = t.ID,
-            TermName = t.Name,
-            StartDate = t.StartDate,
-            EndDate = t.EndDate,
-            RegistrationStartDate = t.RegistrationStartDate,
-            RegistrationEndDate = t.RegistrationEndDate,
-            IsRegistrationOpen = t.IsInRegistrationWindow(today),
-            CanEnterGrades = t.CanEnterGrades(today)
         };
     }
 }

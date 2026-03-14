@@ -15,7 +15,8 @@ namespace Domain.Interfaces
         Task<List<Term>> ListAllAsync(CancellationToken ct);
         Task<List<Term>> ListOpenForRegistrationAsync(DateOnly today, CancellationToken ct);
         Task<List<Term>> ListCurrentAndFutureAsync(DateOnly today, CancellationToken ct);
-        Task<List<Term>> ListForTeacherGradingAsync(DateOnly today, CancellationToken ct);
+        Task<List<Term>> ListForTeacherGradingAsync(int teacherId, int subjectId, CancellationToken ct);
+        Task<Term?> GetPreviousTermAsync(int currentTermId, CancellationToken ct = default);
 
         void Add(Term term); 
         void Remove(Term term);

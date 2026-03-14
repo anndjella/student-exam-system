@@ -24,6 +24,8 @@ namespace Infrastructure.Seed
             if (await _db.Registrations.AnyAsync(ct) || await _db.Exams.AnyAsync(ct))
                 return;
 
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
             var terms = await _db.Terms
                 .AsNoTracking()
                 .OrderBy(t => t.StartDate)
@@ -91,18 +93,25 @@ namespace Infrastructure.Seed
                         continue;
 
                     var regDate = FindRegistrationDate(term);
+
+                    if (regDate > today)
+                        continue;
+
                     bool cancelled = rng.NextDouble() < 0.08;
+
+                    var regRegisteredAt = ToUtcDateTime(regDate, 10, 0);
+                    var regCancelledAt = cancelled
+                        ? ToUtcDateTime(regDate, 12, 0)
+                        : (DateTime?)null;
 
                     var reg = new Registration
                     {
                         StudentID = enrollment.StudentID,
                         SubjectID = enrollment.SubjectID,
                         TermID = term.ID,
-                        RegisteredAt = regDate.ToDateTime(new TimeOnly(10, 0), DateTimeKind.Utc),
+                        RegisteredAt = regRegisteredAt,
                         IsActive = false,
-                        CancelledAt = cancelled
-                            ? regDate.ToDateTime(new TimeOnly(12, 0), DateTimeKind.Utc)
-                            : null
+                        CancelledAt = regCancelledAt
                     };
 
                     registrations.Add(reg);
@@ -114,14 +123,23 @@ namespace Infrastructure.Seed
                     if (!TryFindExamDate(term, out var examDate))
                         continue;
 
+                    if (examDate > today)
+                        continue;
+
                     byte? grade = GenerateGrade(rng);
 
                     if (passedPairs.Contains(pairKey) && grade >= 6)
                         grade = 5;
 
-                    var signedAt = term.EndDate
-                        .AddDays(1)
-                        .ToDateTime(new TimeOnly(12, 0), DateTimeKind.Utc);
+                    var signedDate = term.EndDate.AddDays(1);
+
+                    if (signedDate > today)
+                        signedDate = today;
+
+                    if (signedDate < examDate)
+                        signedDate = examDate;
+
+                    var signedAt = ToUtcDateTime(signedDate, 12, 0);
 
                     exams.Add(new Exam
                     {
@@ -154,17 +172,20 @@ namespace Infrastructure.Seed
                     {
                         var regDate = FindRegistrationDate(currentTerm);
 
-                        registrations.Add(new Registration
+                        if (regDate <= today)
                         {
-                            StudentID = enrollment.StudentID,
-                            SubjectID = enrollment.SubjectID,
-                            TermID = currentTerm.ID,
-                            RegisteredAt = regDate.ToDateTime(new TimeOnly(10, 0), DateTimeKind.Utc),
-                            IsActive = true,
-                            CancelledAt = null
-                        });
+                            registrations.Add(new Registration
+                            {
+                                StudentID = enrollment.StudentID,
+                                SubjectID = enrollment.SubjectID,
+                                TermID = currentTerm.ID,
+                                RegisteredAt = ToUtcDateTime(regDate, 10, 0),
+                                IsActive = true,
+                                CancelledAt = null
+                            });
 
-                        regKeys.Add(currentKey);
+                            regKeys.Add(currentKey);
+                        }
                     }
                 }
             }
@@ -206,6 +227,11 @@ namespace Infrastructure.Seed
             if (p < 0.10) return null;
             if (p < 0.35) return 5;
             return (byte)rng.Next(6, 11);
+        }
+
+        private static DateTime ToUtcDateTime(DateOnly date, int hour, int minute)
+        {
+            return DateTime.SpecifyKind(date.ToDateTime(new TimeOnly(hour, minute)), DateTimeKind.Utc);
         }
     }
 }

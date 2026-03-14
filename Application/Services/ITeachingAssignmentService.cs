@@ -1,5 +1,4 @@
-﻿using Application.DTO.Me.Teacher;
-using Application.DTO.Subjects;
+﻿using Application.DTO.Subjects;
 using Application.DTO.TeachingAssignment;
 using System;
 using System.Collections.Generic;

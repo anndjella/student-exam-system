@@ -1,5 +1,4 @@
 ﻿using Application.DTO.Exams;
-using Application.DTO.Me.StudService;
 using Application.Services;
 using Domain.Entity;
 using FluentValidation.AspNetCore;
@@ -16,7 +15,7 @@ namespace Api.Controllers
         private readonly IExamService _svc;
         public ExamController(IExamService svc) => _svc = svc;
         [HttpGet("term/{termId:int}/subject/{subjectId:int}")]
-        public async Task<ActionResult<StudentServiceExamsResponse>> ListPaged(
+        public async Task<ActionResult<StudServiceExamsResponse>> ListPaged(
           int subjectId,
           int termId,
           [FromQuery] int skip = 0,

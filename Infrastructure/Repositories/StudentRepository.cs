@@ -21,7 +21,7 @@ namespace Infrastructure.Repositories
             => _db.Students.FirstOrDefaultAsync(x => x.ID == id, ct);
 
         public Task<bool> ExistsByIndexAsync(string indexNumber, CancellationToken ct = default)
-            => _db.Students.AnyAsync(x => x.IndexNumber == indexNumber, ct);
+            => _db.Students.IgnoreQueryFilters().AnyAsync(x => x.IndexNumber == indexNumber, ct);
 
         public Task<Student?> GetByIndexAsync(string indexNumber, CancellationToken ct = default)
           => _db.Students.FirstOrDefaultAsync(x => x.IndexNumber == indexNumber, ct);

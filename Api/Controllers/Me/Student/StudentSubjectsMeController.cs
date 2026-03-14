@@ -9,10 +9,10 @@ namespace Api.Controllers.Me.Student
     [ApiController]
     [Route("api/me/student/subjects")]
     [Authorize(Roles = "Student", Policy = "PasswordChanged")]
-    public class StudentEnrollmentsMeController : ControllerBase
+    public class StudentSubjectsMeController : ControllerBase
     {
         private readonly IEnrollmentService _svc;
-        public StudentEnrollmentsMeController(IEnrollmentService svc)
+        public StudentSubjectsMeController(IEnrollmentService svc)
         {
             _svc = svc;
         }

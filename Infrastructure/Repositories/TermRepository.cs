@@ -47,32 +47,55 @@ namespace Infrastructure.Repositories
          => _db.Terms
             .Where(t => t.RegistrationStartDate <= today && t.RegistrationEndDate >= today)
             .ToListAsync(ct);
-        public async Task<List<Term>> ListForTeacherGradingAsync(DateOnly today, CancellationToken ct)
+        public async Task<List<Term>> ListForTeacherGradingAsync(int teacherId,int subjectId, CancellationToken ct)
         {
-            var registrationOpen = await _db.Terms
-                .Where(t => t.RegistrationStartDate <= today && t.RegistrationEndDate >= today)
-                .ToListAsync(ct);
+            var terms = await _db.Registrations
+            .Where(r => r.SubjectID == subjectId)
+            .Where(r=>r.IsActive)
+            .Where(r => r.Exam == null || r.Exam.SignedAt == null)
+            .Select(r => r.Term)
+            .Distinct()
+            .OrderByDescending(t => t.StartDate)
+            .ToListAsync(ct);
 
-            var termActiveNow = await _db.Terms
+            if (terms.Count > 0)
+                return terms;
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var currentTerm = await _db.Terms
                 .Where(t => t.StartDate <= today && t.EndDate >= today)
-                .ToListAsync(ct);
+                .OrderByDescending(t => t.StartDate)
+                .FirstOrDefaultAsync(ct);
 
-            var prev2 = await _db.Terms
+            if (currentTerm is not null)
+                return new List<Term> { currentTerm };
+
+            var lastTerm = await _db.Terms
                 .Where(t => t.EndDate < today)
                 .OrderByDescending(t => t.EndDate)
-                .Take(2)
-                .ToListAsync(ct);
+                .FirstOrDefaultAsync(ct);
 
-            var all = registrationOpen
-                .Concat(termActiveNow)
-                .Concat(prev2)
-                .GroupBy(t => t.ID)
-                .Select(g => g.First())
-                .OrderByDescending(t => t.StartDate)
-                .ToList();
+            if (lastTerm is not null)
+                return new List<Term> { lastTerm };
 
-            return all;
+            return new List<Term>();
         }
+        public async Task<Term?> GetPreviousTermAsync(int currentTermId, CancellationToken ct = default)
+        {
+            var current = await _db.Terms
+                .Where(t => t.ID == currentTermId)
+                .Select(t => new { t.ID, t.StartDate, t.EndDate })
+                .FirstOrDefaultAsync(ct);
 
+            if (current is null)
+                return null;
+
+            return await _db.Terms
+                .Where(t => t.StartDate < current.StartDate)
+                .OrderByDescending(t => t.StartDate)
+                .ThenByDescending(t => t.EndDate)
+                .FirstOrDefaultAsync(ct);
+        }
     }
 }

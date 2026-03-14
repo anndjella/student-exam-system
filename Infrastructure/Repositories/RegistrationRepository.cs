@@ -44,6 +44,7 @@ namespace Infrastructure.Repositories
                 .ToListAsync(ct);
         public Task<List<Registration>> ListActiveForStudentWithExamAsync(int studentId, CancellationToken ct = default)
             => _db.Registrations
+            .IgnoreQueryFilters()
                     .Where(e => e.StudentID == studentId && e.IsActive)
                     .Include(e=>e.Subject).Include(e=>e.Term)
                     .Include(e=>e.Exam)
@@ -73,6 +74,7 @@ namespace Infrastructure.Repositories
             query = query?.Trim();
 
             IQueryable<Registration> q = _db.Registrations
+                .IgnoreQueryFilters()
                 .Include(r => r.Student)
                 .Include(r => r.Subject)
                 .Include(r => r.Term);
@@ -99,6 +101,7 @@ namespace Infrastructure.Repositories
             query = query?.Trim();
 
             IQueryable<Registration> q = _db.Registrations
+                .IgnoreQueryFilters()
                 .Include(r => r.Student)
                 .Include(r => r.Subject)
                 .Include(r => r.Term);

@@ -33,8 +33,7 @@ namespace Application.Common
                     .DependentRules(() =>
                     {
                         RuleFor(x => x.JMBG)
-                            .Must(JmbgValidation.RegionLooksSerbian).WithMessage("JMBG region is not for Serbia.")
-                            .Must(JmbgValidation.ChecksumValid).WithMessage("Check digit of JMBG is not valid.");
+                            .Must(JmbgValidation.RegionLooksSerbian).WithMessage("JMBG region is not for Serbia.");
                     });
             });
             

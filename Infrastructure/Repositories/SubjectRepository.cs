@@ -32,20 +32,15 @@ namespace Infrastructure.Repositories
 
         public Task<List<int>> GetExistingIdsAsync(List<int> ids, CancellationToken ct)
         => _db.Subjects.Where(s => ids.Contains(s.ID)).Select(s => s.ID).ToListAsync(ct);
-        public Task<List<Subject>> ListActiveAsync(CancellationToken ct = default) // for student service to make enrollments
-        => _db.Subjects.AsNoTracking().Where(x => x.IsActive).ToListAsync(ct);
+        public Task<List<Subject>> ListAllIncludingInactiveAsync(CancellationToken ct = default) // for student service to make enrollments
+        => _db.Subjects.AsNoTracking().ToListAsync(ct);
         public void Remove(Subject subject)
         => _db.Subjects.Remove(subject);
-
-        //public Task<List<Subject>> ListAllWithTeachersAsync(CancellationToken ct = default)
-        //=> _db.Subjects.AsNoTracking()
-        //      .Include(e => e.TeachingAssignments)
-        //    .ThenInclude(e => e.Teacher).ToListAsync(ct);
         public Task<int> CountAdminAsync(bool isActive, string? query, CancellationToken ct = default)
         {
             query = query?.Trim();
 
-            IQueryable<Subject> q = _db.Subjects;
+            IQueryable<Subject> q = _db.Subjects.IgnoreQueryFilters();
 
             q = q.Where(s => s.IsActive == isActive);
 
@@ -65,6 +60,7 @@ namespace Infrastructure.Repositories
             query = query?.Trim();
 
             IQueryable<Subject> q = _db.Subjects
+                .IgnoreQueryFilters()
                 .Include(s => s.TeachingAssignments)
                     .ThenInclude(ta => ta.Teacher)
                 .AsNoTracking()

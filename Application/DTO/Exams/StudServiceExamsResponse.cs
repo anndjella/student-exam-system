@@ -1,13 +1,12 @@
-﻿using Application.DTO.Exams;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.DTO.Me.StudService
+namespace Application.DTO.Exams
 {
-    public sealed class StudentServiceExamsResponse
+    public sealed class StudServiceExamsResponse
     {
         public int UnsignedCount { get; set; }
         public int Total { get; set; }

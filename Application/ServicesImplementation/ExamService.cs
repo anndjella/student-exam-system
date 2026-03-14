@@ -1,8 +1,5 @@
 ﻿using Application.Common;
 using Application.DTO.Exams;
-using Application.DTO.Me.Student;
-using Application.DTO.Me.StudService;
-using Application.DTO.Me.Teacher;
 using Application.Services;
 using Domain.Entity;
 using Domain.Enums;
@@ -34,6 +31,8 @@ namespace Application.ServicesImplementation
             var term = await _uow.Terms.GetByIdAsync(termId, ct);
             if (term is null)
                 throw new AppException(AppErrorCode.NotFound, "Term not found.");
+
+            await EnsurePreviousTermFinalizedAsync(subjectId, termId, ct);
 
             if (!term.IsInTermWindow(req.Date))
                 throw new AppException(
@@ -72,6 +71,8 @@ namespace Application.ServicesImplementation
             var term = await _uow.Terms.GetByIdAsync(req.TermID, ct);
             if (term is null)
                 throw new AppException(AppErrorCode.NotFound, "Term not found.");
+
+            await EnsurePreviousTermFinalizedAsync(req.SubjectID, req.TermID, ct);
 
             if (term.IsInRegistrationWindow(_clock.Today))
                 throw new AppException(
@@ -201,6 +202,8 @@ namespace Application.ServicesImplementation
             if (ta is null || !ta.CanGrade)
                 throw new AppException(AppErrorCode.Forbidden, "Teacher cannot grade this subject.");
 
+            await EnsurePreviousTermFinalizedAsync(subjectId, termId, ct);
+
             var exam = await _uow.Exams.GetByKeyAsync(studentId, subjectId, termId, ct);
             if (exam is null)
                 throw new AppException(AppErrorCode.NotFound, "Exam not found.");
@@ -238,7 +241,7 @@ namespace Application.ServicesImplementation
 
             return resp;
         }
-        public async Task<StudentServiceExamsResponse> ListPagedAsync(
+        public async Task<StudServiceExamsResponse> ListPagedAsync(
             int subjectId,
             int termId,
             int skip,
@@ -264,12 +267,46 @@ namespace Application.ServicesImplementation
             var unsignedCount = await _uow.Exams.CountUnsignedBySubjectTermAsync(subjectId, termId, ct);
             var exams = await _uow.Exams.ListPagedAsync(subjectId, termId, skip, take, query, ct);
 
-            return new StudentServiceExamsResponse
+            return new StudServiceExamsResponse
             {
                 UnsignedCount = unsignedCount,
                 Total = total,
                 Exams = exams.Select(Mapper.StudServiceExamToResponse).ToList()
             };
+        }
+        private async Task EnsurePreviousTermFinalizedAsync(
+            int subjectId,
+            int currentTermId,
+            CancellationToken ct)
+        {
+            var previousTerm = await _uow.Terms.GetPreviousTermAsync(currentTermId, ct);
+            if (previousTerm is null)
+                return;
+
+            var prevActiveRegs = await _uow.Registrations
+                .ListActiveBySubjectAndTermWithExamAsync(subjectId, previousTerm.ID, ct);
+
+            var hasMissingExam = prevActiveRegs.Any(r => r.Exam is null);
+            if (hasMissingExam)
+            {
+                throw new AppException(
+                    AppErrorCode.Conflict,
+                    $"Previous term '{previousTerm.Name}' is not finalized. " +
+                    "Some active registrations do not have exams yet."
+                );
+            }
+
+            var unsignedPrevExams = await _uow.Exams
+                .ListUnsignedBySubjectTermWithRegistrationAsync(subjectId, previousTerm.ID, ct);
+
+            if (unsignedPrevExams.Count > 0)
+            {
+                throw new AppException(
+                    AppErrorCode.Conflict,
+                    $"Previous term '{previousTerm.Name}' is not finalized. " +
+                    "Some exams are still not locked."
+                );
+            }
         }
     }
 }

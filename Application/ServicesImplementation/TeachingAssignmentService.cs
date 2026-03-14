@@ -1,6 +1,4 @@
 ﻿using Application.Common;
-using Application.DTO.Me.Student;
-using Application.DTO.Me.Teacher;
 using Application.DTO.Subjects;
 using Application.DTO.TeachingAssignment;
 using Application.Services;

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace Api.Controllers.Me
+namespace Api.Controllers.Me.Teacher
 {
     [ApiController]
     [Route("api/me/teacher/subjects")]
