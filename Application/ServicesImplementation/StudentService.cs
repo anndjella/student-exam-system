@@ -2,87 +2,142 @@
 using Application.DTO.Exams;
 using Application.DTO.Students;
 using Application.Services;
+using Application.ServicesImplementation;
 using Domain.Entity;
 using Domain.Interfaces;
-using Domain.Validation;
+using Domain.Common;
+using Domain.Enums;
+using Application.Auth;
+using Application.DTO.Common;
 
 namespace Application.Services;
 
 public sealed class StudentService : IStudentService
 {
-    private readonly IStudentRepository _repo;
-    public StudentService(IStudentRepository repo) => _repo = repo;
-
+    private readonly IUnitOfWork _uow;
+    public StudentService(IUnitOfWork uow)
+    {
+        _uow = uow;
+    }
     public async Task<StudentResponse> CreateAsync(CreateStudentRequest req, CancellationToken ct = default)
     {
-        if (await _repo.ExistsByJmbgAsync(req.JMBG, ct))
-            throw new AppException(AppErrorCode.Conflict,"Student with this JMBG already exists.");
+        if (!JmbgParser.TryGetDateOfBirth(req.JMBG, out var dob, out var dobError))
+            throw new AppException(AppErrorCode.Validation, dobError);
 
-        if (await _repo.ExistsByIndexAsync(req.IndexNumber, ct))
+        if (await _uow.People.ExistsByJmbgAsync(req.JMBG, ct))
+            throw new AppException(AppErrorCode.Conflict, "Person with this JMBG already exists.");
+
+        if (await _uow.Students.ExistsByIndexAsync(req.IndexNumber, ct))
             throw new AppException(AppErrorCode.Conflict, "Index already exists.");
 
-        Student student = new Student
+        var student = new Student
         {
             JMBG = req.JMBG,
             FirstName = req.FirstName,
             LastName = req.LastName,
-            DateOfBirth = req.DateOfBirth,
+            DateOfBirth = dob,
             IndexNumber = req.IndexNumber
         };
 
-        var id = await _repo.CreateAsync(student, ct);
-        var created = await _repo.GetByIdAsync(id, ct) ??
-            throw new AppException(AppErrorCode.Unexpected,"Unexpected error in creating.");
+        _uow.Students.Add(student);
+
+        var username = CredentialsGenerator.StudentUsername(student.FirstName, student.LastName, student.IndexNumber);
+
+        if (await _uow.Users.ExistsByUsernameAsync(username, ct))
+            throw new AppException(AppErrorCode.Conflict, "Generated username already exists.");
+
+        var initialPlain = CredentialsGenerator.InitialPasswordPlain(student.JMBG);
+        var user = new User(UserRole.Student, username, passwordHash: "TEMP");
+
+        var hash = PasswordService.Hash(user, initialPlain);
+        user.SetPasswordHash(hash);
+
+        student.User = user;
+
+        _uow.Users.Add(user);
+
+        await _uow.CommitAsync(ct);
+
+        var created = await _uow.Students.GetByIdAsync(student.ID, ct)
+            ?? throw new AppException(AppErrorCode.Unexpected, "Unexpected error in creating.");
 
         return Mapper.StudentToResponse(created);
     }
 
-    public async Task<StudentResponse?> GetAsync(int id, CancellationToken ct = default)
+    public async Task<StudentResponse?> GetByIdAsync(int id, CancellationToken ct = default)
     {
-        var s = await _repo.GetByIdAsync(id, ct);
-        return s is null ?
-            throw new AppException(AppErrorCode.NotFound, $"Student with id {id} not found.")
-            : Mapper.StudentToResponse(s);
-    }
+        var s = await _uow.Students.GetByIdAsync(id, ct);
+        if (s is null)
+            throw new AppException(AppErrorCode.NotFound, $"Student with id {id} not found.");
 
-    public async Task<IReadOnlyList<StudentResponse>> ListAsync(CancellationToken ct = default)
+        return Mapper.StudentToResponse(s);
+    }
+    public async Task<StudentResponse?> GetByIndexAsync(string index, CancellationToken ct = default)
     {
-        var list = await _repo.ListAsync(ct);
-        return list.Select(Mapper.StudentToResponse).ToList();
+        var s=await _uow.Students.GetByIndexAsync(index, ct);
+        if (s is null)
+            throw new AppException(AppErrorCode.NotFound, $"Student with index {index} not found.");
+        var stats = await _uow.StudentStats.GetByStudentIdAsync(s.ID, ct);
+        return Mapper.StudentToResponseWithStats(s,stats);
     }
 
     public async Task UpdateAsync(int id, UpdateStudentRequest req, CancellationToken ct = default)
     {
-        var s = await _repo.GetByIdAsync(id, ct) ?? 
-            throw new AppException(AppErrorCode.NotFound,$"Student with id {id} not found.");
+        var s = await _uow.Students.GetByIdAsync(id, ct)
+            ?? throw new AppException(AppErrorCode.NotFound, $"Student with id {id} not found.");
 
         if (req.FirstName is not null) s.FirstName = req.FirstName;
         if (req.LastName is not null) s.LastName = req.LastName;
+
         if (req.IndexNumber is not null)
         {
-            if (s.IndexNumber != req.IndexNumber && await _repo.ExistsByIndexAsync(req.IndexNumber, ct))
-                throw new AppException(AppErrorCode.Conflict,"Index already exists.");
+            if (s.IndexNumber != req.IndexNumber && await _uow.Students.ExistsByIndexAsync(req.IndexNumber, ct))
+                throw new AppException(AppErrorCode.Conflict, "Index already exists.");
+
             s.IndexNumber = req.IndexNumber;
         }
 
-        await _repo.UpdateAsync(s, ct);
+        //_uow.Students.Update(s);
+        await _uow.CommitAsync(ct);
     }
 
-    public async Task DeleteAsync(int id, CancellationToken ct = default)
+    public async Task SoftDeleteAsync(int id, CancellationToken ct = default)
     {
-        var s = await _repo.GetByIdAsync(id, ct);
-        if (s is null)
-            throw new AppException(AppErrorCode.NotFound, $"Student with id {id} not found.");
-        await _repo.DeleteAsync(s, ct);
+           var s = await _uow.Students.GetByIdWithUserAsync(id, ct)
+            ?? throw new AppException(AppErrorCode.NotFound, $"Student with id {id} not found.");
+
+        s.MarkDeleted();
+        s.User?.Deactivate();
+
+        //_uow.Students.Update(s);
+        await _uow.CommitAsync(ct);
     }
 
-    public async Task<IReadOnlyList<ExamResponse>> GetExamsAsync(int studentId, CancellationToken ct = default)
+    public async Task<PagedResponse<StudentResponse>> ListAsync(int skip, int take,string? query,bool onlyDeleted,CancellationToken ct)
     {
-        if (await _repo.GetByIdAsync(studentId, ct) is null)
-            throw new AppException(AppErrorCode.NotFound, $"Student with id {studentId} not found.");
+        if (skip < 0) skip = 0;
+        if (take <= 0) take = 20;
+        if (take > 100) take = 100;
 
-        var exams = await _repo.GetExamsAsync(studentId, ct);
+        var total = await _uow.Students.CountAsync(query, onlyDeleted, ct);
+        var items = await _uow.Students.ListPagedAsync(skip, take, query, onlyDeleted, ct);
 
-        return exams.Select(Mapper.ExamToResponse).ToList();
+        var ids = items.Select(s => s.ID).ToList();
+
+        var statsList = await _uow.StudentStats.ListByStudentIdsAsync(ids, ct);
+
+        var statsByStudentId = statsList.ToDictionary(x => x.StudentID);
+
+        var respItems = items.Select(s =>
+        {
+            statsByStudentId.TryGetValue(s.ID, out var st);
+            return Mapper.StudentToResponseWithStats(s, st);
+        }).ToList();
+
+        return new PagedResponse<StudentResponse>
+        {
+            Items = respItems,
+            Total = total
+        };
     }
 }

@@ -29,7 +29,7 @@ namespace Tests.Service
                 FirstName = "Ana",
                 LastName = "Anić",
                 DateOfBirth = new DateOnly(1974, 9, 4),
-                Title = Title.FullProfessor
+                Title = Enums.FullProfessor
             };
             _id = 26;
             _teacher = Mapper.CreateToTeacher(_req, _id);
@@ -149,7 +149,7 @@ namespace Tests.Service
 
             UpdateTeacherRequest req = new UpdateTeacherRequest
             {
-                Title = Title.ProfessorEmeritus
+                Title = Enums.ProfessorEmeritus
             };
 
             await _svc.UpdateAsync(_id, req);
@@ -159,7 +159,7 @@ namespace Tests.Service
             captured.FirstName.Should().Be(_teacher.FirstName);
             captured.LastName.Should().Be(_teacher.LastName);
             captured.JMBG.Should().Be(_teacher.JMBG);
-            captured.Title.Should().Be(Title.ProfessorEmeritus);
+            captured.Title.Should().Be(Enums.ProfessorEmeritus);
 
             _repo.Verify(r=>r.UpdateAsync(It.IsAny<Teacher>(),default),Times.Once);
         }    
@@ -216,8 +216,8 @@ namespace Tests.Service
         {
             var list = new[]
             {
-                new Teacher { ID = 1, FirstName = "A", LastName = "B", Title = Title.AssistantProfessor },
-                new Teacher { ID = 2, FirstName = "C", LastName = "D", Title = Title.AssociateProfessor }
+                new Teacher { ID = 1, FirstName = "A", LastName = "B", Title = Enums.AssistantProfessor },
+                new Teacher { ID = 2, FirstName = "C", LastName = "D", Title = Enums.AssociateProfessor }
             };
             _repo.Setup(r => r.ListAsync(It.IsAny<CancellationToken>()))
                  .ReturnsAsync(list);

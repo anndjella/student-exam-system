@@ -1,5 +1,6 @@
 ﻿using Domain.Entity;
 using Domain.Interfaces;
+using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -17,31 +18,68 @@ namespace Infrastructure.Repositories
         {
             _db = db;
         }
-        public async Task<int> CreateAsync(Subject subject, CancellationToken ct = default)
+        public void Add(Subject subject)
+        =>_db.Subjects.Add(subject);
+
+        public Task<bool> ExistsByCode(string code, CancellationToken ct)
+         => _db.Subjects.AsNoTracking().AnyAsync(x => x.Name.ToLower() == code.ToLower(), ct);
+        public Task<bool> ExistsById(int id, CancellationToken ct)
+       => _db.Subjects.AsNoTracking().AnyAsync(x => x.ID==id, ct);
+        public Task<Subject?> GetByIdWithTeachersAsync(int id, CancellationToken ct = default)
+        =>_db.Subjects.Include(e=>e.TeachingAssignments).ThenInclude(e=>e.Teacher).FirstOrDefaultAsync(x=>x.ID == id, ct);
+        public Task<Subject?> GetByCodeWithTeachersAsync(string code, CancellationToken ct = default)
+        => _db.Subjects.Include(e => e.TeachingAssignments).ThenInclude(e => e.Teacher).FirstOrDefaultAsync(x => x.Code == code, ct);
+
+        public Task<List<int>> GetExistingIdsAsync(List<int> ids, CancellationToken ct)
+        => _db.Subjects.Where(s => ids.Contains(s.ID)).Select(s => s.ID).ToListAsync(ct);
+        public Task<List<Subject>> ListAllIncludingInactiveAsync(CancellationToken ct = default) // for student service to make enrollments
+        => _db.Subjects.AsNoTracking().ToListAsync(ct);
+        public void Remove(Subject subject)
+        => _db.Subjects.Remove(subject);
+        public Task<int> CountAdminAsync(bool isActive, string? query, CancellationToken ct = default)
         {
-            _db.Subjects.Add(subject);
-            await _db.SaveChangesAsync(ct);
-            return subject.ID;
+            query = query?.Trim();
+
+            IQueryable<Subject> q = _db.Subjects.IgnoreQueryFilters();
+
+            q = q.Where(s => s.IsActive == isActive);
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(s =>
+                    EF.Functions.Like(s.Code, like) ||
+                    EF.Functions.Like(s.Name, like));
+            }
+
+            return q.CountAsync(ct);
         }
 
-        public async Task DeleteAsync(Subject subject, CancellationToken ct = default)
+        public Task<List<Subject>> ListPagedWithTeachersAsync(int skip, int take, bool isActive, string? query, CancellationToken ct = default)
         {
-            _db.Subjects.Remove(subject);
-            await _db.SaveChangesAsync(ct);
+            query = query?.Trim();
+
+            IQueryable<Subject> q = _db.Subjects
+                .IgnoreQueryFilters()
+                .Include(s => s.TeachingAssignments)
+                    .ThenInclude(ta => ta.Teacher)
+                .AsNoTracking()
+                .Where(s => s.IsActive == isActive);
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(s => EF.Functions.Like(s.Code, like) || EF.Functions.Like(s.Name, like));
+            }
+
+            return q.OrderBy(s => s.Code)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(ct);
         }
 
-        public async Task<Subject?> GetByIdAsync(int id, CancellationToken ct = default)
-       => await _db.Subjects.FirstOrDefaultAsync(x => x.ID == id, ct);
 
-
-        public async Task<IReadOnlyList<Subject>> ListAsync(CancellationToken ct = default)
-       => await _db.Subjects.AsNoTracking().OrderBy(x => x.Name).ThenBy(x => x.ESPB).ToListAsync(ct);
-
-
-        public async Task UpdateAsync(Subject subject, CancellationToken ct = default)
-        {
-            await _db.SaveChangesAsync(ct);
-        }
-
+        public Task<Subject?> GetByCodeAsync(string subjectCode, CancellationToken ct)
+        =>_db.Subjects.AsNoTracking().FirstOrDefaultAsync(e=>e.Code==subjectCode, ct);
     }
 }

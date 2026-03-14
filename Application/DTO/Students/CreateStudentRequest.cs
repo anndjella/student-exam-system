@@ -1,4 +1,4 @@
-﻿using Domain.Validation;
+﻿using Domain.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +14,6 @@ namespace Application.DTO.Students
         public string JMBG { get; set; } = "";
         public string FirstName { get; set; } = "";
         public string LastName { get; set; } = "";
-        public DateOnly DateOfBirth { get; set; }
         public string IndexNumber { get; set; } = "" ;
     }
     }

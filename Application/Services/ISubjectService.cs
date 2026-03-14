@@ -1,4 +1,5 @@
-﻿using Application.DTO.Subjects;
+﻿using Application.DTO.Common;
+using Application.DTO.Subjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +12,12 @@ namespace Application.Services
     public interface ISubjectService
     {
         Task<SubjectResponse> CreateAsync(CreateSubjectRequest req, CancellationToken ct = default);
-        Task<SubjectResponse?> GetAsync(int id, CancellationToken ct = default);
-        Task<IReadOnlyList<SubjectResponse>> ListAsync(CancellationToken ct = default);
-        Task UpdateAsync(int id, UpdateSubjectRequest req, CancellationToken ct = default);
+        Task<StudServiceSubjectResponse?> GetByIdAsync(int id, CancellationToken ct = default);
+        Task<StudServiceSubjectResponse?> GetByCodeAsync(string code, CancellationToken ct = default);
+        //Task<AdminSubjectsResponse> ListAllWithTeachersAsync(CancellationToken ct);
+        Task<PagedResponse<StudServiceSubjectResponse>> ListPagedAsync(bool isActive, int skip, int take, string? query, CancellationToken ct);
+        Task<List<SimpleSubjectResponse>> ListAllIncludingInactiveAsync(CancellationToken ct = default);
         Task DeleteAsync(int id, CancellationToken ct = default);
+        Task DeactivateAsync(int id, CancellationToken ct);
     }
 }

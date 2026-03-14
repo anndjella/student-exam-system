@@ -1,6 +1,7 @@
 ﻿using Application.DTO.Exams;
 using Domain.Entity;
 using Domain.Interfaces;
+using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -18,63 +19,82 @@ namespace Infrastructure.Repositories
         {
             _db = db;
         }
+        public void Add(Teacher teacher) => _db.Teachers.Add(teacher);
+        public Task<bool> ExistsByEmployeeNumAsync(string employeeNum, CancellationToken ct = default)
+          => _db.Teachers.IgnoreQueryFilters().AnyAsync(x => x.EmployeeNumber == employeeNum, ct);
+        public Task<bool> ExistsByIdAsync(int id, CancellationToken ct = default)
+          => _db.Teachers.AsNoTracking().AnyAsync(x => x.ID == id, ct);
+        public Task DeleteByIdAsync(int teacherId, CancellationToken ct = default)
+        => _db.Teachers.Where(e => e.ID == teacherId).ExecuteDeleteAsync();
 
-        public async Task<int> CreateAsync(Teacher teacher, CancellationToken ct = default)
+        public  Task<Teacher?> GetByIdAsync(int id, CancellationToken ct = default)
+           =>  _db.Teachers.FirstOrDefaultAsync(x => x.ID == id, ct);
+       
+        public Task<Teacher?> GetByIdWithUserAsync(int id, CancellationToken ct = default)
+        =>_db.Teachers
+            .Include(x=>x.User)
+            .FirstOrDefaultAsync(x=>x.ID == id, ct);
+
+        public Task<Teacher?> GetByEmployeeNumAsync(string employeeNum, CancellationToken ct = default)
+        => _db.Teachers.FirstOrDefaultAsync(x => x.EmployeeNumber == employeeNum);
+        public Task<int> CountAsync(string? query,bool onlyDeleted, CancellationToken ct = default)
         {
-            _db.Teachers.Add(teacher);
-            await _db.SaveChangesAsync(ct);
-            return teacher.ID;
+            query = query?.Trim();
+
+            IQueryable<Teacher> q = _db.Teachers;
+
+            if (onlyDeleted)
+            {
+                q = q.IgnoreQueryFilters().Where(s => s.IsDeleted);
+            }
+            else
+            {
+                q = q.Where(s => !s.IsDeleted);
+            }
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(t =>
+                    EF.Functions.Like(t.FirstName, like) ||
+                    EF.Functions.Like(t.LastName, like) ||
+                    EF.Functions.Like(t.EmployeeNumber, like));
+            }
+
+            return q.CountAsync(ct);
         }
 
-        public async Task DeleteAsync(Teacher teacher, CancellationToken ct = default)
+        public Task<List<Teacher>> ListPagedAsync(int skip, int take, string? query, bool onlyDeleted, CancellationToken ct = default)
         {
-            _db.Teachers.Remove(teacher);
-            await _db.SaveChangesAsync(ct);
-        }
+            query = query?.Trim();
 
-        public Task<bool> ExistsByJmbgAsync(string jmbg, CancellationToken ct = default)
-        {
-            return _db.Teachers.AnyAsync(x => x.JMBG == jmbg, ct);
-        }
+            IQueryable<Teacher> q = _db.Teachers;
 
-        public async Task<Teacher?> GetByIdAsync(int id, CancellationToken ct = default)
-        {
-            return await _db.Teachers.FirstOrDefaultAsync(x => x.ID == id, ct);
-        }
+            if (onlyDeleted)
+            {
+                q = q.IgnoreQueryFilters().Where(s => s.IsDeleted);
+            }
+            else
+            {
+                q = q.Where(s => !s.IsDeleted);
+            }
 
-        public async Task<IReadOnlyList<Teacher>> ListAsync(CancellationToken ct = default)
-        {
-          return await _db.Teachers.AsNoTracking().OrderBy(x => x.LastName).ThenBy(x => x.FirstName).ToListAsync(ct);
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(t =>
+                    EF.Functions.Like(t.FirstName, like) ||
+                    EF.Functions.Like(t.LastName, like) ||
+                    EF.Functions.Like(t.EmployeeNumber, like));
+            }
 
-        }
-
-        public async Task<IReadOnlyList<Exam>> ListExamsAsExaminerAsync(int teacherId, CancellationToken ct = default)
-        {
-            return await _db.Exams.AsNoTracking()
-                       .Where(e => e.ExaminerID == teacherId)
-                       .Include(e=>e.Student)
-                       .Include(e => e.Subject)
-                       .Include(e => e.Examiner)
-                       .Include(e => e.Supervisor)
-                       .OrderByDescending(e => e.Date)
-                       .ToListAsync(ct);
-        }
-
-        public async Task<IReadOnlyList<Exam>> ListExamsAsSupervisorAsync(int teacherId, CancellationToken ct = default)
-        {
-            return await _db.Exams.AsNoTracking()
-                 .Where(e => e.SupervisorID == teacherId)
-                 .Include(e => e.Student)
-                 .Include(e => e.Subject)
-                 .Include(e => e.Examiner)
-                 .Include(e => e.Supervisor)
-                 .OrderByDescending(e => e.Date)
-                 .ToListAsync(ct);
-        }
-
-        public async Task UpdateAsync(Teacher teacher, CancellationToken ct = default)
-        {
-            await _db.SaveChangesAsync(ct);
+            return q.AsNoTracking()
+                .OrderBy(t => t.LastName)
+                .ThenBy(t => t.FirstName)
+                .ThenBy(t => t.EmployeeNumber)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(ct);
         }
     }
 }

@@ -10,8 +10,6 @@ namespace Application.Common
     {
         string FirstName { get; }
         string LastName { get; }
-        DateOnly DateOfBirth { get; }
         string JMBG { get; }
     }
-
 }

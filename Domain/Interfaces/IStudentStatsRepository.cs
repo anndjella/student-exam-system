@@ -1,0 +1,16 @@
+﻿using Domain.Entity;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Domain.Interfaces
+{
+    public interface IStudentStatsRepository
+    {
+        Task<StudentStats?> GetByStudentIdAsync(int studentId, CancellationToken ct = default);
+        Task<List<StudentStats>> ListByStudentIdsAsync(List<int> studentIds, CancellationToken ct = default);
+
+    }
+}

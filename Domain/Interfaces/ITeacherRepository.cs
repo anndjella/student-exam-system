@@ -9,15 +9,17 @@ namespace Domain.Interfaces
 {
     public interface ITeacherRepository
     {
-        Task<bool> ExistsByJmbgAsync(string jmbg, CancellationToken ct = default);
-
+        //existence check
+        Task<bool> ExistsByEmployeeNumAsync(string employeeNum, CancellationToken ct = default);
+        Task<bool> ExistsByIdAsync(int id, CancellationToken ct = default);
+        //read
         Task<Teacher?> GetByIdAsync(int id, CancellationToken ct = default);
-        Task<IReadOnlyList<Teacher>> ListAsync(CancellationToken ct = default);
-        Task<int> CreateAsync(Teacher teacher, CancellationToken ct = default);
-        Task UpdateAsync(Teacher teacher, CancellationToken ct = default);
-        Task DeleteAsync(Teacher teacher, CancellationToken ct = default);
-        Task<IReadOnlyList<Exam>> ListExamsAsExaminerAsync(int teacherId, CancellationToken ct = default);
-        Task<IReadOnlyList<Exam>> ListExamsAsSupervisorAsync(int teacherId, CancellationToken ct = default);
+        Task<Teacher?> GetByIdWithUserAsync(int id, CancellationToken ct = default);
+        Task<Teacher?> GetByEmployeeNumAsync(string employeeNum, CancellationToken ct = default);
+        Task<int> CountAsync(string? query, bool onlyDeleted, CancellationToken ct = default);
+        Task<List<Teacher>> ListPagedAsync(int skip, int take, string? query, bool onlyDeleted, CancellationToken ct = default);
 
+        // write
+        void Add(Teacher teacher);
     }
 }

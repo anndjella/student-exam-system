@@ -1,9 +1,13 @@
-﻿using Application.Common;
+﻿using Application.Auth;
+using Application.Common;
+using Application.DTO.Common;
 using Application.DTO.Exams;
 using Application.DTO.Students;
 using Application.DTO.Teachers;
 using Application.Services;
+using Domain.Common;
 using Domain.Entity;
+using Domain.Enums;
 using Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -15,81 +19,119 @@ namespace Application.ServicesImplementation
 {
     public class TeacherService : ITeacherService
     {
-        private readonly ITeacherRepository _repo;
-        public TeacherService(ITeacherRepository repo) => _repo = repo;
+        private readonly IUnitOfWork _uow;
+        public TeacherService(IUnitOfWork uow)
+        {
+            _uow = uow;
+        }
         public async Task<TeacherResponse> CreateAsync(CreateTeacherRequest req, CancellationToken ct = default)
         {
-            if (await _repo.ExistsByJmbgAsync(req.JMBG, ct))
-                throw new AppException(AppErrorCode.Conflict,"Teacher with this JMBG already exists.");
+            if (!JmbgParser.TryGetDateOfBirth(req.JMBG, out var dob, out var dobError))
+                throw new AppException(AppErrorCode.Validation, dobError);
+
+            if (await _uow.People.ExistsByJmbgAsync(req.JMBG, ct))
+                throw new AppException(AppErrorCode.Conflict,"Person with this JMBG already exists.");
+            if (await _uow.Teachers.ExistsByEmployeeNumAsync(req.EmployeeNumber, ct))
+                throw new AppException(AppErrorCode.Conflict, "Employee number already exists.");
 
             Teacher teacher = new Teacher
             {
                 JMBG = req.JMBG,
                 FirstName = req.FirstName,
                 LastName = req.LastName,
-                DateOfBirth = req.DateOfBirth,
+                DateOfBirth = dob,
+                EmployeeNumber = req.EmployeeNumber,
                 Title=req.Title
             };
 
-            var id = await _repo.CreateAsync(teacher, ct);
-            var created = await _repo.GetByIdAsync(id, ct) ?? 
-                throw new AppException(AppErrorCode.Unexpected,"Unexpected error in creating.");
+            _uow.Teachers.Add(teacher);
+
+            var username = CredentialsGenerator.StudentUsername(teacher.FirstName, teacher.LastName, teacher.EmployeeNumber);
+
+            if (await _uow.Users.ExistsByUsernameAsync(username, ct))
+                throw new AppException(AppErrorCode.Conflict, "Generated username already exists.");
+
+            var initialPlain = CredentialsGenerator.InitialPasswordPlain(teacher.JMBG);
+            var user = new User(UserRole.Teacher, username, passwordHash: "TEMP");
+
+            var hash = PasswordService.Hash(user, initialPlain);
+            user.SetPasswordHash(hash);
+
+            teacher.User = user;
+
+            _uow.Users.Add(user);
+
+            await _uow.CommitAsync(ct);
+
+            var created = await _uow.Teachers.GetByIdAsync(teacher.ID, ct)
+                ?? throw new AppException(AppErrorCode.Unexpected, "Unexpected error in creating.");
 
             return Mapper.TeacherToResponse(created);
         }
 
-        public async Task DeleteAsync(int id, CancellationToken ct = default)
+        public async Task SoftDeleteAsync(int id, CancellationToken ct = default)
         {
-            var s = await _repo.GetByIdAsync(id, ct);
-            if (s is null) 
-                throw new AppException(AppErrorCode.NotFound, $"Teacher with id {id} not found.");
-            await _repo.DeleteAsync(s, ct);
+            var t = await _uow.Teachers.GetByIdWithUserAsync(id, ct)
+            ?? throw new AppException(AppErrorCode.NotFound, $"Teacher with id {id} not found.");
+
+            t.MarkDeleted();
+            t.User?.Deactivate();
+
+            //_uow.Teachers.Update(t);
+            await _uow.CommitAsync(ct);
         }
 
-        public async Task<TeacherResponse?> GetAsync(int id, CancellationToken ct = default)
+        public async Task<TeacherResponse?> GetByIdAsync(int id, CancellationToken ct = default)
         {
-            var s = await _repo.GetByIdAsync(id, ct);
-            return s is null ? 
+            var t = await _uow.Teachers.GetByIdAsync(id, ct);
+            return t is null ? 
                 throw new AppException(AppErrorCode.NotFound, $"Teacher with id {id} not found.")
-                : Mapper.TeacherToResponse(s);
+                : Mapper.TeacherToResponse(t);
         }
-
-        public async Task<IReadOnlyList<TeacherResponse>> ListAsync(CancellationToken ct = default)
+        public async Task<TeacherResponse?> GetByNumAsync(string employeeNum, CancellationToken ct = default)
         {
-            var list = await _repo.ListAsync(ct);
-            return list.Select(Mapper.TeacherToResponse).ToList();
+            var t = await _uow.Teachers.GetByEmployeeNumAsync(employeeNum, ct);
+            return t is null ?
+                throw new AppException(AppErrorCode.NotFound, $"Teacher with id {employeeNum} not found.")
+                : Mapper.TeacherToResponse(t);
         }
-
-        public async Task<IReadOnlyList<ExamResponse>> ListExamsAsExaminerAsync(int teacherId, CancellationToken ct = default)
-        {
-            if (await _repo.GetByIdAsync(teacherId, ct) is null)
-                throw new AppException(AppErrorCode.NotFound, $"Teacher with id {teacherId} not found.");
-
-            var exams = await _repo.ListExamsAsExaminerAsync(teacherId, ct);
-
-            return exams.Select(Mapper.ExamToResponse).ToList();
-        }
-
-        public async Task<IReadOnlyList<ExamResponse>> ListExamsAsSupervisorAsync(int teacherId, CancellationToken ct = default)
-        {
-            if (await _repo.GetByIdAsync(teacherId, ct) is null)
-                throw new AppException(AppErrorCode.NotFound, $"Teacher with id {teacherId} not found.");
-
-            var exams = await _repo.ListExamsAsSupervisorAsync(teacherId, ct);
-
-            return exams.Select(Mapper.ExamToResponse).ToList();
-        }
-
         public async Task UpdateAsync(int id, UpdateTeacherRequest req, CancellationToken ct = default)
         {
-            var s = await _repo.GetByIdAsync(id, ct) ??
+            var t = await _uow.Teachers.GetByIdAsync(id, ct) ??
                 throw new AppException(AppErrorCode.NotFound, $"Teacher with id {id} not found.");
 
-            if (req.FirstName is not null) s.FirstName = req.FirstName;
-            if (req.LastName is not null) s.LastName = req.LastName;
-            if (req.Title is not null) s.Title = req.Title.Value;
+            if (req.FirstName is not null) t.FirstName = req.FirstName;
+            if (req.LastName is not null) t.LastName = req.LastName;
+            if (req.Title is not null) t.Title = req.Title.Value;
 
-            await _repo.UpdateAsync(s, ct);
+            if (req.EmployeeNumber is not null)
+            {
+                if (t.EmployeeNumber != req.EmployeeNumber && await _uow.Teachers.ExistsByEmployeeNumAsync(req.EmployeeNumber, ct))
+                    throw new AppException(AppErrorCode.Conflict, "Employee number already exists.");
+
+                t.EmployeeNumber = req.EmployeeNumber;
+            }
+
+            //_uow.Teachers.Update(t);
+            await _uow.CommitAsync(ct);
+        }
+
+        public async Task<PagedResponse<TeacherResponse>> ListAsync(int skip,int take,string? query, bool onlyDeleted, CancellationToken ct)
+        {
+            if (skip < 0) skip = 0;
+            if (take <= 0) take = 20;
+            if (take > 100) take = 100;
+
+            var total = await _uow.Teachers.CountAsync(query, onlyDeleted, ct);
+            var items = await _uow.Teachers.ListPagedAsync(skip, take, query, onlyDeleted, ct);
+
+            var respItems = items.Select(Mapper.TeacherToResponse).ToList();
+
+            return new PagedResponse<TeacherResponse>
+            {
+                Items = respItems,
+                Total = total
+            };
         }
     }
 }

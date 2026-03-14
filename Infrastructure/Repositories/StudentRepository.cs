@@ -1,5 +1,6 @@
 ﻿using Domain.Entity;
 using Domain.Interfaces;
+using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -11,51 +12,87 @@ using System.Threading.Tasks;
 namespace Infrastructure.Repositories
 {
     public sealed class StudentRepository : IStudentRepository
-    {
+    {   
         private readonly AppDbContext _db;
         public StudentRepository(AppDbContext db) => _db = db;
 
-        public Task<bool> ExistsByJmbgAsync(string jmbg, CancellationToken ct = default)
-            => _db.Students.AnyAsync(x => x.JMBG == jmbg, ct);
+        public void Add(Student s) => _db.Students.Add(s);
+        public Task<Student?> GetByIdAsync(int id, CancellationToken ct = default)
+            => _db.Students.FirstOrDefaultAsync(x => x.ID == id, ct);
 
         public Task<bool> ExistsByIndexAsync(string indexNumber, CancellationToken ct = default)
-            => _db.Students.AnyAsync(x => x.IndexNumber == indexNumber, ct);
+            => _db.Students.IgnoreQueryFilters().AnyAsync(x => x.IndexNumber == indexNumber, ct);
 
-        public async Task<Student?> GetByIdAsync(int id, CancellationToken ct = default)
-            => await _db.Students.AsNoTracking().FirstOrDefaultAsync(x => x.ID == id, ct);
+        public Task<Student?> GetByIndexAsync(string indexNumber, CancellationToken ct = default)
+          => _db.Students.FirstOrDefaultAsync(x => x.IndexNumber == indexNumber, ct);
 
-        public async Task<IReadOnlyList<Student>> ListAsync(CancellationToken ct = default)
-            => await _db.Students.AsNoTracking().OrderBy(x => x.LastName).ThenBy(x => x.FirstName).ToListAsync(ct);
+        public Task<Student?> GetByIdWithUserAsync(int id, CancellationToken ct = default)
+         => _db.Students
+            .Include(s => s.User)
+            .FirstOrDefaultAsync(x => x.ID == id, ct);
+        public Task<List<int>> ListIdsByIndexPrefixAsync(string prefix, CancellationToken ct)
+         => _db.Students
+            .Where(s => s.IndexNumber.StartsWith(prefix))
+            .Select(s => s.ID)
+            .ToListAsync(ct);
 
-        public async Task<int> CreateAsync(Student student, CancellationToken ct = default)
+        public Task<int> CountAsync(string? query, bool onlyDeleted, CancellationToken ct = default)
         {
-            _db.Students.Add(student);
-            await _db.SaveChangesAsync(ct);
-            return student.ID;
+            query = query?.Trim();
+
+            IQueryable<Student> q = _db.Students.AsQueryable();
+
+            if (onlyDeleted)
+            {
+                q = q.IgnoreQueryFilters().Where(s => s.IsDeleted);
+            }
+            else
+            {
+                q = q.Where(s => !s.IsDeleted);
+            }
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(s =>
+                    EF.Functions.Like(s.FirstName, like) ||
+                    EF.Functions.Like(s.LastName, like) ||
+                    EF.Functions.Like(s.IndexNumber, like));
+            }
+
+            return q.CountAsync(ct);
         }
 
-        public async Task UpdateAsync(Student student, CancellationToken ct = default)
+        public Task<List<Student>> ListPagedAsync(int skip ,int take, string? query, bool onlyDeleted, CancellationToken ct = default)
         {
-              await _db.SaveChangesAsync(ct);
+            query = query?.Trim();
+
+            IQueryable<Student> q = _db.Students.AsQueryable();
+
+            if (onlyDeleted)
+            {
+                q = q.IgnoreQueryFilters().Where(s => s.IsDeleted);
+            }
+            else
+            {
+                q = q.Where(s => !s.IsDeleted);
+            }
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var like = $"%{query}%";
+                q = q.Where(s =>
+                    EF.Functions.Like(s.FirstName, like) ||
+                    EF.Functions.Like(s.LastName, like) ||
+                    EF.Functions.Like(s.IndexNumber, like));
+            }
+
+            return q.AsNoTracking()
+                .OrderBy(s => s.LastName).ThenBy(s => s.FirstName).ThenBy(s => s.IndexNumber)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(ct);
         }
 
-        public async Task DeleteAsync(Student student, CancellationToken ct = default)
-        {
-            _db.Students.Remove(student);
-            await _db.SaveChangesAsync(ct);
-        }
-
-        public async Task<IReadOnlyList<Exam>> GetExamsAsync(int studentId, CancellationToken ct = default)
-        {
-            return await _db.Exams
-              .AsNoTracking()
-              .Where(e => e.StudentID == studentId)
-              .Include(e=>e.Student)
-              .Include(e => e.Subject)
-              .Include(e => e.Examiner)
-              .Include(e => e.Supervisor)
-              .OrderByDescending(e => e.Date)
-              .ToListAsync(ct);
-        }
     }
 }

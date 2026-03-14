@@ -9,6 +9,7 @@ namespace Application.DTO.Subjects
     public class CreateSubjectRequest
     {
         public string Name { get; set; } = "";
-        public int ESPB { get; set; }
+        public byte ECTS { get; set; }
+        public string Code { get; set; } = "";
     }
 }

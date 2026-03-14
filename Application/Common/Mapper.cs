@@ -1,8 +1,13 @@
-﻿using Application.DTO.Exams;
+﻿using Application.DTO.Enrollments;
+using Application.DTO.Exams;
+using Application.DTO.Registrations;
 using Application.DTO.Students;
 using Application.DTO.Subjects;
 using Application.DTO.Teachers;
+using Application.DTO.TeachingAssignment;
+using Application.DTO.Term;
 using Domain.Entity;
+using Microsoft.AspNetCore.Http.HttpResults;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,39 +20,127 @@ namespace Application.Common
     {
         public static StudentResponse StudentToResponse(Student s) => new()
         {
-            Id = s.ID,
+            ID = s.ID,
             FirstName = s.FirstName,
             LastName = s.LastName,
-            Age = s.Age,
-            Gpa = s.GPA,
+            DateOfBirth = s.DateOfBirth,
+            GPA = null,
+            ECTSCount = null,
             IndexNumber = s.IndexNumber
+        };
+        public static StudentResponse StudentToResponseWithStats(Student s, StudentStats? stats) => new()
+        {
+            ID = s.ID,
+            FirstName = s.FirstName,
+            LastName = s.LastName,
+            DateOfBirth=s.DateOfBirth,
+            GPA = stats?.GPA is null ? null : (double)stats.GPA.Value,
+            ECTSCount = stats?.ECTSCount,
+            IndexNumber = s.IndexNumber,
+            DeletedAt=s.DeletedAt
         };
         public static TeacherResponse TeacherToResponse(Teacher s) => new()
         {
-            Id = s.ID,
+            ID = s.ID,
             FirstName = s.FirstName,
+            DateOfBirth=s.DateOfBirth,
             LastName = s.LastName,
-            Title = s.Title
+            EmployeeNumber = s.EmployeeNumber,
+            Title = s.Title,
+            DeletedAt=s.DeletedAt
         };
-        public static SubjectResponse SubjectToResponse(Subject s) => new()
+        internal static SimpleSubjectResponse SubjectToSimpleSubjectResponse(Subject s) => new()
         {
-            Id = s.ID,
+            ID = s.ID,
             Name = s.Name,
-            ESPB = s.ESPB
+            Code = s.Code
         };
-        public static ExamResponse ExamToResponse(Exam e) => new()
+        internal static SubjectResponse SubjectToResponse(Subject s) => new()
         {
-            StudentID=e.StudentID,
-            SubjectID=e.SubjectID,
-            Grade = e.Grade,
-            Date = e.Date,
-            Note = e.Note,
-            StudentIndex = e.Student?.IndexNumber ?? string.Empty,
+            ID = s.ID,
+            Name = s.Name,
+            ECTS = s.ECTS,
+            Code = s.Code,
+            Teachers = (s.TeachingAssignments ?? Enumerable.Empty<TeachingAssignment>())
+                    .Where(ta => ta.Teacher != null)
+                    .Select(ta => new SubjectTeacherItem
+                    {
+                        ID = ta.TeacherID,
+                        FirstName = ta.Teacher!.FirstName,
+                        LastName = ta.Teacher!.LastName,
+                    })
+                    .ToList()
+        };
+        internal static StudServiceSubjectResponse SubjectToAdminResponse(Subject s) => new()
+        {
+            ID = s.ID,
+            Name = s.Name,
+            ECTS = s.ECTS,
+            Code = s.Code,
+            IsActive=s.IsActive,
+            Teachers = (s.TeachingAssignments ?? Enumerable.Empty<TeachingAssignment>())
+                    .Where(ta => ta.Teacher != null)
+                    .Select(ta => new StudServiceSubjectTeacherItem
+                    {
+                        ID = ta.TeacherID,
+                        FirstName = ta.Teacher!.FirstName,
+                        LastName = ta.Teacher!.LastName,
+                        EmployeeNumber=ta.Teacher!.EmployeeNumber,
+                        Title=ta.Teacher!.Title,
+                        CanGrade=ta.CanGrade
+                    })
+                    .ToList()
+        };
+        public static TeacherExamItemResponse ExamToTeacherResponse(Exam e) => new()
+        {
+            ID = e.ID,
+            StudentId = e.StudentID,
+            StudentFullName = $"{e.Registration?.Student?.FirstName}  {e.Registration?.Student?.LastName}" ?? string.Empty,
+            StudentIndexNum = e.Registration?.Student?.IndexNumber ?? string.Empty,
 
-            StudentFullName = e.Student != null ? $"{e.Student.FirstName} {e.Student.LastName}".Trim() : string.Empty,
-            SubjectName = e.Subject?.Name ?? string.Empty,
-            ExaminerFullName = e.Examiner != null ? $"{e.Examiner.FirstName} {e.Examiner.LastName}".Trim() : string.Empty,
-            SupervisorFullName = e.Supervisor != null ? $"{e.Supervisor.FirstName} {e.Supervisor.LastName}".Trim() : string.Empty,
+            //SubjectID = e.SubjectID,
+            //SubjectName = e.Registration?.Subject?.Name ?? string.Empty,
+
+            //TermId = e.TermID,
+            //TermName = e.Registration?.Term?.Name ?? string.Empty,
+
+            //TeacherID = e.TeacherID,
+            EnteredByTeacherName = e.Teacher != null
+            ? $"{e.Teacher.FirstName} {e.Teacher.LastName}"
+            : string.Empty,
+            EnteredByEmployeeNumber=e.Teacher != null ? e.Teacher.EmployeeNumber : string.Empty,
+
+            Grade = e.Grade,
+            ExamDate = e.Date,
+            Note = e.Note,
+            SignedAt = e.SignedAt
+        };
+        internal static StudentExamItemResponse StudentExamToResponse(Exam e) => new()
+        {
+            ID = e.ID,
+            SubjectCode = e.Registration?.Subject?.Code ?? string.Empty,
+            SubjectName = e.Registration?.Subject?.Name ?? string.Empty,
+            SubjectECTS = e.Registration?.Subject?.ECTS ?? 0,
+
+            Date = e.Date,
+            Grade = e?.Grade,
+            Note = e?.Note,
+            TeacherName = $"{e?.Teacher?.FirstName} {e?.Teacher?.LastName}",
+            TermName = e.Registration?.Term?.Name ?? string.Empty
+        };
+        internal static StudServiceExamItemResponse StudServiceExamToResponse(Exam e) => new()
+        {
+            ID = e.ID,
+
+            StudentName =$"{e.Registration?.Student?.FirstName}  {e.Registration?.Student?.LastName}" ?? string.Empty,
+            StudentIndexNum=e.Registration?.Student?.IndexNumber ?? string.Empty,
+            
+            Date = e.Date,
+            Grade = e?.Grade,
+            Note = e?.Note,
+            SignedAt=e?.SignedAt,
+            TeacherEmployeeNum=e?.Teacher?.EmployeeNumber ?? string.Empty,
+            TeacherName = $"{e?.Teacher?.FirstName} {e?.Teacher?.LastName}",
         };
 
         public static Student CreateToStudent(CreateStudentRequest req, int id) => new()
@@ -56,26 +149,72 @@ namespace Application.Common
             JMBG = req.JMBG,
             FirstName = req.FirstName,
             LastName = req.LastName,
-            DateOfBirth = req.DateOfBirth,
             IndexNumber = req.IndexNumber
         };
-        public static Teacher CreateToTeacher(CreateTeacherRequest req, int id) => new()
+
+        internal static TeachingAssignmentResponse TeachingAssignmentToResponse(TeachingAssignment ta) => new()
         {
-            ID = id,
-            JMBG = req.JMBG,
-            FirstName = req.FirstName,
-            LastName = req.LastName,
-            DateOfBirth = req.DateOfBirth,
-            Title = req.Title
+            SubjectID = ta.SubjectID,
+            SubjectName = ta?.Subject != null ? ta.Subject.Name : string.Empty,
+            TeacherID = ta.TeacherID,
+            TeacherEmployeeNum = ta.Teacher != null ? ta.Teacher.EmployeeNumber : string.Empty,
+            TeacherName = ta.Teacher != null ? $"{ta.Teacher.FirstName} {ta.Teacher.LastName}" : string.Empty,
+            CanGrade = ta.CanGrade
         };
-        public static StudentResponse CreateToStudentResponse(CreateStudentRequest req, int id,int age,double gpa) => new()
+        internal static EnrollmentResponse EnrollmentToResponse(Enrollment e) => new()
         {
-            Id=id,
-            IndexNumber=req.IndexNumber,
-            FirstName=req.FirstName,
-            LastName = req.LastName,
-            Age=age,
-            Gpa=gpa
+            SubjectID = e.SubjectID,
+            SubjectCode=e.Subject != null ? e.Subject.Code : string.Empty,
+            SubjectName = e.Subject != null ? e.Subject.Name : string.Empty,
+            SubjectECTS = e.Subject?.ECTS ?? 0,
+            StudentID=e.StudentID,
+            StudentName=e.Student != null ? $"{e.Student.FirstName} {e.Student.LastName}" :string.Empty,
+            StudentIndex=e.Student != null ? e.Student.IndexNumber : string.Empty,
+            IsPassed=e.IsPassed,
+            CreatedAt=e.CreatedAt,
+            PassedAt=e.PassedAt
+        };
+        internal static StudentRegistrationResponse StudentRegistrationToResponse(Registration e) => new()
+        {
+            SubjectID=e.SubjectID,
+            SubjectName = e.Subject != null ? e.Subject.Name : string.Empty,
+            TermID=e.TermID,
+            TermName = e.Term != null ? e.Term.Name : string.Empty,
+            Grade = e.Exam != null ? e.Exam.Grade : null,
+            TeacherFullName = e.Exam?.Teacher != null
+                 ? $"{e.Exam.Teacher.FirstName} {e.Exam.Teacher.LastName}"
+                 : null
+        };
+        internal static TeacherRegistrationResponse TeacherRegistrationToResponse(Registration e) => new()
+        {
+            StudentID = e.StudentID,
+            StudentName = e.Student != null ? $"{e.Student.FirstName} {e.Student.LastName}" : string.Empty,
+            StudentIndexNumber = e.Student != null ? e.Student.IndexNumber : string.Empty ,
+            HasExam = e?.Exam != null,
+            ExamID =e?.Exam?.ID,
+            ExamDate=e?.Exam?.Date,
+            Grade=e?.Exam?.Grade,
+            Note = e?.Exam?.Note,
+            SignedAt = e?.Exam?.SignedAt
+        };
+        internal static StudServiceRegistrationResponse StudServiceRegistrationToResponse(Registration e) => new()
+        {
+            StudentID = e.StudentID,
+            StudentName = e.Student != null ? $"{e.Student.FirstName} {e.Student.LastName}" : string.Empty,
+            StudentIndexNumber = e.Student != null ? e.Student.IndexNumber : string.Empty,
+            SubjectID=e.SubjectID,
+            TermID =e.TermID,
+            RegisteredAt=e.RegisteredAt,
+            CancelledAt=e.CancelledAt
+        };
+        internal static TermResponse TermToResponse(Term term) => new()
+        {
+            TermID = term.ID,
+            TermName = term.Name,
+            StartDate = term.StartDate,
+            EndDate = term.EndDate,
+            RegistrationEndDate = term.RegistrationEndDate,
+            RegistrationStartDate = term.RegistrationStartDate
         };
     }
 }

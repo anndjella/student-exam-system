@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.DTO.Common;
 using Application.DTO.Students;
 using Application.DTO.Subjects;
 using Application.Services;
@@ -15,56 +16,92 @@ namespace Application.ServicesImplementation
 {
     public class SubjectService : ISubjectService
     {
-        private readonly ISubjectRepository _repo;
-        public SubjectService(ISubjectRepository repo)
+        private readonly IUnitOfWork _uow;
+        public SubjectService(IUnitOfWork uow)
         {
-            _repo = repo;
+            _uow = uow;
         }
-
         public async Task<SubjectResponse> CreateAsync(CreateSubjectRequest req, CancellationToken ct = default)
         {
+            if (await _uow.Subjects.ExistsByCode(req.Code, ct))
+                throw new AppException(AppErrorCode.Conflict, $"Subject with code {req.Code} already exists.");
+
             Subject subject = new Subject
             {
-                Name=req.Name,
-                ESPB=req.ESPB
+                Name = req.Name,
+                ECTS = req.ECTS,
+                Code = req.Code,
+                IsActive = true
             };
-            var id = await _repo.CreateAsync(subject,ct);
-            var created = await _repo.GetByIdAsync(id, ct) ??
-                throw new AppException(AppErrorCode.Unexpected,"Unexpected error in creating.");
+            _uow.Subjects.Add(subject);
+            await _uow.CommitAsync(ct);
+
+            var created = await _uow.Subjects.GetByIdWithTeachersAsync(subject.ID, ct) ??
+                throw new AppException(AppErrorCode.Unexpected, "Unexpected error in creating.");
+
             return Mapper.SubjectToResponse(created);
         }
 
         public async Task DeleteAsync(int id, CancellationToken ct = default)
         {
-            var s = await _repo.GetByIdAsync(id, ct);
-            if (s is null) 
+            var s = await _uow.Subjects.GetByIdWithTeachersAsync(id, ct);
+            if (s is null)
                 throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.");
-            await _repo.DeleteAsync(s, ct);
-        }
 
-        public async Task<SubjectResponse?> GetAsync(int id, CancellationToken ct = default)
+            if (await _uow.Registrations.ExistsAnyForSubjectAsync(id, ct))
+                throw new AppException(AppErrorCode.Validation, "Subject cannot be deleted because it has registrations already.");
+
+            if (await _uow.Exams.ExistsAnyForSubjectAsync(id, ct))
+                throw new AppException(AppErrorCode.Validation, "Subject cannot be deleted because it has exams already");
+
+            if(await _uow.Enrollments.ExistsBySubjectIdAsync(id, ct))
+                throw new AppException(AppErrorCode.Validation, "Subject cannot be deleted because it has enrollments already");
+
+            _uow.Subjects.Remove(s);
+            await _uow.CommitAsync(ct);
+        }
+        public async Task<StudServiceSubjectResponse?> GetByIdAsync(int id, CancellationToken ct = default)
         {
-            var s = await _repo.GetByIdAsync(id, ct);
-            return s is null ? 
+            var s = await _uow.Subjects.GetByIdWithTeachersAsync(id, ct);
+            return s is null ?
                 throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.")
-                : Mapper.SubjectToResponse(s);
+                : Mapper.SubjectToAdminResponse(s);
         }
 
-        public async Task<IReadOnlyList<SubjectResponse>> ListAsync(CancellationToken ct = default)
+        public async Task<StudServiceSubjectResponse?> GetByCodeAsync(string code, CancellationToken ct = default)
         {
-             var list = await _repo.ListAsync(ct);
-            return list.Select(Mapper.SubjectToResponse).ToList();
+            var s = await _uow.Subjects.GetByCodeWithTeachersAsync(code, ct);
+            return s is null ?
+                throw new AppException(AppErrorCode.NotFound, $"Subject with code {code} not found.")
+                : Mapper.SubjectToAdminResponse(s);
+        }
+        public async Task<PagedResponse<StudServiceSubjectResponse>> ListPagedAsync( bool isActive, int skip, int take, string? query, CancellationToken ct)
+        {
+            var total = await _uow.Subjects.CountAdminAsync(isActive, query, ct);
+
+            var page = await _uow.Subjects.ListPagedWithTeachersAsync(skip, take, isActive, query, ct);
+
+            return new PagedResponse<StudServiceSubjectResponse>
+            {
+                Items = page.Select(Mapper.SubjectToAdminResponse).ToList(),
+                Total = total
+            };
         }
 
-        public async Task UpdateAsync(int id, UpdateSubjectRequest req, CancellationToken ct = default)
+
+
+        public async Task<List<SimpleSubjectResponse>> ListAllIncludingInactiveAsync(CancellationToken ct=default)
+        => (await _uow.Subjects.ListAllIncludingInactiveAsync(ct)).Select(Mapper.SubjectToSimpleSubjectResponse).ToList();
+
+        public async Task DeactivateAsync(int id, CancellationToken ct)
         {
-            var s = await _repo.GetByIdAsync(id, ct) ??
-                throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not found.");
+            var res = await _uow.Subjects.GetByIdWithTeachersAsync(id, ct);
+            if (res is null)
+                throw new AppException(AppErrorCode.NotFound, $"Subject with id {id} not  found.");
 
-            if (req.Name is not null) s.Name = req.Name;
-            if (req.ESPB is not null) s.ESPB = req.ESPB.Value;
-
-            await _repo.UpdateAsync(s, ct);
+            res.IsActive = false;
+            await _uow.CommitAsync(ct);
         }
     }
+
 }
