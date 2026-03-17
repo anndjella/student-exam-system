@@ -196,17 +196,17 @@ namespace Application.ServicesImplementation
             };
         }
 
-        public async Task<TeacherExamItemResponse> UpdateAsync(int subjectId, int termId, int studentId,UpdateExamRequest req, int teacherId, CancellationToken ct = default)
+        public async Task<TeacherExamItemResponse> UpdateAsync(int examId,UpdateExamRequest req, int teacherId, CancellationToken ct = default)
         {
-            var ta = await _uow.TeachingAssignments.GetAsync(teacherId, subjectId, ct);
+            var exam= await _uow.Exams.GetByIdAsync(examId, ct);
+            if(exam is null)
+                throw new AppException(AppErrorCode.NotFound, "Exam not found.");
+
+            var ta = await _uow.TeachingAssignments.GetAsync(teacherId, exam.SubjectID, ct);
             if (ta is null || !ta.CanGrade)
                 throw new AppException(AppErrorCode.Forbidden, "Teacher cannot grade this subject.");
 
-            await EnsurePreviousTermFinalizedAsync(subjectId, termId, ct);
-
-            var exam = await _uow.Exams.GetByKeyAsync(studentId, subjectId, termId, ct);
-            if (exam is null)
-                throw new AppException(AppErrorCode.NotFound, "Exam not found.");
+            await EnsurePreviousTermFinalizedAsync(exam.SubjectID, exam.TermID, ct);
 
             if (exam.SignedAt is not null)
                 throw new AppException(AppErrorCode.Conflict, "Exam is locked and cannot be changed.");

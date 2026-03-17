@@ -9,6 +9,7 @@ namespace Domain.Interfaces
 {
     public interface IExamRepository
     {
+        Task<Exam?> GetByIdAsync(int examId,CancellationToken ct=default);
         Task<Exam?> GetByKeyAsync(int studentId, int subjectId, int termId, CancellationToken ct = default);
         Task<List<Exam>> ListUnsignedBySubjectTermAsync(int subjectId, int termId, CancellationToken ct = default);
         Task<List<Exam>> ListBySubjectTermAsync(int subjectId, int termId, CancellationToken ct = default);

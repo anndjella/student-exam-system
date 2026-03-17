@@ -42,16 +42,13 @@ namespace Api.Controllers.Me.Teacher
         }
         [HttpPatch("{examId:int}")]
         public async Task<ActionResult<TeacherExamItemResponse>> Update(
-            int subjectId,
-            int termId,
-            int studentId,
-            [FromBody, CustomizeValidator(RuleSet = "Update")] UpdateExamRequest req,
+            int examId,[FromBody, CustomizeValidator(RuleSet = "Update")] UpdateExamRequest req,
             CancellationToken ct)
         {
             if (!User.TryGetPid(out var teacherId))
                 return Unauthorized();
 
-            var res = await _svc.UpdateAsync(subjectId, termId, studentId, req, teacherId, ct);
+            var res = await _svc.UpdateAsync(examId, req, teacherId, ct);
             return Ok(res);
         }
 

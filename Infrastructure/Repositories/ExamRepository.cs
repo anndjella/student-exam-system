@@ -15,6 +15,8 @@ namespace Infrastructure.Repositories
     {
         private readonly AppDbContext _db;
         public ExamRepository(AppDbContext db) => _db = db;
+        public Task<Exam?> GetByIdAsync(int examId, CancellationToken ct = default)
+         => _db.Exams.FirstOrDefaultAsync(e => e.ID == examId, ct);
 
         public void Add(Exam exam) => _db.Exams.Add(exam);
 
@@ -148,5 +150,6 @@ namespace Infrastructure.Repositories
                 .Take(take)
                 .ToListAsync(ct);
         }
+
     }
 }
