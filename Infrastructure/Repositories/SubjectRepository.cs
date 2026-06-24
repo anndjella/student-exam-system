@@ -11,36 +11,28 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
-    public class SubjectRepository : ISubjectRepository
+    public class SubjectRepository : BaseRepository<Subject>, ISubjectRepository
     {
-        private readonly AppDbContext _db;
-        public SubjectRepository(AppDbContext db)
-        {
-            _db = db;
-        }
-        public void Add(Subject subject)
-        =>_db.Subjects.Add(subject);
+        public SubjectRepository(AppDbContext db) : base(db) { }
 
         public Task<bool> ExistsByCode(string code, CancellationToken ct)
-         => _db.Subjects.AsNoTracking().AnyAsync(x => x.Name.ToLower() == code.ToLower(), ct);
+         => Set.AsNoTracking().AnyAsync(x => x.Name.ToLower() == code.ToLower(), ct);
         public Task<bool> ExistsById(int id, CancellationToken ct)
-       => _db.Subjects.AsNoTracking().AnyAsync(x => x.ID==id, ct);
+       => ExistsByIdAsync(id, ct);
         public Task<Subject?> GetByIdWithTeachersAsync(int id, CancellationToken ct = default)
-        =>_db.Subjects.Include(e=>e.TeachingAssignments).ThenInclude(e=>e.Teacher).FirstOrDefaultAsync(x=>x.ID == id, ct);
+        =>Set.Include(e=>e.TeachingAssignments).ThenInclude(e=>e.Teacher).FirstOrDefaultAsync(x=>x.ID == id, ct);
         public Task<Subject?> GetByCodeWithTeachersAsync(string code, CancellationToken ct = default)
-        => _db.Subjects.Include(e => e.TeachingAssignments).ThenInclude(e => e.Teacher).FirstOrDefaultAsync(x => x.Code == code, ct);
+        => Set.Include(e => e.TeachingAssignments).ThenInclude(e => e.Teacher).FirstOrDefaultAsync(x => x.Code == code, ct);
 
         public Task<List<int>> GetExistingIdsAsync(List<int> ids, CancellationToken ct)
-        => _db.Subjects.Where(s => ids.Contains(s.ID)).Select(s => s.ID).ToListAsync(ct);
+        => Set.Where(s => ids.Contains(s.ID)).Select(s => s.ID).ToListAsync(ct);
         public Task<List<Subject>> ListAllIncludingInactiveAsync(CancellationToken ct = default) // for student service to make enrollments
-        => _db.Subjects.AsNoTracking().ToListAsync(ct);
-        public void Remove(Subject subject)
-        => _db.Subjects.Remove(subject);
+        => Set.AsNoTracking().ToListAsync(ct);
         public Task<int> CountAdminAsync(bool isActive, string? query, CancellationToken ct = default)
         {
             query = query?.Trim();
 
-            IQueryable<Subject> q = _db.Subjects.IgnoreQueryFilters();
+            IQueryable<Subject> q = Set.IgnoreQueryFilters();
 
             q = q.Where(s => s.IsActive == isActive);
 
@@ -59,7 +51,7 @@ namespace Infrastructure.Repositories
         {
             query = query?.Trim();
 
-            IQueryable<Subject> q = _db.Subjects
+            IQueryable<Subject> q = Set
                 .IgnoreQueryFilters()
                 .Include(s => s.TeachingAssignments)
                     .ThenInclude(ta => ta.Teacher)
@@ -80,6 +72,6 @@ namespace Infrastructure.Repositories
 
 
         public Task<Subject?> GetByCodeAsync(string subjectCode, CancellationToken ct)
-        =>_db.Subjects.AsNoTracking().FirstOrDefaultAsync(e=>e.Code==subjectCode, ct);
+        =>Set.AsNoTracking().FirstOrDefaultAsync(e=>e.Code==subjectCode, ct);
     }
 }

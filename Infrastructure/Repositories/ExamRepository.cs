@@ -11,43 +11,38 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
-    public sealed class ExamRepository : IExamRepository
+    public sealed class ExamRepository : BaseRepository<Exam>, IExamRepository
     {
-        private readonly AppDbContext _db;
-        public ExamRepository(AppDbContext db) => _db = db;
-        public Task<Exam?> GetByIdAsync(int examId, CancellationToken ct = default)
-         => _db.Exams.FirstOrDefaultAsync(e => e.ID == examId, ct);
-
-        public void Add(Exam exam) => _db.Exams.Add(exam);
+        public ExamRepository(AppDbContext db) : base(db) { }
 
         public Task<Exam?> GetByKeyAsync(int studentId, int subjectId, int termId, CancellationToken ct = default)
-            => _db.Exams.FirstOrDefaultAsync(x =>
+            => Set.FirstOrDefaultAsync(x =>
                 x.StudentID == studentId && x.SubjectID == subjectId && x.TermID == termId, ct);
 
         public Task<List<Exam>> ListUnsignedBySubjectTermAsync(int subjectId, int termId, CancellationToken ct = default)
-            => _db.Exams
+            => Set
                 .Where(x => x.SubjectID == subjectId && x.TermID == termId && x.SignedAt == null)
                 .ToListAsync(ct);
         public Task<List<Exam>> ListBySubjectTermAsync(int subjectId, int termId, CancellationToken ct = default)
-          => _db.Exams
+          => Set
               .Where(x => x.SubjectID == subjectId && x.TermID == termId)
               .OrderBy(x => x.StudentID)
               .ToListAsync(ct);
 
         public Task<bool> ExistsAnyForTermAsync(int termId, CancellationToken ct = default)
-         => _db.Exams.AnyAsync(e => e.TermID == termId);
+         => Set.AnyAsync(e => e.TermID == termId);
 
         public Task<bool> ExistsAnyForSubjectAsync(int subjectId, CancellationToken ct = default)
-        => _db.Exams.AsNoTracking().AnyAsync(e => e.SubjectID == subjectId);
+        => Set.AsNoTracking().AnyAsync(e => e.SubjectID == subjectId);
 
         public Task<List<Exam>> ListUnsignedBySubjectTermWithRegistrationAsync(int subjectId, int termId, CancellationToken ct = default)
-        => _db.Exams
+        => Set
             .Where(e => e.SubjectID == subjectId && e.TermID == termId && e.SignedAt== null)
             .Include(e=>e.Registration)
             .ToListAsync(ct);
 
         public Task<List<Exam>> ListSignedByStudentIdAsync(int studentId, CancellationToken ct = default)
-        =>_db.Exams
+        =>Set
             .IgnoreQueryFilters()
               .AsNoTracking()
               .Where(e => e.StudentID == studentId && e.SignedAt != null)
@@ -63,11 +58,11 @@ namespace Infrastructure.Repositories
             int termId,
             int teacherId,
             CancellationToken ct = default)
-        => _db.Exams
+        => Set
             .IgnoreQueryFilters()
             .AsNoTracking()
             .Where(e => e.TermID == termId && e.SubjectID == subjectId && e.SignedAt != null)
-            .Where(e => _db.TeachingAssignments.Any(ta =>
+            .Where(e => Db.TeachingAssignments.Any(ta =>
                 ta.TeacherID == teacherId && ta.SubjectID == subjectId
             ))
             .Include(e=> e.Registration).ThenInclude(e=>e.Student)
@@ -76,10 +71,10 @@ namespace Infrastructure.Repositories
             .ToListAsync(ct);
 
         public Task<bool> ExistsAnyForSubjectAndStudentAsync(int subjectId, int studentId, CancellationToken ct = default)
-        => _db.Exams.AsNoTracking().AnyAsync(e => e.StudentID == studentId && e.SubjectID == subjectId);
+        => Set.AsNoTracking().AnyAsync(e => e.StudentID == studentId && e.SubjectID == subjectId);
 
         public Task<int> CountUnsignedBySubjectTermAsync(int subjectId, int termId, CancellationToken ct = default)
-        => _db.Exams
+        => Set
         .AsNoTracking()
         .CountAsync(e => e.SubjectID == subjectId
                       && e.TermID == termId
@@ -93,7 +88,7 @@ namespace Infrastructure.Repositories
         {
             query = query?.Trim();
 
-            IQueryable<Exam> q = _db.Exams
+            IQueryable<Exam> q = Set
                 .IgnoreQueryFilters()
                 .AsNoTracking()
                 .Include(e => e.Registration)
@@ -125,7 +120,7 @@ namespace Infrastructure.Repositories
         {
             query = query?.Trim();
 
-            IQueryable<Exam> q = _db.Exams
+            IQueryable<Exam> q = Set
                 .IgnoreQueryFilters()
                 .AsNoTracking()
                 .Include(e => e.Registration)

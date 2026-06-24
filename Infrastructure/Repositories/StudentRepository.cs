@@ -11,27 +11,22 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
-    public sealed class StudentRepository : IStudentRepository
+    public sealed class StudentRepository : BaseRepository<Student>, IStudentRepository
     {   
-        private readonly AppDbContext _db;
-        public StudentRepository(AppDbContext db) => _db = db;
-
-        public void Add(Student s) => _db.Students.Add(s);
-        public Task<Student?> GetByIdAsync(int id, CancellationToken ct = default)
-            => _db.Students.FirstOrDefaultAsync(x => x.ID == id, ct);
+        public StudentRepository(AppDbContext db) : base(db) { }
 
         public Task<bool> ExistsByIndexAsync(string indexNumber, CancellationToken ct = default)
-            => _db.Students.IgnoreQueryFilters().AnyAsync(x => x.IndexNumber == indexNumber, ct);
+            => Set.IgnoreQueryFilters().AnyAsync(x => x.IndexNumber == indexNumber, ct);
 
         public Task<Student?> GetByIndexAsync(string indexNumber, CancellationToken ct = default)
-          => _db.Students.FirstOrDefaultAsync(x => x.IndexNumber == indexNumber, ct);
+          => Set.FirstOrDefaultAsync(x => x.IndexNumber == indexNumber, ct);
 
         public Task<Student?> GetByIdWithUserAsync(int id, CancellationToken ct = default)
-         => _db.Students
+         => Set
             .Include(s => s.User)
             .FirstOrDefaultAsync(x => x.ID == id, ct);
         public Task<List<int>> ListIdsByIndexPrefixAsync(string prefix, CancellationToken ct)
-         => _db.Students
+         => Set
             .Where(s => s.IndexNumber.StartsWith(prefix))
             .Select(s => s.ID)
             .ToListAsync(ct);
@@ -40,7 +35,7 @@ namespace Infrastructure.Repositories
         {
             query = query?.Trim();
 
-            IQueryable<Student> q = _db.Students.AsQueryable();
+            IQueryable<Student> q = Set.AsQueryable();
 
             if (onlyDeleted)
             {
@@ -67,7 +62,7 @@ namespace Infrastructure.Repositories
         {
             query = query?.Trim();
 
-            IQueryable<Student> q = _db.Students.AsQueryable();
+            IQueryable<Student> q = Set.AsQueryable();
 
             if (onlyDeleted)
             {
