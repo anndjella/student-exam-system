@@ -12,36 +12,28 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
-    public sealed class TeacherRepository : ITeacherRepository
+    public sealed class TeacherRepository : BaseRepository<Teacher>, ITeacherRepository
     {
-        private readonly AppDbContext _db;
-        public TeacherRepository(AppDbContext db)
-        {
-            _db = db;
-        }
-        public void Add(Teacher teacher) => _db.Teachers.Add(teacher);
-        public Task<bool> ExistsByEmployeeNumAsync(string employeeNum, CancellationToken ct = default)
-          => _db.Teachers.IgnoreQueryFilters().AnyAsync(x => x.EmployeeNumber == employeeNum, ct);
-        public Task<bool> ExistsByIdAsync(int id, CancellationToken ct = default)
-          => _db.Teachers.AsNoTracking().AnyAsync(x => x.ID == id, ct);
-        public Task DeleteByIdAsync(int teacherId, CancellationToken ct = default)
-        => _db.Teachers.Where(e => e.ID == teacherId).ExecuteDeleteAsync();
+        public TeacherRepository(AppDbContext db) : base(db) { }
 
-        public  Task<Teacher?> GetByIdAsync(int id, CancellationToken ct = default)
-           =>  _db.Teachers.FirstOrDefaultAsync(x => x.ID == id, ct);
+        public Task<bool> ExistsByEmployeeNumAsync(string employeeNum, CancellationToken ct = default)
+          => Set.IgnoreQueryFilters().AnyAsync(x => x.EmployeeNumber == employeeNum, ct);
+
+        public Task DeleteByIdAsync(int teacherId, CancellationToken ct = default)
+        => Set.Where(e => e.ID == teacherId).ExecuteDeleteAsync();
        
         public Task<Teacher?> GetByIdWithUserAsync(int id, CancellationToken ct = default)
-        =>_db.Teachers
+        =>Set
             .Include(x=>x.User)
             .FirstOrDefaultAsync(x=>x.ID == id, ct);
 
         public Task<Teacher?> GetByEmployeeNumAsync(string employeeNum, CancellationToken ct = default)
-        => _db.Teachers.FirstOrDefaultAsync(x => x.EmployeeNumber == employeeNum);
+        => Set.FirstOrDefaultAsync(x => x.EmployeeNumber == employeeNum);
         public Task<int> CountAsync(string? query,bool onlyDeleted, CancellationToken ct = default)
         {
             query = query?.Trim();
 
-            IQueryable<Teacher> q = _db.Teachers;
+            IQueryable<Teacher> q = Set;
 
             if (onlyDeleted)
             {
@@ -68,7 +60,7 @@ namespace Infrastructure.Repositories
         {
             query = query?.Trim();
 
-            IQueryable<Teacher> q = _db.Teachers;
+            IQueryable<Teacher> q = Set;
 
             if (onlyDeleted)
             {

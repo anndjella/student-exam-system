@@ -15,3 +15,6 @@ coverage/
 **/coverage.opencover.xml
 baseline
 SonarProcedures/
+TestResults/
+**/coverage.opencover.xml
+ElaboratFinal*
