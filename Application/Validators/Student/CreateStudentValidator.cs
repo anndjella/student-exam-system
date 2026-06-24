@@ -26,12 +26,18 @@ namespace Application.Validators.Student
                             .WithMessage("Format of an Index Number must be YYYY/Number, e.g., 2024/1234.")
                             .Must(index =>
                             {
+                                if (string.IsNullOrWhiteSpace(index) || index.Length < 4)
+                                    return false;
+
                                 var year = int.Parse(index.Substring(0, 4));
                                 return year >= 1900;
                             })
                             .WithMessage("Index year cannot be earlier than 1900.")
                             .Must(index =>
                             {
+                                if (string.IsNullOrWhiteSpace(index) || index.Length < 4)
+                                    return false;
+
                                 var year = int.Parse(index.Substring(0, 4));
                                 return year <= DateTime.UtcNow.Year;
                             })
