@@ -11,14 +11,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
-    public sealed class PersonRepository : IPersonRepository
+    public sealed class PersonRepository : BaseRepository<Person>, IPersonRepository
     {
-        private readonly AppDbContext _db;
-        public PersonRepository(AppDbContext db) => _db = db;
-        public Task<bool> ExistsByJmbgAsync(string jmbg, CancellationToken ct = default)
-         =>  _db.People.IgnoreQueryFilters().AnyAsync(e=>e.JMBG== jmbg,ct);
+        public PersonRepository(AppDbContext db) : base(db) { }
 
-        public Task<Person?> GetByIdAsync(int personId, CancellationToken ct = default)
-        => _db.People.FirstOrDefaultAsync(e => e.ID == personId, ct);
+        public Task<bool> ExistsByJmbgAsync(string jmbg, CancellationToken ct = default)
+         =>  Set.IgnoreQueryFilters().AnyAsync(e=>e.JMBG== jmbg,ct);
     }
 }
