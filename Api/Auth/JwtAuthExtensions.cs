@@ -1,4 +1,4 @@
-﻿using Application.Common;
+﻿using Application.Common.Errors;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;

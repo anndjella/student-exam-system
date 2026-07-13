@@ -1,6 +1,6 @@
-﻿using Application.DTO.Common;
+using Application.DTO.Common;
 using Application.DTO.Enrollments;
-using Application.Services;
+using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,10 +24,6 @@ namespace Api.Controllers
             [FromQuery] string? query = null,
             CancellationToken ct = default)
         {
-            if (skip < 0) skip = 0;
-            if (take <= 0) take = 20;
-            if (take > 100) take = 100;
-
             var res = await _svc.ListPagedAsync(subjectId, termId, skip, take, query, ct);
             return Ok(res);
         }

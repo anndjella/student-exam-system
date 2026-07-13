@@ -33,32 +33,20 @@ namespace Infrastructure.Repositories
 
         public Task<int> CountAsync(string? query, bool onlyDeleted, CancellationToken ct = default)
         {
-            query = query?.Trim();
-
-            IQueryable<Student> q = Set.AsQueryable();
-
-            if (onlyDeleted)
-            {
-                q = q.IgnoreQueryFilters().Where(s => s.IsDeleted);
-            }
-            else
-            {
-                q = q.Where(s => !s.IsDeleted);
-            }
-
-            if (!string.IsNullOrWhiteSpace(query))
-            {
-                var like = $"%{query}%";
-                q = q.Where(s =>
-                    EF.Functions.Like(s.FirstName, like) ||
-                    EF.Functions.Like(s.LastName, like) ||
-                    EF.Functions.Like(s.IndexNumber, like));
-            }
-
-            return q.CountAsync(ct);
+            return BuildSearchQuery(query, onlyDeleted).CountAsync(ct);
         }
 
         public Task<List<Student>> ListPagedAsync(int skip ,int take, string? query, bool onlyDeleted, CancellationToken ct = default)
+        {
+            return BuildSearchQuery(query, onlyDeleted)
+                .AsNoTracking()
+                .OrderBy(s => s.LastName).ThenBy(s => s.FirstName).ThenBy(s => s.IndexNumber)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(ct);
+        }
+
+        private IQueryable<Student> BuildSearchQuery(string? query, bool onlyDeleted)
         {
             query = query?.Trim();
 
@@ -82,11 +70,7 @@ namespace Infrastructure.Repositories
                     EF.Functions.Like(s.IndexNumber, like));
             }
 
-            return q.AsNoTracking()
-                .OrderBy(s => s.LastName).ThenBy(s => s.FirstName).ThenBy(s => s.IndexNumber)
-                .Skip(skip)
-                .Take(take)
-                .ToListAsync(ct);
+            return q;
         }
 
     }

@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestPlatform.TestHost;
+using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Application.Services;
+using Application.Services.Interfaces;
 using Moq;
 
 namespace Tests.Application

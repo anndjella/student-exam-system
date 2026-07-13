@@ -1,7 +1,7 @@
-﻿using Application.DTO.Common;
+using Application.DTO.Common;
 using Application.DTO.Students;
 using Application.DTO.Subjects;
-using Application.Services;
+using Application.Services.Interfaces;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,13 +29,13 @@ namespace Api.Controllers
         public async Task<ActionResult<StudServiceSubjectResponse>> GetOneById(int id, CancellationToken ct)
         {
             var resp = await _svc.GetByIdAsync(id, ct);
-            return resp is null ? NotFound() : Ok(resp);
+            return Ok(resp);
         }
         [HttpGet("{code}")]
         public async Task<ActionResult<StudServiceSubjectResponse>> SearchByCode(string code, CancellationToken ct)
         {
             var resp = await _svc.GetByCodeAsync(code, ct);
-            return resp is null ? NotFound() : Ok(resp);
+            return Ok(resp);
         }
         [HttpGet]
         public async Task<ActionResult<PagedResponse<StudServiceSubjectResponse>>> List(
@@ -45,10 +45,6 @@ namespace Api.Controllers
             [FromQuery] string? query = null,
             CancellationToken ct = default)
         {
-            if (skip < 0) skip = 0;
-            if (take <= 0) take = 20;
-            if (take > 100) take = 100;
-
             var resp = await _svc.ListPagedAsync(active, skip, take, query, ct);
             return Ok(resp);
         }
@@ -57,7 +53,7 @@ namespace Api.Controllers
         public async Task<ActionResult<List<SimpleSubjectResponse>>> ListAllIncludingInactive(CancellationToken ct)
         {
             var resp = await _svc.ListAllIncludingInactiveAsync(ct);
-            return resp is null ? NotFound() : Ok(resp);
+            return Ok(resp);
         }
 
         [HttpDelete("{id:int}")]

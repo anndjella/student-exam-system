@@ -1,5 +1,5 @@
-﻿using Application.DTO.Term;
-using Application.Services;
+using Application.DTO.Term;
+using Application.Services.Interfaces;
 using Domain.Enums;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
@@ -28,7 +28,7 @@ namespace Api.Controllers
         public async Task<ActionResult<TermResponse>> GetOne(int id, CancellationToken ct)
         {
             var resp = await _svc.GetByIdAsync(id, ct);
-            return resp is null ? NotFound() : Ok(resp);
+            return Ok(resp);
         }
 
         [HttpGet]
@@ -51,14 +51,14 @@ namespace Api.Controllers
         public async Task<ActionResult<List<TermResponse>>> ListForExamsView(CancellationToken ct)
         {
             var resp = await _svc.ListForTeacherExamsViewAsync(ct);
-            return resp is null ? NotFound() : Ok(resp);
+            return Ok(resp);
         }
         [HttpGet("open-for-registration")]
         [Authorize(Roles = "Student")]
         public async Task<ActionResult<List<TermResponse>>> ListOpenForRegistration(CancellationToken ct)
         {
             var resp = await _svc.ListOpenForRegistrationAsync(ct);
-            return resp is null ? NotFound() : Ok(resp);
+            return Ok(resp);
         }
         [HttpDelete("{id:int}")]
         [Authorize(Roles ="StudentService")]

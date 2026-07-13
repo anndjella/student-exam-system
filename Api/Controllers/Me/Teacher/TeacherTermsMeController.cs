@@ -1,6 +1,6 @@
-﻿using Api.Common;
+using Api.Common;
 using Application.DTO.Term;
-using Application.Services;
+using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography.Pkcs;
@@ -22,7 +22,7 @@ namespace Api.Controllers.Me.Teacher
         {
             if (!User.TryGetPid(out var personId)) return Unauthorized();
             var resp = await _svc.ListForGradingAsync(personId, subjectId, ct);
-            return resp is null ? NotFound() : Ok(resp);
+            return Ok(resp);
         }
     }
 }

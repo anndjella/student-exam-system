@@ -1,6 +1,6 @@
-﻿using Api.Common;
+using Api.Common;
 using Application.DTO.Registrations;
-using Application.Services;
+using Application.Services.Interfaces;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

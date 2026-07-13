@@ -1,8 +1,8 @@
-﻿using Application.DTO.Common;
+using Application.DTO.Common;
 using Application.DTO.Enrollments;
 using Application.DTO.Subjects;
-using Application.Services;
-using Application.ServicesImplementation;
+using Application.Services.Interfaces;
+using Application.Services.Implementations;
 using Domain.Entity;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
@@ -36,10 +36,6 @@ namespace Api.Controllers
                [FromQuery] string? query = null,
                CancellationToken ct = default)
         {
-            if (skip < 0) skip = 0;
-            if (take <= 0) take = 20;
-            if (take > 100) take = 100;
-
             var res = await _svc.ListByStudentAsync(index,skip, take, query, ct);
             return Ok(res);
         }
@@ -51,10 +47,6 @@ namespace Api.Controllers
                [FromQuery] string? query = null,
                CancellationToken ct = default)
         {
-            if (skip < 0) skip = 0;
-            if (take <= 0) take = 20;
-            if (take > 100) take = 100;
-
             var res = await _svc.ListBySubjectAsync(code, skip, take, query, ct);
             return Ok(res);
         }

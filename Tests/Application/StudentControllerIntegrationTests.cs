@@ -1,4 +1,5 @@
-﻿using Application.DTO.Students;
+﻿using Application.Common.Errors;
+using Application.DTO.Students;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,6 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Application.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Tests.Application
@@ -29,11 +29,11 @@ namespace Tests.Application
             {
                 JMBG = "0101000700011",
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 DateOfBirth = new DateOnly(2000, 1, 1),
                 IndexNumber = "2024/5"
             };
-            var resp = new StudentResponse { Id = 123, FirstName = "Ana", LastName = "Anić", IndexNumber = "2024/5" };
+            var resp = new StudentResponse { Id = 123, FirstName = "Ana", LastName = "Anic", IndexNumber = "2024/5" };
 
             _fx.StudentSvcMock
                 .Setup(s => s.CreateAsync(It.IsAny<CreateStudentRequest>(), It.IsAny<CancellationToken>()))
@@ -54,7 +54,7 @@ namespace Tests.Application
             {
                 JMBG = "0101000700011",
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 DateOfBirth = new DateOnly(2000, 1, 1),
                 IndexNumber = "2024/5"
             };

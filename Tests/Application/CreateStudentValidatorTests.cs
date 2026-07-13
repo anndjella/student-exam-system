@@ -22,7 +22,7 @@ namespace Tests.Application
             CreateStudentRequest model = new CreateStudentRequest
             {
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 DateOfBirth = new DateOnly(1998, 4, 15),
                 JMBG = "1504998710016",
                 IndexNumber = "2024/1234"
@@ -60,7 +60,7 @@ namespace Tests.Application
             CreateStudentRequest model = new CreateStudentRequest
             {
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 DateOfBirth = new DateOnly(1998, 4, 15),
                 JMBG = "1504998710016",
                 IndexNumber = badIndex
@@ -75,7 +75,7 @@ namespace Tests.Application
             CreateStudentRequest m1 = new CreateStudentRequest
             {
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 DateOfBirth = new DateOnly(1998, 4, 15),
                 JMBG = "15049987100A6",
                 IndexNumber = "2024/1234"
@@ -87,7 +87,7 @@ namespace Tests.Application
             CreateStudentRequest m2 = new CreateStudentRequest
             {
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 DateOfBirth = new DateOnly(1998, 4, 15),
                 JMBG = "150499871001",
                 IndexNumber = "2024/1234"
@@ -99,7 +99,7 @@ namespace Tests.Application
             CreateStudentRequest m3 = new CreateStudentRequest
             {
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 DateOfBirth = new DateOnly(1998, 4, 15),
                 JMBG = "1504998710017",
                 IndexNumber = "2024/1234"
@@ -115,7 +115,7 @@ namespace Tests.Application
             CreateStudentRequest model = new CreateStudentRequest
             {
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 DateOfBirth = new DateOnly(1998, 4, 16),
                 JMBG = "1504998710016",
                 IndexNumber = "2024/1234"
@@ -134,7 +134,7 @@ namespace Tests.Application
             CreateStudentRequest model = new CreateStudentRequest
             {
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 DateOfBirth = new DateOnly(y, m, d),
                 JMBG = "1504998710016",
                 IndexNumber = "2024/1234"
