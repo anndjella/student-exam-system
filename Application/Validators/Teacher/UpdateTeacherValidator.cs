@@ -1,4 +1,4 @@
-﻿using Application.Common;
+using Application.Validators.Person;
 using Application.DTO.Teachers;
 using FluentValidation;
 using System;
@@ -21,6 +21,12 @@ namespace Application.Validators.Teacher
                     RuleFor(x => x.Title)
                             .IsInEnum()
                             .WithMessage("Title is required and must be a valid value."));
+
+                When(x => x.EmployeeNumber != null, () =>
+                    RuleFor(x => x.EmployeeNumber!)
+                            .ValidSchoolNumber(
+                                "Employee number",
+                                "Format of an Employee Number must be YYYY/Number, e.g., 2024/1234."));
 
             });
         }

@@ -1,8 +1,8 @@
-﻿using Application.DTO.Common;
+using Application.DTO.Common;
 using Application.DTO.Exams;
 using Application.DTO.Students;
 using Application.DTO.Teachers;
-using Application.Services;
+using Application.Services.Interfaces;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -33,7 +33,7 @@ namespace Api.Controllers
         public async Task<ActionResult<TeacherResponse>> GetOneById(int id, CancellationToken ct)
         {
             var resp = await _svc.GetByIdAsync(id, ct);
-            return resp is null ? NotFound() : Ok(resp);
+            return Ok(resp);
         }
         [HttpGet("year/{year:int}/number/{number:int}")]
         [Authorize(Roles = "StudentService")]
@@ -41,7 +41,7 @@ namespace Api.Controllers
         {
             string employeeNum=$"{year}/{number:D4}";
             var resp = await _svc.GetByNumAsync(employeeNum, ct);
-            return resp is null ? NotFound() : Ok(resp);
+            return Ok(resp);
         }
 
         [HttpPut("{id:int}")]
@@ -67,10 +67,6 @@ namespace Api.Controllers
                 [FromQuery] bool onlyDeleted = false,
                 CancellationToken ct = default)
         {
-            if (skip < 0) skip = 0;
-            if (take <= 0) take = 20;
-            if (take > 100) take = 100;
-
             var res = await _svc.ListAsync(skip, take, query, onlyDeleted, ct);
             return Ok(res);
         }

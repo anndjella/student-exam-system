@@ -1,5 +1,5 @@
-﻿using Application.DTO.TeachingAssignment;
-using Application.Services;
+using Application.DTO.TeachingAssignment;
+using Application.Services.Interfaces;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,19 +24,19 @@ namespace Api.Controllers.Me
         public async Task<ActionResult<TeachingAssignmentResponse>> GetOneById(int teacherId,int subjectId, CancellationToken ct)
         {
             var resp = await _svc.GetAsync(teacherId,subjectId, ct);
-            return resp is null ? NotFound() : Ok(resp);
+            return Ok(resp);
         }
         [HttpGet("by-teacher/{teacherId:int}")]
         public async Task<ActionResult<TeachingAssignmentResponse>> ListByTeacherId(int teacherId, CancellationToken ct)
         {
             var resp = await _svc.ListByTeacherAsync(teacherId, ct);
-            return resp is null ? NotFound() : Ok(resp);
+            return Ok(resp);
         }
         [HttpGet("by-subject/{subjectId:int}")]
         public async Task<ActionResult<TeachingAssignmentResponse>> ListBySubjectId(int subjectId, CancellationToken ct)
         {
             var resp = await _svc.ListBySubjectAsync(subjectId, ct);
-            return resp is null ? NotFound() : Ok(resp);
+            return Ok(resp);
         }
         [HttpPut("teacher/{teacherId:int}/subject/{subjectId:int}/can-grade")]
         public async Task<IActionResult> Update(CreateTeachingAssignmentRequest req, CancellationToken ct)

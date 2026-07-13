@@ -1,6 +1,6 @@
-using Application.Common;
+using Application.Common.Errors;
 using Application.DTO.Registrations;
-using Application.ServicesImplementation;
+using Application.Services.Implementations;
 using Domain.Entity;
 using FluentAssertions;
 using Moq;

@@ -1,8 +1,9 @@
-﻿using Application.Common;
+using Application.Common.Errors;
+using Application.Common.Mapping;
 using Application.DTO.Exams;
 using Application.DTO.Teachers;
-using Application.Services;
-using Application.ServicesImplementation;
+using Application.Services.Interfaces;
+using Application.Services.Implementations;
 using Domain.Entity;
 using Domain.Interfaces;
 using FluentAssertions;
@@ -27,12 +28,12 @@ namespace Tests.Service
             {
                 JMBG = "0409974732292",
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 DateOfBirth = new DateOnly(1974, 9, 4),
                 Title = Enums.FullProfessor
             };
             _id = 26;
-            _teacher = Mapper.CreateToTeacher(_req, _id);
+            _teacher = TeacherMapper.CreateToTeacher(_req, _id);
         }
 
         [Fact]

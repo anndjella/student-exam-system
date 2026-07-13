@@ -1,4 +1,4 @@
-﻿using Application.Common;
+using Application.Validators.Person;
 using Domain.Entity;
 using FluentValidation;
 using System;

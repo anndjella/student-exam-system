@@ -1,11 +1,12 @@
-﻿using Api.Auth;
+using Api.Auth;
 using Api.Middleware;
+using Application.Common.Abstractions;
 using Application.Auth;
-using Application.Common;
+using Application.Common.Errors;
 using Application.DTO.Students;
 using Application.DTO.Term;
-using Application.Services;
-using Application.ServicesImplementation;
+using Application.Services.Interfaces;
+using Application.Services.Implementations;
 using Application.Validators.Enrollment;
 using Application.Validators.Exam;
 using Application.Validators.Student;

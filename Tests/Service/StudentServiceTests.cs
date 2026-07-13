@@ -1,5 +1,8 @@
-﻿using Application.DTO.Students;
-using Application.Services;
+using Application.Services.Implementations;
+using Application.Common.Errors;
+using Application.Common.Mapping;
+using Application.DTO.Students;
+using Application.Services.Interfaces;
 using Domain.Entity;
 using Domain.Interfaces;
 using Moq;
@@ -9,7 +12,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Application.Common;
 using FluentAssertions.Specialized;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -36,7 +38,7 @@ namespace Tests.Service
                 IndexNumber = "2020/1234"
             };
             _id = 26;
-            _student = Mapper.CreateToStudent(_req, _id);
+            _student = StudentMapper.CreateToStudent(_req, _id);
         }
 
         [Fact]
@@ -137,7 +139,7 @@ namespace Tests.Service
                  .Callback<Student, CancellationToken>((s, _) => captured = s)
                  .Returns(Task.CompletedTask);
 
-            var req = new UpdateStudentRequest { LastName = "Anić" };
+            var req = new UpdateStudentRequest { LastName = "Anic" };
 
             // Act
             await _svc.UpdateAsync(_id, req);

@@ -28,7 +28,7 @@ namespace Tests.Persistance
             {
                 JMBG = "0101990123456",
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 DateOfBirth = new DateOnly(1990, 1, 1),
                 IndexNumber = "2024/15"
             };
@@ -52,7 +52,7 @@ namespace Tests.Persistance
             {
                 JMBG = "1111990123456",
                 FirstName = "Pera",
-                LastName = "Perić",
+                LastName = "Peric",
                 DateOfBirth = new DateOnly(1990, 11, 11),
                 IndexNumber = "2024/5"
             });
@@ -62,7 +62,7 @@ namespace Tests.Persistance
             {
                 JMBG = "2202992123456",
                 FirstName = "Mika",
-                LastName = "Mikić",
+                LastName = "Mikic",
                 DateOfBirth = new DateOnly(1992, 2, 22),
                 IndexNumber = "2024/5"
             });
@@ -77,7 +77,7 @@ namespace Tests.Persistance
             Student student = new Student
             {
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 DateOfBirth = new DateOnly(1990, 1, 1),
                 JMBG = "0101990123456",
                 IndexNumber = "2024/57"

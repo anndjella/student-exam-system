@@ -1,6 +1,7 @@
-﻿using Api.Controllers;
+using Application.Common.Errors;
+using Api.Controllers;
 using Application.DTO.Students;
-using Application.Services;
+using Application.Services.Interfaces;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,6 @@ using System.Threading.Tasks;
 using Api;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
-using Application.Common;
 
 namespace Tests.Application
 {
@@ -31,12 +31,12 @@ namespace Tests.Application
             {
                 JMBG = "0101990123456",
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 DateOfBirth = new DateOnly(1990, 1, 1),
                 IndexNumber = "2024/5"
             };
 
-            StudentResponse resp = new StudentResponse { Id = 123, FirstName = "Ana", LastName = "Anić", IndexNumber = "2024/5" };
+            StudentResponse resp = new StudentResponse { Id = 123, FirstName = "Ana", LastName = "Anic", IndexNumber = "2024/5" };
             _svc.Setup(s => s.CreateAsync(req, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(resp);
 
@@ -60,7 +60,7 @@ namespace Tests.Application
             {
                 JMBG = "0101990123456",
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 DateOfBirth = new DateOnly(1990, 1, 1),
                 IndexNumber = "2024/5"
             };
@@ -85,7 +85,7 @@ namespace Tests.Application
             {
                 Id = 7,
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 IndexNumber = "2024/5"
             };
             _svc.Setup(s => s.GetAsync(7, It.IsAny<CancellationToken>()))

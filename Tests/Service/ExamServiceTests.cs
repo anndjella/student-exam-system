@@ -1,8 +1,8 @@
-﻿using System;
+using Application.Common.Errors;
+using System;
 using System.Threading.Tasks;
-using Application.Common;
 using Application.DTO.Exams;
-using Application.ServicesImplementation;
+using Application.Services.Implementations;
 using Domain.Entity;
 using Domain.Interfaces;
 using FluentAssertions;
@@ -89,11 +89,11 @@ namespace Tests.Service
             UpdateExamRequest req = new UpdateExamRequest
             {
                 Grade = 7,
-                Note = "Greška"
+                Note = "Gre?ka"
             };
             await _svc.UpdateAsync(1, 2, new DateOnly(2024, 1, 10), req, default);
 
-            _repo.Verify(r => r.UpdateAsync(It.Is<Exam>(e => e.Grade == 7 && e.Note=="Greška"), default));
+            _repo.Verify(r => r.UpdateAsync(It.Is<Exam>(e => e.Grade == 7 && e.Note=="Gre?ka"), default));
             _repo.Verify(r => r.UpdateAsync(It.IsAny<Exam>(),default), Times.Once);
         }
         [Fact]

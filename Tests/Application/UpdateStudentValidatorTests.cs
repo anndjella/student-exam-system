@@ -23,7 +23,7 @@ namespace Tests.Application
             UpdateStudentRequest model = new UpdateStudentRequest
             {
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 IndexNumber = null
             };
 
@@ -36,7 +36,7 @@ namespace Tests.Application
             UpdateStudentRequest model = new UpdateStudentRequest
             {
                 FirstName = "",
-                LastName = "Anić",
+                LastName = "Anic",
                 IndexNumber = null
             };
 
@@ -54,7 +54,7 @@ namespace Tests.Application
             var model = new UpdateStudentRequest
             {
                 FirstName = "Ana",
-                LastName = "Anić",
+                LastName = "Anic",
                 IndexNumber = badIndex
             };
 

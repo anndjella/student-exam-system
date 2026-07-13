@@ -1,4 +1,4 @@
-﻿using Application.Common;
+using Application.Validators.Person;
 using Application.DTO.Students;
 using Application.DTO.Teachers;
 using FluentValidation;
@@ -22,22 +22,9 @@ namespace Application.Validators.Teacher
                             .IsInEnum()
                             .WithMessage("Title is required and must be a valid value.");
                 RuleFor(x => x.EmployeeNumber)
-                            .NotEmpty()
-                            .MaximumLength(9)
-                            .Matches(@"^[0-9]{4}/[0-9]{4}$")
-                            .WithMessage("Format of an Employee Number must be YYYY/Number, e.g., 2024/1234.")
-                            .Must(index =>
-                            {
-                                var year = int.Parse(index.Substring(0, 4));
-                                return year >= 1900;
-                            })
-                            .WithMessage("Employee number year cannot be earlier than 1900.")
-                            .Must(index =>
-                            {
-                                var year = int.Parse(index.Substring(0, 4));
-                                return year <= DateTime.UtcNow.Year;
-                            })
-                            .WithMessage("Employee number year cannot be in the future.");
+                            .ValidSchoolNumber(
+                                "Employee number",
+                                "Format of an Employee Number must be YYYY/Number, e.g., 2024/1234.");
 
             });
         }

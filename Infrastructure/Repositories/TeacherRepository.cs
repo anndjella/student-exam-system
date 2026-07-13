@@ -31,32 +31,22 @@ namespace Infrastructure.Repositories
         => Set.FirstOrDefaultAsync(x => x.EmployeeNumber == employeeNum);
         public Task<int> CountAsync(string? query,bool onlyDeleted, CancellationToken ct = default)
         {
-            query = query?.Trim();
-
-            IQueryable<Teacher> q = Set;
-
-            if (onlyDeleted)
-            {
-                q = q.IgnoreQueryFilters().Where(s => s.IsDeleted);
-            }
-            else
-            {
-                q = q.Where(s => !s.IsDeleted);
-            }
-
-            if (!string.IsNullOrWhiteSpace(query))
-            {
-                var like = $"%{query}%";
-                q = q.Where(t =>
-                    EF.Functions.Like(t.FirstName, like) ||
-                    EF.Functions.Like(t.LastName, like) ||
-                    EF.Functions.Like(t.EmployeeNumber, like));
-            }
-
-            return q.CountAsync(ct);
+            return BuildSearchQuery(query, onlyDeleted).CountAsync(ct);
         }
 
         public Task<List<Teacher>> ListPagedAsync(int skip, int take, string? query, bool onlyDeleted, CancellationToken ct = default)
+        {
+            return BuildSearchQuery(query, onlyDeleted)
+                .AsNoTracking()
+                .OrderBy(t => t.LastName)
+                .ThenBy(t => t.FirstName)
+                .ThenBy(t => t.EmployeeNumber)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(ct);
+        }
+
+        private IQueryable<Teacher> BuildSearchQuery(string? query, bool onlyDeleted)
         {
             query = query?.Trim();
 
@@ -80,13 +70,7 @@ namespace Infrastructure.Repositories
                     EF.Functions.Like(t.EmployeeNumber, like));
             }
 
-            return q.AsNoTracking()
-                .OrderBy(t => t.LastName)
-                .ThenBy(t => t.FirstName)
-                .ThenBy(t => t.EmployeeNumber)
-                .Skip(skip)
-                .Take(take)
-                .ToListAsync(ct);
+            return q;
         }
     }
 }
