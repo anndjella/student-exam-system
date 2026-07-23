@@ -23,6 +23,8 @@ namespace Infrastructure.Seed
 
         public async Task SeedAsync(CancellationToken ct = default)
         {
+            await BackfillMissingEmailsAsync(ct);
+
             if (await _db.Users.AnyAsync(ct) || await _db.Students.AnyAsync(ct) || await _db.Teachers.AnyAsync(ct))
                 return;
 
@@ -58,6 +60,7 @@ namespace Infrastructure.Seed
                 {
                     FirstName = first,
                     LastName = last,
+                    Email = $"student.{index.Replace("/", ".")}@example.com",
                     JMBG = jmbg,
                     DateOfBirth = dob,
                     IndexNumber = index
@@ -79,6 +82,7 @@ namespace Infrastructure.Seed
                 {
                     FirstName = first,
                     LastName = last,
+                    Email = $"teacher.{emp.Replace("/", ".")}@example.com",
                     JMBG = jmbg,
                     DateOfBirth = dob,
                     EmployeeNumber = emp,
@@ -123,6 +127,42 @@ namespace Infrastructure.Seed
             }
 
             _db.Users.AddRange(users);
+            await _db.SaveChangesAsync(ct);
+        }
+
+        private async Task BackfillMissingEmailsAsync(CancellationToken ct)
+        {
+            var people = await _db.People
+                .IgnoreQueryFilters()
+                .Where(p => p.Email == null || p.Email == "")
+                .ToListAsync(ct);
+
+            if (people.Count == 0)
+                return;
+
+            var studentIds = new HashSet<int>(
+                await _db.Students
+                    .IgnoreQueryFilters()
+                    .Select(s => s.ID)
+                    .ToListAsync(ct));
+
+            var teacherIds = new HashSet<int>(
+                await _db.Teachers
+                    .IgnoreQueryFilters()
+                    .Select(t => t.ID)
+                    .ToListAsync(ct));
+
+            foreach (var person in people)
+            {
+                var prefix = studentIds.Contains(person.ID)
+                    ? "student"
+                    : teacherIds.Contains(person.ID)
+                        ? "teacher"
+                        : "person";
+
+                person.Email = $"{prefix}.{person.ID}@example.com";
+            }
+
             await _db.SaveChangesAsync(ct);
         }
 

@@ -24,6 +24,7 @@ namespace Tests.Application
             {
                 FirstName = "Ana",
                 LastName = "Anic",
+                Email = "ana.anic@example.com",
                 IndexNumber = null
             };
 

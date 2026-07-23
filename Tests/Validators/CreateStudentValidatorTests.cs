@@ -40,6 +40,7 @@ public sealed class CreateStudentValidatorTests
         JMBG = "0201995701231",
         FirstName = "Ana",
         LastName = "Anic",
+        Email = "ana.anic@example.com",
         IndexNumber = "2024/1234"
     };
 }

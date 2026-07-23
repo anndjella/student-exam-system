@@ -23,6 +23,7 @@ namespace Tests.Application
             {
                 FirstName = "Ana",
                 LastName = "Anic",
+                Email = "ana.anic@example.com",
                 DateOfBirth = new DateOnly(1998, 4, 15),
                 JMBG = "1504998710016",
                 IndexNumber = "2024/1234"
