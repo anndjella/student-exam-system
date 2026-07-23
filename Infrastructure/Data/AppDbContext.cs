@@ -43,6 +43,7 @@ namespace Infrastructure.Data
 
                 b.Property(p => p.FirstName).HasMaxLength(50);
                 b.Property(p => p.LastName).HasMaxLength(50);
+                b.Property(p => p.Email).HasMaxLength(254);
                 b.Property(p => p.DateOfBirth).HasColumnType("date");
                 b.Property(p => p.JMBG).HasColumnType("char(13)").IsUnicode(false);
                 b.HasIndex(p => p.JMBG).IsUnique().HasFilter("[IsDeleted] = 0");
@@ -221,6 +222,7 @@ namespace Infrastructure.Data
                 b.Property(x => x.GPA).HasColumnType("decimal(4,2)");
                 b.Property(x => x.ECTSCount);
             });
+
         }
     }
 }

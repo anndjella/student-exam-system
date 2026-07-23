@@ -38,6 +38,7 @@ public sealed class StudentService : IStudentService
             JMBG = req.JMBG,
             FirstName = req.FirstName,
             LastName = req.LastName,
+            Email = req.Email,
             DateOfBirth = dob,
             IndexNumber = req.IndexNumber
         };
@@ -86,6 +87,7 @@ public sealed class StudentService : IStudentService
 
         if (req.FirstName is not null) s.FirstName = req.FirstName;
         if (req.LastName is not null) s.LastName = req.LastName;
+        if (req.Email is not null) s.Email = req.Email;
 
         if (req.IndexNumber is not null)
         {

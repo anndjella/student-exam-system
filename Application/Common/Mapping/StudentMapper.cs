@@ -10,6 +10,7 @@ namespace Application.Common.Mapping
             ID = student.ID,
             FirstName = student.FirstName,
             LastName = student.LastName,
+            Email = student.Email,
             DateOfBirth = student.DateOfBirth,
             GPA = null,
             ECTSCount = null,
@@ -21,6 +22,7 @@ namespace Application.Common.Mapping
             ID = student.ID,
             FirstName = student.FirstName,
             LastName = student.LastName,
+            Email = student.Email,
             DateOfBirth = student.DateOfBirth,
             GPA = stats?.GPA is null ? null : (double)stats.GPA.Value,
             ECTSCount = stats?.ECTSCount,
@@ -34,6 +36,7 @@ namespace Application.Common.Mapping
             JMBG = req.JMBG,
             FirstName = req.FirstName,
             LastName = req.LastName,
+            Email = req.Email,
             IndexNumber = req.IndexNumber
         };
     }

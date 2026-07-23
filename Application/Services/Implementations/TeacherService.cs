@@ -42,6 +42,7 @@ namespace Application.Services.Implementations
                 JMBG = req.JMBG,
                 FirstName = req.FirstName,
                 LastName = req.LastName,
+                Email = req.Email,
                 DateOfBirth = dob,
                 EmployeeNumber = req.EmployeeNumber,
                 Title=req.Title
@@ -100,6 +101,7 @@ namespace Application.Services.Implementations
 
             if (req.FirstName is not null) t.FirstName = req.FirstName;
             if (req.LastName is not null) t.LastName = req.LastName;
+            if (req.Email is not null) t.Email = req.Email;
             if (req.Title is not null) t.Title = req.Title.Value;
 
             if (req.EmployeeNumber is not null)
