@@ -1,4 +1,7 @@
 using Api.Auth;
+using Api.Clients;
+using Api.Health;
+using Api.Http;
 using Api.Middleware;
 using Application.Common.Abstractions;
 using Application.Auth;
@@ -22,6 +25,7 @@ using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -69,6 +73,31 @@ builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IExamRepository, ExamRepository>();
 builder.Services.AddScoped<IExamService, ExamService>();
 builder.Services.AddScoped<IMeService, MeService>();
+builder.Services.AddScoped<INotificationCandidateReader, NotificationCandidateReader>();
+builder.Services.AddTransient<InternalServiceResilienceHandler>();
+builder.Services.AddHttpClient<INotificationService, NotificationServiceClient>((services, client) =>
+{
+    var configuration = services.GetRequiredService<IConfiguration>();
+    var baseUrl = configuration["Services:NotificationService"]
+        ?? throw new InvalidOperationException("Missing Services:NotificationService configuration.");
+    var apiKey = configuration["ServiceAuthentication:ApiKey"]
+        ?? throw new InvalidOperationException("Missing ServiceAuthentication:ApiKey configuration.");
+
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = Timeout.InfiniteTimeSpan;
+    client.DefaultRequestHeaders.Add("X-Internal-Api-Key", apiKey);
+})
+.AddHttpMessageHandler<InternalServiceResilienceHandler>();
+
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>(
+        "database",
+        tags: ["ready"],
+        timeout: TimeSpan.FromSeconds(3))
+    .AddCheck<NotificationServiceHealthCheck>(
+        "notification-service",
+        tags: ["ready"],
+        timeout: TimeSpan.FromSeconds(3));
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuthService>();
@@ -184,6 +213,21 @@ using (var scope = app.Services.CreateScope())
 
     var registrationsExamsSeeder = new RegistrationsExamsSeeder(db);
     await registrationsExamsSeeder.SeedAsync(2002);
+
+    if (app.Environment.IsDevelopment())
+    {
+        var teacherNotificationSeeder = new TeacherNotificationScenarioSeeder(db);
+        var scenario = await teacherNotificationSeeder.SeedAsync(
+            DateOnly.FromDateTime(DateTime.UtcNow));
+        app.Logger.LogInformation(
+            "Teacher notification test scenario ready. TeacherId: {TeacherId}, StudentIds: {StudentIds}, SubjectId: {SubjectId}, TermId: {TermId}, ExamDate: {ExamDate}, Email: {Email}.",
+            scenario.TeacherId,
+            string.Join(",", scenario.StudentIds),
+            scenario.SubjectId,
+            scenario.TermId,
+            scenario.ExamDate,
+            scenario.TeacherEmail);
+    }
 }
 
 app.UseRouting();
@@ -199,6 +243,14 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false
+});
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = registration => registration.Tags.Contains("ready")
+});
 
 await app.RunAsync();
 
