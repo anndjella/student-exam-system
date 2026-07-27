@@ -31,7 +31,6 @@ public sealed class ProductionDemoSeeder
 
     public async Task<ProductionDemoSeedResult> SeedAsync(
         DateOnly today,
-        string? initialPassword,
         CancellationToken ct = default)
     {
         if (await _db.Users.AnyAsync(user => user.Username == MarkerUsername, ct))
@@ -39,12 +38,6 @@ public sealed class ProductionDemoSeeder
             await UpgradeLegacyTermNamesAsync(today, ct);
             await RemoveLegacyDemoNotesAsync(ct);
             return await ReadResultAsync(wasCreated: false, ct);
-        }
-
-        if (string.IsNullOrWhiteSpace(initialPassword) || initialPassword.Length < 12)
-        {
-            throw new InvalidOperationException(
-                "SeedData:DemoInitialPassword must contain at least 12 characters when SeedData:Mode is Demo.");
         }
 
         if (await ContainsAcademicDataAsync(ct))
@@ -62,7 +55,7 @@ public sealed class ProductionDemoSeeder
         _db.Teachers.AddRange(people.Teachers);
         await _db.SaveChangesAsync(ct);
 
-        _db.Users.AddRange(CreateUsers(people, initialPassword));
+        _db.Users.AddRange(CreateUsers(people));
 
         var subjects = CreateSubjects();
         var terms = CreateTerms(today);
@@ -158,7 +151,7 @@ public sealed class ProductionDemoSeeder
         return new DemoPeople(studentServices, students, teachers);
     }
 
-    private static IEnumerable<User> CreateUsers(DemoPeople people, string initialPassword)
+    private static IEnumerable<User> CreateUsers(DemoPeople people)
     {
         var users = new List<User>(
             people.StudentServices.Count + people.Students.Count + people.Teachers.Count);
@@ -169,7 +162,7 @@ public sealed class ProductionDemoSeeder
                 UserRole.StudentService,
                 $"studentservice{i + 1:00}",
                 people.StudentServices[i].ID,
-                initialPassword));
+                people.StudentServices[i].JMBG));
         }
 
         foreach (var student in people.Students)
@@ -181,7 +174,7 @@ public sealed class ProductionDemoSeeder
                     student.LastName,
                     student.IndexNumber),
                 student.ID,
-                initialPassword));
+                student.JMBG));
         }
 
         foreach (var teacher in people.Teachers)
@@ -193,7 +186,7 @@ public sealed class ProductionDemoSeeder
                     teacher.LastName,
                     teacher.EmployeeNumber),
                 teacher.ID,
-                initialPassword));
+                teacher.JMBG));
         }
 
         return users;
@@ -203,9 +196,10 @@ public sealed class ProductionDemoSeeder
         UserRole role,
         string username,
         int personId,
-        string initialPassword)
+        string jmbg)
     {
         var user = new User(role, username, "TEMP", personId);
+        var initialPassword = CredentialsGenerator.InitialPasswordPlain(jmbg);
         user.SetPasswordHash(PasswordService.Hash(user, initialPassword));
         return user;
     }

@@ -183,17 +183,6 @@ using (var scope = app.Services.CreateScope())
         var registrationsExamsSeeder = new RegistrationsExamsSeeder(db);
         await registrationsExamsSeeder.SeedAsync(2002);
 
-        var teacherNotificationSeeder = new TeacherNotificationScenarioSeeder(db);
-        var scenario = await teacherNotificationSeeder.SeedAsync(
-            DateOnly.FromDateTime(DateTime.UtcNow));
-        app.Logger.LogInformation(
-            "Teacher notification test scenario ready. TeacherId: {TeacherId}, StudentIds: {StudentIds}, SubjectId: {SubjectId}, TermId: {TermId}, ExamDate: {ExamDate}, Email: {Email}.",
-            scenario.TeacherId,
-            string.Join(",", scenario.StudentIds),
-            scenario.SubjectId,
-            scenario.TermId,
-            scenario.ExamDate,
-            scenario.TeacherEmail);
     }
     else
     {
@@ -206,8 +195,7 @@ using (var scope = app.Services.CreateScope())
 
             var demoSeeder = new ProductionDemoSeeder(db);
             var result = await demoSeeder.SeedAsync(
-                DateOnly.FromDateTime(localNow.DateTime),
-                builder.Configuration["SeedData:DemoInitialPassword"]);
+                DateOnly.FromDateTime(localNow.DateTime));
 
             app.Logger.LogInformation(
                 "Production demo seed {Action}. Student services: {StudentServices}, students: {Students}, " +

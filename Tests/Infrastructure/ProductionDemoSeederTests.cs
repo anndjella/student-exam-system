@@ -1,6 +1,7 @@
+using Application.Auth;
+using Domain.Common;
 using Domain.Enums;
 using FluentAssertions;
-using Infrastructure.Repositories;
 using Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
 using Tests.TestDoubles;
@@ -20,7 +21,7 @@ public sealed class ProductionDemoSeederTests
         {
             var seeder = new ProductionDemoSeeder(db);
 
-            var first = await seeder.SeedAsync(Today, "Demo-password-2026!");
+            var first = await seeder.SeedAsync(Today);
 
             first.WasCreated.Should().BeTrue();
             first.StudentServices.Should().Be(5);
@@ -41,7 +42,14 @@ public sealed class ProductionDemoSeederTests
                 .Should().Be(ProductionDemoSeeder.TeacherCount);
             (await db.Users.AllAsync(user => user.MustChangePassword))
                 .Should().BeTrue();
-
+            var users = await db.Users
+                .AsNoTracking()
+                .Include(user => user.Person)
+                .ToListAsync();
+            users.Should().OnlyContain(user =>
+                PasswordService.Verify(
+                    user,
+                    CredentialsGenerator.InitialPasswordPlain(user.Person.JMBG)));
             var subjectsWithoutGrader = await db.Subjects
                 .Where(subject => !db.TeachingAssignments.Any(assignment =>
                     assignment.SubjectID == subject.ID && assignment.CanGrade))
@@ -146,17 +154,7 @@ public sealed class ProductionDemoSeederTests
                 hasLaterRegistration.Should().BeFalse();
             }
 
-            var candidateReader = new NotificationCandidateReader(db);
-            var registrationCandidates =
-                await candidateReader.ListRegistrationRemindersAsync(Today.AddDays(1));
-            var missingResultCandidates =
-                await candidateReader.ListMissingExamResultsAsync(Today.AddDays(-30));
-
-            registrationCandidates.Should().NotBeEmpty();
-            missingResultCandidates.Should().ContainSingle(candidate =>
-                candidate.MissingResultCount == 5);
-
-            var second = await seeder.SeedAsync(Today, initialPassword: null);
+            var second = await seeder.SeedAsync(Today);
 
             second.WasCreated.Should().BeFalse();
             second.Should().BeEquivalentTo(first, options =>
@@ -181,7 +179,7 @@ public sealed class ProductionDemoSeederTests
             await db.SaveChangesAsync();
 
             var action = () => new ProductionDemoSeeder(db)
-                .SeedAsync(Today, "Demo-password-2026!");
+                .SeedAsync(Today);
 
             await action.Should()
                 .ThrowAsync<InvalidOperationException>()
