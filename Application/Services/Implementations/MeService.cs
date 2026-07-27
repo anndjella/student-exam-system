@@ -25,6 +25,7 @@ namespace Application.Services.Implementations
             {
                 FirstName = p.FirstName,
                 LastName = p.LastName,
+                Email = p.Email,
                 JMBG = p.JMBG,
                 DateOfBirth = p.DateOfBirth
             };

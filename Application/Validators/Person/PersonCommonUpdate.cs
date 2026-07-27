@@ -19,6 +19,15 @@ namespace Application.Validators.Person
                         .NotEmpty()
                         .WithMessage("Last name is required.")
                         .MaximumLength(50));
+
+                When(x => x.Email != null, () =>
+                    RuleFor(x => x.Email)
+                        .Cascade(CascadeMode.Stop)
+                        .NotEmpty()
+                        .WithMessage("Email is required.")
+                        .MaximumLength(254)
+                        .EmailAddress()
+                        .WithMessage("Email is not valid."));
             });
         }
     }

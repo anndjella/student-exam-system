@@ -14,6 +14,7 @@ namespace Application.DTO.Teachers
     {
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
+        public string? Email { get; set; }
         public Title? Title { get;set; }
         public string? EmployeeNumber { get; set; }
     }

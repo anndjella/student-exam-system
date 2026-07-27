@@ -19,6 +19,14 @@ namespace Application.Validators.Person
                     .WithMessage("Last name is required.")
                     .MaximumLength(50);
 
+                RuleFor(x => x.Email)
+                    .Cascade(CascadeMode.Stop)
+                    .NotEmpty()
+                    .WithMessage("Email is required.")
+                    .MaximumLength(254)
+                    .EmailAddress()
+                    .WithMessage("Email is not valid.");
+
                 RuleFor(x => x.JMBG)
                     .Cascade(CascadeMode.Stop)
                     .NotEmpty().WithMessage("JMBG is required.")
