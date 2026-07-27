@@ -11,6 +11,7 @@ namespace Application.Common.Mapping
             FirstName = teacher.FirstName,
             DateOfBirth = teacher.DateOfBirth,
             LastName = teacher.LastName,
+            Email = teacher.Email,
             EmployeeNumber = teacher.EmployeeNumber,
             Title = teacher.Title,
             DeletedAt = teacher.DeletedAt
@@ -22,6 +23,7 @@ namespace Application.Common.Mapping
             JMBG = req.JMBG,
             FirstName = req.FirstName,
             LastName = req.LastName,
+            Email = req.Email,
             EmployeeNumber = req.EmployeeNumber,
             Title = req.Title
         };
