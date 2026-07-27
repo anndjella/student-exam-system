@@ -17,4 +17,15 @@ baseline
 SonarProcedures/
 TestResults/
 **/coverage.opencover.xml
-ElaboratFinal*
+ef*
+
+# Local configuration and deployment secrets
+.env
+.env.*
+!.env.example
+**/local.settings.json
+**/appsettings.Local.json
+**/appsettings.Production.json
+*.publishsettings
+*.PublishSettings
+*.pubxml.user
