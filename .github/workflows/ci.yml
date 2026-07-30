@@ -11,6 +11,9 @@ on:
 permissions:
   contents: read
 
+env:
+  AZURE_WEBAPP_NAME: student-exam-api-2610
+
 jobs:
   build-and-test:
     name: Build and test
@@ -33,3 +36,45 @@ jobs:
 
       - name: Test
         run: dotnet test Tests/Tests.csproj --configuration Release --no-build --verbosity normal
+
+      - name: Publish API
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: dotnet publish Api/Api.csproj --configuration Release --no-build --output ./publish
+
+      - name: Upload API artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@v4
+        with:
+          name: student-exam-api
+          path: ./publish
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    name: Deploy API to Azure
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Download API artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: student-exam-api
+          path: ./publish
+
+      - name: Sign in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy API
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: ./publish

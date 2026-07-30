@@ -17,4 +17,22 @@ baseline
 SonarProcedures/
 TestResults/
 **/coverage.opencover.xml
-ElaboratFinal*
+ef*
+
+# Local configuration and deployment secrets
+.env
+.env.*
+!.env.example
+**/local.settings.json
+**/appsettings.Local.json
+**/appsettings.Production.json
+*.publishsettings
+*.PublishSettings
+*.pubxml.user
+
+# Local Visual Studio Azure publish metadata
+**/Properties/PublishProfiles/
+**/Properties/ServiceDependencies/
+
+# Microsoft Office temporary files
+~$*.docx
