@@ -37,6 +37,20 @@ using System.Text.Json.Serialization;
 
 
 var builder = WebApplication.CreateBuilder(args);
+var allowedCorsOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>()
+    ?.Where(origin => !string.IsNullOrWhiteSpace(origin))
+    .Select(origin => origin.TrimEnd('/'))
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray() ?? [];
+
+if (allowedCorsOrigins.Length == 0)
+{
+    throw new InvalidOperationException(
+        "Missing Cors:AllowedOrigins configuration. Configure at least one trusted frontend origin.");
+}
+
 // Db
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -154,32 +168,14 @@ builder.Services.AddSwaggerGen(c =>
 // CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("FrontDev", p =>
-        p.WithOrigins("http://127.0.0.1:5500", "http://localhost:5500", "http://localhost:5173", "http://localhost:4200")
+    options.AddPolicy("Frontend", p =>
+        p.WithOrigins(allowedCorsOrigins)
          .AllowAnyHeader()
          .AllowAnyMethod()
          .AllowCredentials()
     );
 });
 
-// AuthN (JWT)
-//builder.Services
-//    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//    .AddJwtBearer(o =>
-//{
-//    o.TokenValidationParameters = new TokenValidationParameters
-//    {
-//        ValidateIssuer = true,
-//        ValidateAudience = true,
-//        ValidateLifetime = true,
-//        ValidateIssuerSigningKey = true,
-//        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-//        ValidAudience = builder.Configuration["Jwt:Audience"],
-//        IssuerSigningKey = new SymmetricSecurityKey(
-//            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
-//        )
-//    };
-//});
 builder.Services.AddJwtAuth(builder.Configuration);
 
 // AuthZ
@@ -205,34 +201,57 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
 
-    var peopleSeeder = new PeopleUsersSeeder(db);
-    await peopleSeeder.SeedAsync();
-
-    var enrollmentSeeder = new EnrollmentSeeder(db);
-    await enrollmentSeeder.SeedAsync();
-
-    var registrationsExamsSeeder = new RegistrationsExamsSeeder(db);
-    await registrationsExamsSeeder.SeedAsync(2002);
-
     if (app.Environment.IsDevelopment())
     {
-        var teacherNotificationSeeder = new TeacherNotificationScenarioSeeder(db);
-        var scenario = await teacherNotificationSeeder.SeedAsync(
-            DateOnly.FromDateTime(DateTime.UtcNow));
-        app.Logger.LogInformation(
-            "Teacher notification test scenario ready. TeacherId: {TeacherId}, StudentIds: {StudentIds}, SubjectId: {SubjectId}, TermId: {TermId}, ExamDate: {ExamDate}, Email: {Email}.",
-            scenario.TeacherId,
-            string.Join(",", scenario.StudentIds),
-            scenario.SubjectId,
-            scenario.TermId,
-            scenario.ExamDate,
-            scenario.TeacherEmail);
+        var peopleSeeder = new PeopleUsersSeeder(db);
+        await peopleSeeder.SeedAsync();
+
+        var enrollmentSeeder = new EnrollmentSeeder(db);
+        await enrollmentSeeder.SeedAsync();
+
+        var registrationsExamsSeeder = new RegistrationsExamsSeeder(db);
+        await registrationsExamsSeeder.SeedAsync(2002);
+
+    }
+    else
+    {
+        var seedMode = builder.Configuration["SeedData:Mode"] ?? "None";
+        if (seedMode.Equals("Demo", StringComparison.OrdinalIgnoreCase))
+        {
+            var timeZoneId = builder.Configuration["SeedData:TimeZone"] ?? "Europe/Budapest";
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            var localNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone);
+
+            var demoSeeder = new ProductionDemoSeeder(db);
+            var result = await demoSeeder.SeedAsync(
+                DateOnly.FromDateTime(localNow.DateTime));
+
+            app.Logger.LogInformation(
+                "Production demo seed {Action}. Student services: {StudentServices}, students: {Students}, " +
+                "teachers: {Teachers}, subjects: {Subjects}, terms: {Terms}, assignments: {Assignments}, " +
+                "enrollments: {Enrollments}, registrations: {Registrations}, exams: {Exams}.",
+                result.WasCreated ? "created" : "already present",
+                result.StudentServices,
+                result.Students,
+                result.Teachers,
+                result.Subjects,
+                result.Terms,
+                result.TeachingAssignments,
+                result.Enrollments,
+                result.Registrations,
+                result.Exams);
+        }
+        else if (!seedMode.Equals("None", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Unsupported SeedData:Mode '{seedMode}'. Allowed values are None and Demo.");
+        }
     }
 }
 
 app.UseRouting();
 
-app.UseCors("FrontDev");
+app.UseCors("Frontend");
 
 app.UseHttpsRedirection();
 
