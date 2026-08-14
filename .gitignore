@@ -29,3 +29,10 @@ ef*
 *.publishsettings
 *.PublishSettings
 *.pubxml.user
+
+# Local Visual Studio Azure publish metadata
+**/Properties/PublishProfiles/
+**/Properties/ServiceDependencies/
+
+# Microsoft Office temporary files
+~$*.docx
