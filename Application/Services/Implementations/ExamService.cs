@@ -43,10 +43,16 @@ namespace Application.Services.Implementations
                     $"Exam date must be between {term.StartDate:yyyy-MM-dd} and {term.EndDate:yyyy-MM-dd}."
                 );
 
-            if (term.IsInRegistrationWindow(req.Date))
+            if (term.IsInRegistrationWindow(_clock.Today))
                 throw new AppException(
                     AppErrorCode.Conflict,
                     "Exam cannot be created while the registration period is still open."
+                );
+
+            if (req.Grade.HasValue && req.Date > _clock.Today)
+                throw new AppException(
+                    AppErrorCode.Conflict,
+                    "A grade cannot be entered before the exam date."
                 );
 
             var exam = new Exam
@@ -94,6 +100,12 @@ namespace Application.Services.Implementations
                 .ListUnsignedBySubjectTermWithRegistrationAsync(req.SubjectID, req.TermID, ct);
 
             if (unsignedExams.Count == 0) return 0;
+
+            if (unsignedExams.Any(exam => exam.Date > _clock.Today))
+                throw new AppException(
+                    AppErrorCode.Conflict,
+                    "Cannot lock exams before every exam date has been reached."
+                );
 
             var enrollmentByStudent = await LoadEnrollmentsByStudentAsync(unsignedExams, req.SubjectID, ct);
 
@@ -213,6 +225,22 @@ namespace Application.Services.Implementations
 
             if (exam.SignedAt is not null)
                 throw new AppException(AppErrorCode.Conflict, "Exam is locked and cannot be changed.");
+
+            var term = await _uow.Terms.GetByIdAsync(exam.TermID, ct);
+            if (term is null)
+                throw new AppException(AppErrorCode.NotFound, "Term not found.");
+
+            if (term.IsInRegistrationWindow(_clock.Today))
+                throw new AppException(
+                    AppErrorCode.Conflict,
+                    "Grades cannot be changed while the registration period is still open."
+                );
+
+            if (req.Grade.HasValue && exam.Date > _clock.Today)
+                throw new AppException(
+                    AppErrorCode.Conflict,
+                    "A grade cannot be entered before the exam date."
+                );
 
             exam.Grade = req.Grade;
             exam.Note = req.Note;
