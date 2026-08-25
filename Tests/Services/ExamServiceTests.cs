@@ -14,7 +14,7 @@ public sealed class ExamServiceTests
     public async Task CreateAsync_AddsExam_WhenTeacherCanGradeAndRegistrationIsActive()
     {
         var uow = new UnitOfWorkMock();
-        var clock = new TestClock();
+        var clock = new TestClock { Today = new DateOnly(2026, 2, 12) };
         var service = new ExamService(uow.Object, clock);
         var request = new CreateExamRequest
         {
@@ -58,6 +58,46 @@ public sealed class ExamServiceTests
         added.TeacherID.Should().Be(4);
         added.SignedAt.Should().BeNull();
         uow.Mock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ThrowsConflict_WhenGradeIsEnteredBeforeExamDate()
+    {
+        var uow = new UnitOfWorkMock();
+        var clock = new TestClock { Today = new DateOnly(2026, 2, 11) };
+        var service = new ExamService(uow.Object, clock);
+
+        SetupTeacherCanGrade(uow, teacherId: 4, subjectId: 10);
+        uow.Registrations
+            .Setup(x => x.ExistsActiveAsync(6, 10, 2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        uow.Exams
+            .Setup(x => x.GetByKeyAsync(6, 10, 2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Exam?)null);
+        uow.Terms
+            .Setup(x => x.GetByIdAsync(2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Term(2));
+        uow.Terms
+            .Setup(x => x.GetPreviousTermAsync(2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Term?)null);
+
+        var act = () => service.CreateAsync(
+            10,
+            2,
+            6,
+            new CreateExamRequest
+            {
+                Grade = 9,
+                Date = new DateOnly(2026, 2, 12)
+            },
+            4);
+
+        await act.Should().ThrowAsync<AppException>()
+            .Where(ex => ex.Code == AppErrorCode.Conflict)
+            .WithMessage("A grade cannot be entered before the exam date.");
+
+        uow.Exams.Verify(x => x.Add(It.IsAny<Exam>()), Times.Never);
+        uow.Mock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -214,6 +254,83 @@ public sealed class ExamServiceTests
         await act.Should().ThrowAsync<AppException>()
             .Where(ex => ex.Code == AppErrorCode.Conflict)
             .WithMessage("Cannot lock exams because some active registrations do not have exams.");
+
+        uow.Mock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task LockAsync_ThrowsConflict_WhenExamDateIsInTheFuture()
+    {
+        var uow = new UnitOfWorkMock();
+        var clock = new TestClock { Today = new DateOnly(2026, 2, 11) };
+        var service = new ExamService(uow.Object, clock);
+        var request = new LockExamsRequest { SubjectID = 10, TermID = 2 };
+        var registration = Registration(studentId: 6, subjectId: 10, termId: 2);
+        var futureExam = Exam(id: 21, studentId: 6, grade: 8, registration);
+        futureExam.Date = new DateOnly(2026, 2, 12);
+        registration.Exam = futureExam;
+
+        SetupTeacherCanGrade(uow, teacherId: 4, subjectId: request.SubjectID);
+        uow.Terms
+            .Setup(x => x.GetByIdAsync(request.TermID, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Term(request.TermID));
+        uow.Terms
+            .Setup(x => x.GetPreviousTermAsync(request.TermID, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Term?)null);
+        uow.Registrations
+            .Setup(x => x.ListActiveBySubjectAndTermWithExamAsync(request.SubjectID, request.TermID, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Registration> { registration });
+        uow.Exams
+            .Setup(x => x.ListBySubjectTermAsync(request.SubjectID, request.TermID, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Exam> { futureExam });
+        uow.Exams
+            .Setup(x => x.ListUnsignedBySubjectTermWithRegistrationAsync(request.SubjectID, request.TermID, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Exam> { futureExam });
+
+        var act = () => service.LockAsync(request, teacherId: 4);
+
+        await act.Should().ThrowAsync<AppException>()
+            .Where(ex => ex.Code == AppErrorCode.Conflict)
+            .WithMessage("Cannot lock exams before every exam date has been reached.");
+
+        uow.Mock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ThrowsConflict_WhenGradeIsEnteredBeforeExamDate()
+    {
+        var uow = new UnitOfWorkMock();
+        var clock = new TestClock { Today = new DateOnly(2026, 2, 11) };
+        var service = new ExamService(uow.Object, clock);
+        var exam = new Exam
+        {
+            ID = 21,
+            SubjectID = 10,
+            TermID = 2,
+            StudentID = 6,
+            Date = new DateOnly(2026, 2, 12),
+            SignedAt = null
+        };
+
+        uow.Exams
+            .Setup(x => x.GetByIdAsync(exam.ID, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(exam);
+        SetupTeacherCanGrade(uow, teacherId: 4, subjectId: exam.SubjectID);
+        uow.Terms
+            .Setup(x => x.GetPreviousTermAsync(exam.TermID, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Term?)null);
+        uow.Terms
+            .Setup(x => x.GetByIdAsync(exam.TermID, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Term(exam.TermID));
+
+        var act = () => service.UpdateAsync(
+            exam.ID,
+            new UpdateExamRequest { Grade = 8, Note = "Result entered early." },
+            teacherId: 4);
+
+        await act.Should().ThrowAsync<AppException>()
+            .Where(ex => ex.Code == AppErrorCode.Conflict)
+            .WithMessage("A grade cannot be entered before the exam date.");
 
         uow.Mock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
