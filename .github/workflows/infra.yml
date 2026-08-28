@@ -1,0 +1,26 @@
+name: Infra
+
+on:
+  pull_request:
+    branches: [master]
+    paths: ['infra/**', '.github/workflows/infra.yml']
+  push:
+    branches: [master]
+    paths: ['infra/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Bicep lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bicep build (lint)
+        run: az bicep build --file infra/main.bicep
+
+      - name: Check parameter file
+        run: az bicep build-params --file infra/main.bicepparam --stdout

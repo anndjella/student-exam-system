@@ -239,6 +239,36 @@ The API will run on:
 http://localhost:5000
 
 ---
+# Infrastructure
+
+All Azure resources (App Service, Azure SQL, Service Bus, Key Vault, Communication Services,
+Application Insights and the Notification Service function app) are described as Bicep under
+infra/.
+
+Preview the changes:
+
+az deployment sub what-if -l swedencentral -f infra/main.bicep -p infra/main.bicepparam
+
+Deploy (secrets are passed at deploy time, never committed):
+
+az deployment sub create -n studentexam-infra -l swedencentral -f infra/main.bicep -p infra/main.bicepparam -p sqlAdminPassword=... internalApiKey=... jwtSigningKey=...
+
+---
+# Database seeding
+
+Demo data is not created automatically. It is produced on demand by a separate CLI in
+tools/StudentExam.DbSeeder, which runs in a transaction and refuses to run against a
+database it did not create.
+
+Preview without writing anything:
+dotnet run --project tools/StudentExam.DbSeeder -- dry-run --connection "<connection string>"
+
+Seed:
+dotnet run --project tools/StudentExam.DbSeeder -- seed --connection "<connection string>"
+
+Run with --help for all commands and options.
+
+---
 # Future Improvements
 
 Potential improvements include:
