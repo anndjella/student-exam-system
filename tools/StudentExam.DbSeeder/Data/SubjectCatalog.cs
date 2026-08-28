@@ -1,0 +1,73 @@
+using Domain.Entity;
+
+namespace StudentExam.DbSeeder.Data;
+
+internal static class SubjectCatalog
+{
+    public sealed record Definition(string Code, string Name, byte Ects, bool IsActive);
+
+    // 55 active + 5 retired (IsActive = false) subjects.
+    public static readonly Definition[] All =
+    [
+        new("CS101", "Introduction to Programming", 8, true),
+        new("CS102", "Object-Oriented Programming", 8, true),
+        new("CS103", "Programming Paradigms", 6, true),
+        new("CS201", "Data Structures and Algorithms", 8, true),
+        new("CS202", "Database Systems", 7, true),
+        new("CS203", "Computer Architecture", 6, true),
+        new("CS204", "Operating Systems", 7, true),
+        new("CS205", "Systems Programming", 6, true),
+        new("CS206", "Functional Programming", 5, true),
+        new("CS207", "Compiler Construction", 6, true),
+        new("CS301", "Software Engineering", 8, true),
+        new("CS302", "Web Application Development", 7, true),
+        new("CS303", "Computer Networks", 7, true),
+        new("CS304", "Distributed Systems", 7, true),
+        new("CS305", "Information Security", 6, true),
+        new("CS306", "Cloud Computing", 6, true),
+        new("CS307", "DevOps and Site Reliability", 5, true),
+        new("CS308", "Concurrent and Parallel Programming", 6, true),
+        new("CS309", "Software Architecture", 7, true),
+        new("CS310", "API and Integration Design", 5, true),
+        new("CS401", "Machine Learning", 8, true),
+        new("CS402", "Artificial Intelligence", 8, true),
+        new("CS403", "Data Mining", 6, true),
+        new("CS404", "Mobile Application Development", 6, true),
+        new("CS405", "Software Testing and Quality Assurance", 6, true),
+        new("CS406", "Human-Computer Interaction", 5, true),
+        new("CS407", "Computer Graphics", 6, true),
+        new("CS408", "Natural Language Processing", 6, true),
+        new("CS409", "Deep Learning", 7, true),
+        new("CS410", "Big Data Engineering", 7, true),
+        new("CS411", "Reinforcement Learning", 6, true),
+        new("CS412", "Computer Vision", 6, true),
+        new("CS413", "Blockchain and Decentralized Systems", 5, true),
+        new("CS414", "Game Development", 5, true),
+        new("CS415", "Robotics Software", 6, true),
+        new("MATH101", "Calculus I", 8, true),
+        new("MATH102", "Calculus II", 8, true),
+        new("MATH201", "Linear Algebra", 7, true),
+        new("MATH202", "Discrete Mathematics", 7, true),
+        new("MATH203", "Numerical Methods", 6, true),
+        new("MATH301", "Probability and Statistics", 7, true),
+        new("MATH302", "Mathematical Optimization", 6, true),
+        new("MATH303", "Graph Theory", 5, true),
+        new("PHYS101", "Physics for Computing", 6, true),
+        new("EE201", "Digital Electronics", 6, true),
+        new("EE202", "Signals and Systems", 6, true),
+        new("EE301", "Embedded Systems", 7, true),
+        new("EE302", "Internet of Things", 6, true),
+        new("ENG101", "Academic English", 4, true),
+        new("ENG201", "Technical Writing", 3, true),
+        new("BUS201", "IT Project Management", 5, true),
+        new("BUS202", "Principles of Economics", 4, true),
+        new("BUS301", "Technology Entrepreneurship", 5, true),
+        new("LAW201", "Data Protection and IT Law", 4, true),
+        new("ETH201", "Ethics in Computing", 3, true),
+        new("LEGACY01", "Legacy Information Systems", 5, false),
+        new("LEGACY02", "Classic Software Platforms", 5, false),
+        new("LEGACY03", "Mainframe Programming", 5, false),
+        new("LEGACY04", "Desktop Application Frameworks", 4, false),
+        new("LEGACY05", "Enterprise SOAP Services", 4, false),
+    ];
+}

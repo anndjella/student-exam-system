@@ -33,6 +33,7 @@
     <ProjectReference Include="..\Api\Api.csproj" />
     <ProjectReference Include="..\Application\Application.csproj" />
     <ProjectReference Include="..\Domain\Domain.csproj" />
+    <ProjectReference Include="..\tools\StudentExam.DbSeeder\StudentExam.DbSeeder.csproj" />
   </ItemGroup>
 
 </Project>

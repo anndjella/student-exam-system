@@ -23,7 +23,6 @@ using FluentValidation.AspNetCore;
 using Infrastructure;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
-using Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Authorization;
@@ -196,57 +195,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Schema is kept current on startup. Demo/reference data is NEVER seeded here:
+// use the dedicated, explicit tools/StudentExam.DbSeeder CLI instead.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
-
-    if (app.Environment.IsDevelopment())
-    {
-        var peopleSeeder = new PeopleUsersSeeder(db);
-        await peopleSeeder.SeedAsync();
-
-        var enrollmentSeeder = new EnrollmentSeeder(db);
-        await enrollmentSeeder.SeedAsync();
-
-        var registrationsExamsSeeder = new RegistrationsExamsSeeder(db);
-        await registrationsExamsSeeder.SeedAsync(2002);
-
-    }
-    else
-    {
-        var seedMode = builder.Configuration["SeedData:Mode"] ?? "None";
-        if (seedMode.Equals("Demo", StringComparison.OrdinalIgnoreCase))
-        {
-            var timeZoneId = builder.Configuration["SeedData:TimeZone"] ?? "Europe/Budapest";
-            var timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-            var localNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone);
-
-            var demoSeeder = new ProductionDemoSeeder(db);
-            var result = await demoSeeder.SeedAsync(
-                DateOnly.FromDateTime(localNow.DateTime));
-
-            app.Logger.LogInformation(
-                "Production demo seed {Action}. Student services: {StudentServices}, students: {Students}, " +
-                "teachers: {Teachers}, subjects: {Subjects}, terms: {Terms}, assignments: {Assignments}, " +
-                "enrollments: {Enrollments}, registrations: {Registrations}, exams: {Exams}.",
-                result.WasCreated ? "created" : "already present",
-                result.StudentServices,
-                result.Students,
-                result.Teachers,
-                result.Subjects,
-                result.Terms,
-                result.TeachingAssignments,
-                result.Enrollments,
-                result.Registrations,
-                result.Exams);
-        }
-        else if (!seedMode.Equals("None", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException(
-                $"Unsupported SeedData:Mode '{seedMode}'. Allowed values are None and Demo.");
-        }
-    }
 }
 
 app.UseRouting();
