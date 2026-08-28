@@ -36,3 +36,7 @@ ef*
 
 # Microsoft Office temporary files
 ~$*.docx
+
+# Bicep build output
+infra/**/*.json
+!infra/**/*.bicepparam
