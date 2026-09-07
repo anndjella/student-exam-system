@@ -78,17 +78,19 @@ public sealed class NotificationCandidateReader : INotificationCandidateReader
     }
 
     public async Task<IReadOnlyList<MissingExamResultCandidateResponse>> ListMissingExamResultsAsync(
-        DateOnly examDate,
+        DateOnly cutoffDate,
         CancellationToken ct = default)
     {
+        // "Missing" means the exam period ended at least this long ago and the teacher still
+        // hasn't locked (signed) the result - a Grade may already be entered but not final until
+        // SignedAt is set, so Grade is irrelevant here; only SignedAt decides whether it's missing.
         var rows = await (
             from exam in _db.Exams
             join subject in _db.Subjects on exam.SubjectID equals subject.ID
             join term in _db.Terms on exam.TermID equals term.ID
             join user in _db.Users on exam.TeacherID equals user.PersonID
             join person in _db.People on user.PersonID equals person.ID
-            where exam.Date <= examDate
-                && exam.Grade == null
+            where term.EndDate <= cutoffDate
                 && exam.SignedAt == null
                 && user.isActive
                 && user.Role == UserRole.Teacher
@@ -102,7 +104,7 @@ public sealed class NotificationCandidateReader : INotificationCandidateReader
                 SubjectName = subject.Name,
                 TermId = term.ID,
                 TermName = term.Name,
-                exam.Date,
+                term.EndDate,
                 exam.StudentID
             })
             .AsNoTracking()
@@ -119,7 +121,7 @@ public sealed class NotificationCandidateReader : INotificationCandidateReader
                 row.SubjectName,
                 row.TermId,
                 row.TermName,
-                row.Date
+                row.EndDate
             })
             .Select(group => new MissingExamResultCandidateResponse
             {
@@ -131,7 +133,7 @@ public sealed class NotificationCandidateReader : INotificationCandidateReader
                 SubjectName = group.Key.SubjectName,
                 TermId = group.Key.TermId,
                 TermName = group.Key.TermName,
-                ExamDate = group.Key.Date,
+                TermEndDate = group.Key.EndDate,
                 MissingResultCount = group.Select(row => row.StudentID).Distinct().Count()
             })
             .ToList();

@@ -10,6 +10,6 @@ public sealed class MissingExamResultCandidateResponse
     public string SubjectName { get; set; } = "";
     public int TermId { get; set; }
     public string TermName { get; set; } = "";
-    public DateOnly ExamDate { get; set; }
+    public DateOnly TermEndDate { get; set; }
     public int MissingResultCount { get; set; }
 }
