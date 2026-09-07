@@ -34,11 +34,11 @@ public sealed class NotificationCandidatesController : ControllerBase
 
     [HttpGet("missing-exam-results")]
     public async Task<ActionResult<IReadOnlyList<MissingExamResultCandidateResponse>>> MissingExamResults(
-        [FromQuery] DateOnly examDate,
+        [FromQuery] DateOnly cutoffDate,
         CancellationToken ct)
     {
         if (!HasValidServiceKey()) return Unauthorized();
-        return Ok(await _candidateReader.ListMissingExamResultsAsync(examDate, ct));
+        return Ok(await _candidateReader.ListMissingExamResultsAsync(cutoffDate, ct));
     }
 
     private bool HasValidServiceKey()

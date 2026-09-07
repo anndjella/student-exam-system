@@ -9,6 +9,6 @@ public interface INotificationCandidateReader
         CancellationToken ct = default);
 
     Task<IReadOnlyList<MissingExamResultCandidateResponse>> ListMissingExamResultsAsync(
-        DateOnly examDate,
+        DateOnly cutoffDate,
         CancellationToken ct = default);
 }

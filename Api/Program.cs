@@ -50,9 +50,17 @@ if (allowedCorsOrigins.Length == 0)
         "Missing Cors:AllowedOrigins configuration. Configure at least one trusted frontend origin.");
 }
 
-// Db
+// EnableRetryOnFailure: the SQL Database is serverless and auto-pauses when idle (infra/modules/sql.bicep).
+// The first connection after a pause can fail with error 40613 ("Database is not currently
+// available") while it resumes. Without a retry here, that exception is unhandled during the
+// startup migration below and crashes the whole worker process.
 builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    opt.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions => sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 6,
+            maxRetryDelay: TimeSpan.FromSeconds(15),
+            errorNumbersToAdd: null)));
 
 // Validation
 builder.Services.AddFluentValidationAutoValidation();
