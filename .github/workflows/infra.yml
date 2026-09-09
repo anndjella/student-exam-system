@@ -6,11 +6,29 @@ on:
     paths: ['infra/**', '.github/workflows/infra.yml']
   push:
     branches: [master]
-    paths: ['infra/**']
+    paths: ['infra/**', '.github/workflows/infra.yml']
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'what-if = preview only, deploy = preview then apply'
+        type: choice
+        default: what-if
+        options:
+          - what-if
+          - deploy
 
 permissions:
   contents: read
+
+# One infra run at a time. A second push waits for the first to finish
+# instead of racing it.
+concurrency:
+  group: infra-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DEPLOYMENT_NAME: studentexam-infra
+  DEPLOYMENT_LOCATION: swedencentral
 
 jobs:
   lint:
@@ -24,3 +42,64 @@ jobs:
 
       - name: Check parameter file
         run: az bicep build-params --file infra/main.bicepparam --stdout
+
+  deploy:
+    name: Deploy infra
+    needs: lint
+    # On a plain pull request only lint runs. This job is for merges to master
+    # and manual runs from the Actions tab.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      SQL_ADMIN_PASSWORD: ${{ secrets.SQL_ADMIN_PASSWORD }}
+      INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+      JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sign in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: What-if (preview)
+        run: |
+          set -eo pipefail
+          az deployment sub what-if \
+            --name "$DEPLOYMENT_NAME" \
+            --location "$DEPLOYMENT_LOCATION" \
+            --parameters infra/main.bicepparam \
+            2>&1 | tee what-if.txt
+          {
+            echo '## Infra what-if'
+            echo
+            echo '```'
+            cat what-if.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Deploy
+        id: deploy
+        # Merge to master applies. A manual run applies only with mode=deploy;
+        # mode=what-if stops after the preview above.
+        if: ${{ github.event_name == 'push' || inputs.mode == 'deploy' }}
+        run: |
+          set -eo pipefail
+          az deployment sub create \
+            --name "$DEPLOYMENT_NAME" \
+            --location "$DEPLOYMENT_LOCATION" \
+            --parameters infra/main.bicepparam \
+            --query properties.outputs -o json | tee deployment-outputs.json
+          {
+            echo '## Infra deployment'
+            echo
+            echo '### Outputs'
+            echo '```json'
+            cat deployment-outputs.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
