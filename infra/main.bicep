@@ -34,8 +34,8 @@ param alertEmail string = ''
 @description('Spend (this billing currency) at which warning emails start. NOT a charge or a cap - just notifications. 0 = no budget.')
 param monthlyBudgetAmount int = 10
 
-@description('Budget start date (first of a month). Defaults to the current month.')
-param budgetStartDate string = utcNow('yyyy-MM-01')
+@description('Budget start date (first of a month). Fixed because deploy failed.')
+param budgetStartDate string
 
 @description('Shared internal API key between the API and the Notification Service.')
 @secure()
@@ -92,10 +92,34 @@ resource budget 'Microsoft.Consumption/budgets@2023-11-01' = if (monthlyBudgetAm
       startDate: '${budgetStartDate}T00:00:00Z'
     }
     notifications: {
-      warn50: { enabled: true, operator: 'GreaterThanOrEqualTo', threshold: 50, contactEmails: [ alertEmail ], thresholdType: 'Actual' }
-      warn75: { enabled: true, operator: 'GreaterThanOrEqualTo', threshold: 75, contactEmails: [ alertEmail ], thresholdType: 'Actual' }
-      warn90: { enabled: true, operator: 'GreaterThanOrEqualTo', threshold: 90, contactEmails: [ alertEmail ], thresholdType: 'Actual' }
-      warn100: { enabled: true, operator: 'GreaterThanOrEqualTo', threshold: 100, contactEmails: [ alertEmail ], thresholdType: 'Actual' }
+      warn50: {
+        enabled: true
+        operator: 'GreaterThanOrEqualTo'
+        threshold: 50
+        contactEmails: [alertEmail]
+        thresholdType: 'Actual'
+      }
+      warn75: {
+        enabled: true
+        operator: 'GreaterThanOrEqualTo'
+        threshold: 75
+        contactEmails: [alertEmail]
+        thresholdType: 'Actual'
+      }
+      warn90: {
+        enabled: true
+        operator: 'GreaterThanOrEqualTo'
+        threshold: 90
+        contactEmails: [alertEmail]
+        thresholdType: 'Actual'
+      }
+      warn100: {
+        enabled: true
+        operator: 'GreaterThanOrEqualTo'
+        threshold: 100
+        contactEmails: [alertEmail]
+        thresholdType: 'Actual'
+      }
     }
   }
 }

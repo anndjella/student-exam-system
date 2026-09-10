@@ -17,6 +17,8 @@ param alertEmail = readEnvironmentVariable('ALERT_EMAIL', 'milanmima2000@gmail.c
 // Spend (EUR) at which warning emails begin. Not a charge, not a cap - just notifications.
 param monthlyBudgetAmount = 10
 
+param budgetStartDate = '2026-08-01'
+
 param sqlAdminPassword = readEnvironmentVariable('SQL_ADMIN_PASSWORD', '')
 param internalApiKey = readEnvironmentVariable('INTERNAL_API_KEY', '')
 param jwtSigningKey = readEnvironmentVariable('JWT_SIGNING_KEY', '')
