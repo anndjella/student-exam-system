@@ -46,9 +46,9 @@ jobs:
   deploy:
     name: Deploy infra
     needs: lint
-    # On a plain pull request only lint runs. This job is for merges to master
-    # and manual runs from the Actions tab.
-    if: github.event_name != 'pull_request'
+    # Runs on PRs too, but there only the What-if step below executes - the
+    # Deploy step is guarded so the real apply happens only on merge to master
+    # or a manual mode=deploy run.
     runs-on: ubuntu-latest
     permissions:
       contents: read

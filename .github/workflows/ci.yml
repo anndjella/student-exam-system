@@ -4,12 +4,28 @@ on:
   pull_request:
     branches:
       - master
+    # Skip when a change touches only infra or docs - those don't affect the
+    # .NET build, tests, or the API package. Infra has its own workflow.
+    paths-ignore:
+      - 'infra/**'
+      - '.github/workflows/infra.yml'
+      - '**/*.md'
   push:
     branches:
       - master
+    paths-ignore:
+      - 'infra/**'
+      - '.github/workflows/infra.yml'
+      - '**/*.md'
 
 permissions:
   contents: read
+
+# One CI run per branch. A new push to a PR cancels the older in-progress run;
+# on master we let the run finish so a deploy is never interrupted.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   AZURE_WEBAPP_NAME: app-studentexam-api-swc
