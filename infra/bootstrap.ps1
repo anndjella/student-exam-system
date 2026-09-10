@@ -6,7 +6,8 @@
 param(
     [string]$SubscriptionId = '3cfd4685-61a2-4944-a8bf-32aeda2fa4e2',
     [string]$IdentityName   = 'id-github-student-exam-deploy',
-    [string]$IdentityGroup  = 'rg-student-exam-dev'
+    [string]$IdentityGroup  = 'rg-student-exam-dev',
+    [string]$Repo           = 'anndjella/student-exam-system'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,3 +33,33 @@ foreach ($role in @('Contributor', 'Role Based Access Control Administrator')) {
         --only-show-errors | Out-Null
     Write-Host "  '$role' - assigned" -ForegroundColor Green
 }
+
+# Federated credentials: which GitHub trigger may sign in without a secret.
+#   master       -> deploy on push to master
+#   pull_request -> what-if on PRs
+$existing = @(az identity federated-credential list `
+        --identity-name $IdentityName --resource-group $IdentityGroup `
+        --query "[].subject" -o tsv)
+
+$creds = [ordered]@{
+    'github-master'       = "repo:${Repo}:ref:refs/heads/master"
+    'github-pull-request' = "repo:${Repo}:pull_request"
+}
+foreach ($name in $creds.Keys) {
+    $subject = $creds[$name]
+    if ($existing -contains $subject) {
+        Write-Host "  '$subject' - already trusted" -ForegroundColor Yellow
+        continue
+    }
+    az identity federated-credential create `
+        --name $name `
+        --identity-name $IdentityName `
+        --resource-group $IdentityGroup `
+        --issuer 'https://token.actions.githubusercontent.com' `
+        --subject $subject `
+        --audiences 'api://AzureADTokenExchange' `
+        --only-show-errors | Out-Null
+    Write-Host "  '$subject' - trusted" -ForegroundColor Green
+}
+
+Write-Host "`nDone." -ForegroundColor Cyan
