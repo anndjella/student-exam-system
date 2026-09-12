@@ -1,0 +1,78 @@
+name: Security
+
+# two checks on every PR/push: no committed secrets, no NuGet package with a known
+# CVE. Dependabot, CodeQL and GitHub's own secret scanning already cover similar
+# ground, but those run on their own schedule - this is what actually blocks a PR
+# before it gets merged.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # full history, not just the latest commit - a secret could've been
+          # committed and "removed" a few commits back and still be caught
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        # public/personal repo = free, no GITLEAKS_LICENSE needed
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+  vulnerable-dependencies:
+    name: Vulnerable NuGet packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore StudentExamSystem.sln
+
+      - name: Report all vulnerable packages (informational)
+        shell: bash
+        run: |
+          set -eo pipefail
+          report=$(dotnet list StudentExamSystem.sln package --vulnerable --include-transitive)
+          echo "$report"
+          {
+            echo "## Vulnerable dependency scan (incl. transitive)"
+            echo
+            echo '```'
+            echo "$report"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail on directly-referenced vulnerable packages
+        shell: bash
+        run: |
+          set -eo pipefail
+          report=$(dotnet list StudentExamSystem.sln package --vulnerable)
+          echo "$report"
+          if echo "$report" | grep -q "has the following vulnerable packages"; then
+            echo "::error::A directly-referenced NuGet package has a known vulnerability."
+            exit 1
+          fi
+          echo "No vulnerable direct dependencies."

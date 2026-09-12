@@ -10,6 +10,7 @@ obj/
 .sonarqube/
 .sonarlint/
 TestResults/
+artifacts/
 coverage/
 **/coverage.cobertura.xml
 **/coverage.opencover.xml

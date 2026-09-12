@@ -205,8 +205,9 @@ if (app.Environment.IsDevelopment())
 
 // Schema is kept current on startup. Demo/reference data is NEVER seeded here:
 // use the dedicated, explicit tools/StudentExam.DbSeeder CLI instead.
-using (var scope = app.Services.CreateScope())
+if (builder.Configuration.GetValue("Database:MigrateOnStartup", true))
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
 }
