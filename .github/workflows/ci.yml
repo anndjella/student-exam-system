@@ -4,25 +4,25 @@ on:
   pull_request:
     branches:
       - master
-    # Skip when a change touches only infra or docs - those don't affect the
-    # .NET build, tests, or the API package. Infra has its own workflow.
+    # infra-only or docs-only changes don't touch the API build, so skip those
+    # (infra.yml already covers infra)
     paths-ignore:
-      - 'infra/**'
-      - '.github/workflows/infra.yml'
-      - '**/*.md'
+      - "infra/**"
+      - ".github/workflows/infra.yml"
+      - "**/*.md"
   push:
     branches:
       - master
     paths-ignore:
-      - 'infra/**'
-      - '.github/workflows/infra.yml'
-      - '**/*.md'
+      - "infra/**"
+      - ".github/workflows/infra.yml"
+      - "**/*.md"
 
 permissions:
   contents: read
 
-# One CI run per branch. A new push to a PR cancels the older in-progress run;
-# on master we let the run finish so a deploy is never interrupted.
+# a new push to a PR cancels whatever was already running for it, but never on
+# master - don't want a deploy getting cut off halfway through
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -47,11 +47,78 @@ jobs:
       - name: Restore
         run: dotnet restore StudentExamSystem.sln
 
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
       - name: Build
         run: dotnet build StudentExamSystem.sln --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test Tests/Tests.csproj --configuration Release --no-build --verbosity normal
+        shell: bash
+        run: >
+          dotnet test Tests/Tests.csproj
+          --configuration Release
+          --no-build
+          --verbosity normal
+          --logger "trx;LogFileName=test-results.trx"
+          --logger "console;verbosity=normal"
+          --results-directory ./TestResults
+          --settings coverlet.runsettings
+
+      - name: Coverage report
+        if: always()
+        shell: bash
+        run: |
+          dotnet tool run reportgenerator \
+            -reports:"./TestResults/**/coverage.cobertura.xml" \
+            -targetdir:"./TestResults/coveragereport" \
+            -reporttypes:"Html;MarkdownSummaryGithub;TextSummary;Badges"
+          {
+            echo "## Test coverage"
+            echo
+            cat ./TestResults/coveragereport/SummaryGithub.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload test results and coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-and-coverage
+          path: ./TestResults
+          retention-days: 30
+
+      - name: Generate idempotent EF migration script
+        shell: bash
+        # dotnet ef spins up the API host just to see how AppDbContext is wired up -
+        # it never actually connects to anything for "migrations script", so the
+        # values below are just placeholders to keep Program.cs from complaining
+        env:
+          ConnectionStrings__DefaultConnection: "Server=script-only;Database=none;Trusted_Connection=True;TrustServerCertificate=True"
+          Cors__AllowedOrigins__0: "https://example.invalid"
+          Database__MigrateOnStartup: "false"
+        run: |
+          mkdir -p ./artifacts/db
+          dotnet tool run dotnet-ef migrations script \
+            --idempotent \
+            --project Infrastructure/Infrastructure.csproj \
+            --startup-project Api/Api.csproj \
+            --configuration Release \
+            --no-build \
+            --output ./artifacts/db/migrations.sql
+          {
+            echo "## Database migration script"
+            echo
+            echo "Idempotent script for this commit (\`artifacts/db/migrations.sql\`)."
+            echo "Safe to run against any schema version; applies only what is missing."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload migration script
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-migration-script
+          path: ./artifacts/db/migrations.sql
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Publish API
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
@@ -64,18 +131,31 @@ jobs:
           name: student-exam-api
           path: ./publish
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 30
 
   deploy:
     name: Deploy API to Azure
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     needs: build-and-test
     runs-on: ubuntu-latest
+    # same group as rollback.yml - don't want a manual rollback and an automatic
+    # deploy touching the App Service at the same time
+    concurrency:
+      group: deploy-api
+      cancel-in-progress: false
     permissions:
       contents: read
       id-token: write
+      # needed so the rollback steps below can list past runs and grab the old artifact
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      API_BASE_URL: https://app-studentexam-api-swc.azurewebsites.net
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download API artifact
         uses: actions/download-artifact@v4
         with:
@@ -90,7 +170,50 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy API
+        id: deploy
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           package: ./publish
+
+      - name: Smoke test
+        id: smoke
+        run: bash .github/scripts/smoke-test.sh "$API_BASE_URL"
+
+      - name: Find previous good release
+        id: prev
+        if: failure()
+        run: |
+          set -eo pipefail
+          PREV_RUN_ID=$(gh run list \
+            --workflow ci.yml --branch master --event push --status success \
+            --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+          if [ -z "$PREV_RUN_ID" ]; then
+            echo "::error::No previous successful run to roll back to."
+            exit 1
+          fi
+          echo "run_id=$PREV_RUN_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Download previous release
+        if: failure() && steps.prev.outputs.run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: student-exam-api
+          path: ./rollback
+          run-id: ${{ steps.prev.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Roll back
+        if: failure() && steps.prev.outputs.run_id != ''
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: ./rollback
+
+      - name: Verify rollback and fail the run
+        if: failure() && steps.prev.outputs.run_id != ''
+        run: |
+          echo "::warning::Bad deploy was rolled back to run ${{ steps.prev.outputs.run_id }}."
+          bash .github/scripts/smoke-test.sh "$API_BASE_URL"
+          echo "::notice::Previous release is healthy and live. Run left red so the failed deploy gets investigated."
+          exit 1
