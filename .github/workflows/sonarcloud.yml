@@ -1,26 +1,12 @@
 name: SonarCloud
 
 # used to run this by hand from my laptop (the .sonarqube/ folder) - now it runs
-# on every push and PR instead.
+# weekly in the background
 
 on:
-  push:
-    branches: [master]
-    # skip when there's no code/tests for it to actually analyze
-    paths:
-      - "**/*.cs"
-      - "**/*.csproj"
-      - "StudentExamSystem.sln"
-      - "coverlet.runsettings"
-      - ".github/workflows/sonarcloud.yml"
-  pull_request:
-    branches: [master]
-    paths:
-      - "**/*.cs"
-      - "**/*.csproj"
-      - "StudentExamSystem.sln"
-      - "coverlet.runsettings"
-      - ".github/workflows/sonarcloud.yml"
+  schedule:
+    - cron: "5 4 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -32,7 +18,6 @@ concurrency:
 jobs:
   sonarcloud:
     name: Analyze
-    if: github.actor != 'dependabot[bot]'
     runs-on: windows-latest
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
