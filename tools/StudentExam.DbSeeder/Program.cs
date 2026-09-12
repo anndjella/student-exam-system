@@ -157,7 +157,7 @@ static string SafeDataSource(string connectionString)
         var builder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
         return $"{builder.DataSource} / {builder.InitialCatalog}";
     }
-    catch
+    catch (ArgumentException)
     {
         return "(unparsed connection string)";
     }

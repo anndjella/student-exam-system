@@ -58,11 +58,8 @@ namespace Application.Services.Implementations
 
             foreach (var sid in studentIds)
             {
-                foreach (var subId in distinctSubjectIds)
+                foreach (var subId in distinctSubjectIds.Where(subId => !existingPairs.Contains((sid, subId))))
                 {
-                    if (existingPairs.Contains((sid, subId)))
-                        continue;
-
                     toCreate.Add(new Enrollment
                     {
                         StudentID = sid,

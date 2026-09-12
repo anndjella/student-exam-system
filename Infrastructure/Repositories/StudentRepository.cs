@@ -52,14 +52,9 @@ namespace Infrastructure.Repositories
 
             IQueryable<Student> q = Set.AsQueryable();
 
-            if (onlyDeleted)
-            {
-                q = q.IgnoreQueryFilters().Where(s => s.IsDeleted);
-            }
-            else
-            {
-                q = q.Where(s => !s.IsDeleted);
-            }
+            q = onlyDeleted
+                ? q.IgnoreQueryFilters().Where(s => s.IsDeleted)
+                : q.Where(s => !s.IsDeleted);
 
             if (!string.IsNullOrWhiteSpace(query))
             {
