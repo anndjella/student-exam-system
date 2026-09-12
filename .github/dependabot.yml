@@ -5,12 +5,11 @@ updates:
     schedule:
       interval: weekly
       day: monday
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     groups:
-      dotnet-minor:
-        update-types:
-          - minor
-          - patch
+      all-nuget:
+        patterns:
+          - "*"
     commit-message:
       prefix: "deps"
 
@@ -19,5 +18,10 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    open-pull-requests-limit: 5
+    groups:
+      all-actions:
+        patterns:
+          - "*"
     commit-message:
       prefix: "ci"
