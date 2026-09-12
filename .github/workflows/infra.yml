@@ -35,7 +35,7 @@ jobs:
     name: Bicep lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Bicep build (lint)
         run: az bicep build --file infra/main.bicep
@@ -58,7 +58,7 @@ jobs:
       INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
       JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Sign in to Azure
         uses: azure/login@v2
