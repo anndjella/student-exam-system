@@ -3,21 +3,20 @@ updates:
   - package-ecosystem: nuget
     directory: "/"
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
     open-pull-requests-limit: 5
     groups:
-      all-nuget:
-        patterns:
-          - "*"
+      dotnet-minor:
+        update-types:
+          - minor
+          - patch
     commit-message:
       prefix: "deps"
 
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
     open-pull-requests-limit: 5
     groups:
       all-actions:

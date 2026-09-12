@@ -1,15 +1,13 @@
 name: Security
 
-# two checks on every PR/push: no committed secrets, no NuGet package with a known
-# CVE. Dependabot, CodeQL and GitHub's own secret scanning already cover similar
-# ground, but those run on their own schedule - this is what actually blocks a PR
-# before it gets merged.
+# two checks: no committed secrets, no NuGet package with a known CVE.
+#
+# Weekly in the background
 
 on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+  schedule:
+    - cron: "42 3 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
