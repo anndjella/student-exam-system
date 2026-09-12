@@ -6,8 +6,21 @@ name: SonarCloud
 on:
   push:
     branches: [master]
+    # skip when there's no code/tests for it to actually analyze
+    paths:
+      - "**/*.cs"
+      - "**/*.csproj"
+      - "StudentExamSystem.sln"
+      - "coverlet.runsettings"
+      - ".github/workflows/sonarcloud.yml"
   pull_request:
     branches: [master]
+    paths:
+      - "**/*.cs"
+      - "**/*.csproj"
+      - "StudentExamSystem.sln"
+      - "coverlet.runsettings"
+      - ".github/workflows/sonarcloud.yml"
 
 permissions:
   contents: read
