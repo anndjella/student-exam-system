@@ -24,6 +24,7 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_PROJECT_KEY: anndjella_student-exam-system
       SONAR_ORG: anndjella
+      MSYS_NO_PATHCONV: "1"
 
     steps:
       - name: Check for SONAR_TOKEN

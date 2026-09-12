@@ -96,6 +96,9 @@ jobs:
           ConnectionStrings__DefaultConnection: "Server=script-only;Database=none;Trusted_Connection=True;TrustServerCertificate=True"
           Cors__AllowedOrigins__0: "https://example.invalid"
           Database__MigrateOnStartup: "false"
+          Jwt__Key: "script-only-placeholder-not-a-real-key"
+          Services__NotificationService: "https://example.invalid"
+          ServiceAuthentication__ApiKey: "script-only-placeholder"
         run: |
           mkdir -p ./artifacts/db
           dotnet tool run dotnet-ef migrations script \
