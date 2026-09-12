@@ -53,6 +53,7 @@ public sealed class DemoDataSeeder
            || await _db.Registrations.AnyAsync(ct)
            || await _db.Exams.AnyAsync(ct);
 
+    /// <summary>Builds and persists (or, for a dry run, builds and rolls back) the full demo dataset.</summary>
     /// <param name="commit">false = dry run: everything is inserted then rolled back.</param>
     public async Task<SeedResult> RunAsync(bool commit, CancellationToken ct)
     {
@@ -423,11 +424,10 @@ public sealed class DemoDataSeeder
             .Take(3)
             .ToList();
 
-        foreach (var e in eligible)
+        foreach (var e in eligible.Where(e => _regByKey.ContainsKey((studentId, e.SubjectID, cal.ReminderTerm.ID))))
         {
             // drop any active registration this student holds in the reminder term
-            if (_regByKey.TryGetValue((studentId, e.SubjectID, cal.ReminderTerm.ID), out var reg))
-                reg.IsActive = false;
+            _regByKey[(studentId, e.SubjectID, cal.ReminderTerm.ID)].IsActive = false;
         }
         Count($"__GUARANTEED_StudentReminder({eligible.Count})");
     }

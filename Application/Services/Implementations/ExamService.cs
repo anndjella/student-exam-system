@@ -134,13 +134,10 @@ namespace Application.Services.Implementations
 
             var examByStudent = allExams.ToDictionary(e => e.StudentID);
 
-            var missingExam = new List<int>();
-
-            foreach (var reg in activeRegs)
-            {
-                if (!examByStudent.ContainsKey(reg.StudentID))
-                    missingExam.Add(reg.StudentID);
-            }
+            var missingExam = activeRegs
+                .Where(reg => !examByStudent.ContainsKey(reg.StudentID))
+                .Select(reg => reg.StudentID)
+                .ToList();
 
             if (missingExam.Count > 0)
                 throw new AppException(
@@ -173,13 +170,10 @@ namespace Application.Services.Implementations
                 if (exam.Registration is not null)
                     exam.Registration.IsActive = false;
 
-                if (exam.Grade is >= 6)
+                if (exam.Grade is >= 6 && enrollmentByStudent.TryGetValue(exam.StudentID, out var enr))
                 {
-                    if (enrollmentByStudent.TryGetValue(exam.StudentID, out var enr))
-                    {
-                        enr.IsPassed = true;
-                        enr.PassedAt = now;
-                    }
+                    enr.IsPassed = true;
+                    enr.PassedAt = now;
                 }
             }
         }
@@ -260,10 +254,8 @@ namespace Application.Services.Implementations
 
             var resp = new StudentExamsResponse();
 
-            foreach (var e in exams)
+            foreach (var dto in exams.Select(ExamMapper.ToStudentResponse))
             {
-                var dto = ExamMapper.ToStudentResponse(e);
-
                 if (dto.Grade.HasValue && dto.Grade.Value > 5)
                     resp.Passed.Add(dto);
                 else

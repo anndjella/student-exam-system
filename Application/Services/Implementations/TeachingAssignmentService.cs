@@ -26,7 +26,7 @@ namespace Application.Services.Implementations
            if (ta is null)
                throw new AppException(AppErrorCode.NotFound, $"Teaching assignment not found.");
 
-            return ta?.CanGrade ?? false;
+            return ta.CanGrade;
         }
 
         public async Task<TeachingAssignmentResponse> CreateAsync(CreateTeachingAssignmentRequest req, CancellationToken ct)
@@ -82,12 +82,9 @@ namespace Application.Services.Implementations
 
             var dto = new TeacherSubjectsResponse();
 
-            foreach (var ta in teachingAssignments)
+            foreach (var ta in teachingAssignments.Where(ta => ta.Subject is not null))
             {
-                if (ta.Subject is null)
-                    continue;
-
-                var mapped = SubjectMapper.ToResponse(ta.Subject);
+                var mapped = SubjectMapper.ToResponse(ta.Subject!);
 
                 if (ta.CanGrade)
                     dto.GradableSubjects.Add(mapped);
