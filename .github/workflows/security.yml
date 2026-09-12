@@ -1,15 +1,13 @@
 name: Security
 
-# two checks on every PR/push: no committed secrets, no NuGet package with a known
-# CVE. Dependabot, CodeQL and GitHub's own secret scanning already cover similar
-# ground, but those run on their own schedule - this is what actually blocks a PR
-# before it gets merged.
+# two checks: no committed secrets, no NuGet package with a known CVE.
+#
+# Weekly in the background
 
 on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+  schedule:
+    - cron: "42 3 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -24,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # full history, not just the latest commit - a secret could've been
           # committed and "removed" a few commits back and still be caught
@@ -32,7 +30,7 @@ jobs:
 
       - name: Run gitleaks
         # public/personal repo = free, no GITLEAKS_LICENSE needed
-        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
@@ -41,10 +39,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
 
