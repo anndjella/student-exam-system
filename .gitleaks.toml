@@ -1,0 +1,15 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Build output, tool caches and static fixtures"
+paths = [
+  '''(^|/)bin/''',
+  '''(^|/)obj/''',
+  '''(^|/)\.vs/''',
+  '''(^|/)\.sonarqube/''',
+  '''(^|/)TestResults/''',
+  '''(^|/)baseline/''',
+  '''\.sql$''',
+  '''\.docx$''',
+]

@@ -1,0 +1,62 @@
+name: CodeQL
+
+# GitHub's own static analysis for the C# code - findings show up under
+# Security > Code scanning in the repo
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "**/*.cs"
+      - "**/*.csproj"
+      - "StudentExamSystem.sln"
+      - ".github/workflows/codeql.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "**/*.cs"
+      - "**/*.csproj"
+      - "StudentExamSystem.sln"
+      - ".github/workflows/codeql.yml"
+  schedule:
+    # Weekly, so newly published CodeQL queries still get run against code that
+    # has not changed.
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  analyze:
+    name: Analyze C#
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          queries: security-and-quality
+
+      - name: Build
+        run: dotnet build StudentExamSystem.sln --configuration Release
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:csharp"
