@@ -1,0 +1,3 @@
+# keep .sh files as LF - with autocrlf on, git would save these as CRLF and
+# bash on the Linux runners chokes on that
+*.sh text eol=lf
