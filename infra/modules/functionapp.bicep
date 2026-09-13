@@ -83,6 +83,14 @@ resource app 'Microsoft.Web/sites@2023-12-01' = {
     siteConfig: {
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
+      // lets the Azure Portal's "Test/Run" panel call this app's admin API
+      // directly from the browser - without this, manually invoking a
+      // function from the Portal fails with a CORS "Failed to fetch" error
+      cors: {
+        allowedOrigins: [
+          'https://portal.azure.com'
+        ]
+      }
       appSettings: [
         { name: 'AzureWebJobsStorage', value: storageConnectionString }
         { name: 'DEPLOYMENT_STORAGE_CONNECTION_STRING', value: storageConnectionString }
