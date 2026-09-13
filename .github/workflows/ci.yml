@@ -4,22 +4,13 @@ on:
   pull_request:
     branches:
       - master
-    # infra-only or docs-only changes don't touch the API build, so skip those
-    # (infra.yml already covers infra)
-    paths-ignore:
-      - "infra/**"
-      - ".github/workflows/infra.yml"
-      - "**/*.md"
   push:
     branches:
       - master
-    paths-ignore:
-      - "infra/**"
-      - ".github/workflows/infra.yml"
-      - "**/*.md"
 
 permissions:
   contents: read
+  pull-requests: read
 
 # a new push to a PR cancels whatever was already running for it, but never on
 # master - don't want a deploy getting cut off halfway through
@@ -31,8 +22,30 @@ env:
   AZURE_WEBAPP_NAME: app-studentexam-api-swc
 
 jobs:
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Filter paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            code:
+              - "**"
+              - "!infra/**"
+              - "!.github/workflows/infra.yml"
+              - "!**/*.md"
+
   build-and-test:
     name: Build and test
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: windows-latest
 
     steps:
@@ -138,8 +151,8 @@ jobs:
 
   deploy:
     name: Deploy API to Azure
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    needs: build-and-test
+    if: needs.changes.outputs.code == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: [changes, build-and-test]
     runs-on: ubuntu-latest
     # same group as rollback.yml - don't want a manual rollback and an automatic
     # deploy touching the App Service at the same time
