@@ -1,10 +1,15 @@
 using Application.Common.Errors;
 using Application.DTO.Notifications;
 using Application.Services.Interfaces;
+using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Net.Http.Json;
 
-namespace Api.Clients;
+namespace Infrastructure.Clients;
 
 public sealed class NotificationServiceClient : INotificationService
 {
