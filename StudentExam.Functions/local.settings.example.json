@@ -1,0 +1,19 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "ConnectionStrings__DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=StudentExamDB;Trusted_Connection=True;TrustServerCertificate=True",
+    "Jwt__Key": "<same key as the Api user secrets>",
+    "Jwt__Issuer": "StudentExamSystem",
+    "Jwt__Audience": "StudentExamSystem",
+    "Services__NotificationService": "http://localhost:7071/",
+    "ServiceAuthentication__ApiKey": "<same key as the NotificationService>",
+    "InternalHttp__TimeoutSeconds": "10",
+    "InternalHttp__RetryCount": "2",
+    "InternalHttp__RetryBaseDelayMilliseconds": "200"
+  },
+  "Host": {
+    "LocalHttpPort": 7072
+  }
+}

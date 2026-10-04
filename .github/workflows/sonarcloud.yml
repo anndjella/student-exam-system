@@ -49,7 +49,10 @@ jobs:
         if: steps.guard.outputs.run == 'true'
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: 8.0.x
+          # 8.0 for Api/Tests, 10.0 for StudentExam.Functions
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       - name: Setup Java
         if: steps.guard.outputs.run == 'true'

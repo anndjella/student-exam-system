@@ -44,7 +44,10 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: 8.0.x
+          # 8.0 for Api/Tests, 10.0 for StudentExam.Functions
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       - name: Restore
         run: dotnet restore StudentExamSystem.sln
