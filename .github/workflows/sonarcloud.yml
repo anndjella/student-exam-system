@@ -85,6 +85,10 @@ jobs:
             --configuration Release --no-build \
             --settings coverlet.runsettings \
             --results-directory ./TestResults
+          dotnet test StudentExam.Functions.Tests/StudentExam.Functions.Tests.csproj \
+            --configuration Release --no-build \
+            --settings coverlet.runsettings \
+            --results-directory ./TestResults
 
       - name: End analysis
         if: steps.guard.outputs.run == 'true'

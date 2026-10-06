@@ -81,6 +81,18 @@ jobs:
           --results-directory ./TestResults
           --settings coverlet.runsettings
 
+      - name: Test Functions
+        shell: bash
+        run: >
+          dotnet test StudentExam.Functions.Tests/StudentExam.Functions.Tests.csproj
+          --configuration Release
+          --no-build
+          --verbosity normal
+          --logger "trx;LogFileName=functions-test-results.trx"
+          --logger "console;verbosity=normal"
+          --results-directory ./TestResults
+          --settings coverlet.runsettings
+
       - name: Coverage report
         if: always()
         shell: bash

@@ -1,4 +1,4 @@
-using Api.Common;
+using Application.Auth;
 using Application.DTO.Registrations;
 using Application.Services.Interfaces;
 using FluentValidation.AspNetCore;

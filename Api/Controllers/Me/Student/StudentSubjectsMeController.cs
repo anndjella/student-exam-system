@@ -1,5 +1,5 @@
 using Application.Services.Interfaces;
-using Api.Common;
+using Application.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Application.DTO.Subjects;

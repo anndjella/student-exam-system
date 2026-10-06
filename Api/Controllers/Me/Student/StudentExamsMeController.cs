@@ -1,4 +1,4 @@
-using Api.Common;
+using Application.Auth;
 using Application.DTO.Exams;
 using Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;

@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudentExam.DbSeeder", "too
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudentExam.Functions", "StudentExam.Functions\StudentExam.Functions.csproj", "{984EC8E1-9C8C-4CC6-86B7-44E2F4A6AE58}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudentExam.Functions.Tests", "StudentExam.Functions.Tests\StudentExam.Functions.Tests.csproj", "{E5AD2501-8BAC-4746-919B-450735F1F019}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -119,6 +121,18 @@ Global
 		{984EC8E1-9C8C-4CC6-86B7-44E2F4A6AE58}.Release|x64.Build.0 = Release|Any CPU
 		{984EC8E1-9C8C-4CC6-86B7-44E2F4A6AE58}.Release|x86.ActiveCfg = Release|Any CPU
 		{984EC8E1-9C8C-4CC6-86B7-44E2F4A6AE58}.Release|x86.Build.0 = Release|Any CPU
+		{E5AD2501-8BAC-4746-919B-450735F1F019}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5AD2501-8BAC-4746-919B-450735F1F019}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5AD2501-8BAC-4746-919B-450735F1F019}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E5AD2501-8BAC-4746-919B-450735F1F019}.Debug|x64.Build.0 = Debug|Any CPU
+		{E5AD2501-8BAC-4746-919B-450735F1F019}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E5AD2501-8BAC-4746-919B-450735F1F019}.Debug|x86.Build.0 = Debug|Any CPU
+		{E5AD2501-8BAC-4746-919B-450735F1F019}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5AD2501-8BAC-4746-919B-450735F1F019}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5AD2501-8BAC-4746-919B-450735F1F019}.Release|x64.ActiveCfg = Release|Any CPU
+		{E5AD2501-8BAC-4746-919B-450735F1F019}.Release|x64.Build.0 = Release|Any CPU
+		{E5AD2501-8BAC-4746-919B-450735F1F019}.Release|x86.ActiveCfg = Release|Any CPU
+		{E5AD2501-8BAC-4746-919B-450735F1F019}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
