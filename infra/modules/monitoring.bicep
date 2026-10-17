@@ -10,6 +10,9 @@ param apiComponentName string
 @description('Application Insights component name for the Notification Service.')
 param notificationComponentName string
 
+@description('Application Insights component name for the HTTP API Functions backend.')
+param apiFunctionComponentName string
+
 param tags object = {}
 
 resource workspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
@@ -51,6 +54,20 @@ resource notificationInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
+resource apiFunctionInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: apiFunctionComponentName
+  location: location
+  tags: tags
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: workspace.id
+    IngestionMode: 'LogAnalytics'
+    RetentionInDays: 30
+  }
+}
+
 output workspaceId string = workspace.id
+output apiFunctionConnectionString string = apiFunctionInsights.properties.ConnectionString
 output apiConnectionString string = apiInsights.properties.ConnectionString
 output notificationConnectionString string = notificationInsights.properties.ConnectionString

@@ -10,6 +10,9 @@ param apiPrincipalId string
 @description('Function App system-assigned principalId.')
 param functionPrincipalId string
 
+@description('HTTP API Function App system-assigned principalId.')
+param apiFunctionPrincipalId string
+
 var roles = {
   keyVaultSecretsUser: '4633458b-17de-408a-b874-0445c86b69e6'
   serviceBusDataSender: '69a216fc-b8fb-44d8-bc22-1f3c2cd27a39'
@@ -35,6 +38,16 @@ resource functionKeyVault 'Microsoft.Authorization/roleAssignments@2022-04-01' =
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.keyVaultSecretsUser)
     principalId: functionPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource apiFunctionKeyVault 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVault.id, apiFunctionPrincipalId, roles.keyVaultSecretsUser)
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.keyVaultSecretsUser)
+    principalId: apiFunctionPrincipalId
     principalType: 'ServicePrincipal'
   }
 }

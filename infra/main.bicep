@@ -12,6 +12,19 @@ param uniqueSuffix string = toLower(take(uniqueString(subscription().id, 'studen
 @description('App Service plan SKU for the API. F1 = Free.')
 param apiPlanSku string = 'F1'
 
+@description('HTTP API Functions instance memory in MB.')
+@allowed([512, 2048, 4096])
+param apiFunctionMemoryMB int = 2048
+
+@description('HTTP API Functions scale-out ceiling; regional subscription quotas also apply.')
+@minValue(40)
+@maxValue(1000)
+param apiFunctionMaximumInstanceCount int = 40
+
+@description('Concurrent HTTP requests per API Functions instance.')
+@minValue(1)
+param apiFunctionHttpConcurrency int = 16
+
 @description('SQL authentication administrator login.')
 param sqlAdminLogin string = 'studentexamadmin'
 
@@ -55,6 +68,10 @@ var names = {
   logAnalytics: 'log-studentexam-swc'
   apiInsights: 'appi-studentexam-swc'
   notificationInsights: 'appi-notification-swc'
+  apiFunctionInsights: 'appi-studentexam-functions-swc'
+  apiFunctionPlan: 'plan-studentexam-functions-swc'
+  apiFunctionApp: 'func-studentexam-api-swc-${uniqueSuffix}'
+  apiFunctionStorage: 'stexamapi${uniqueSuffix}'
   apiPlan: 'plan-studentexam-swc'
   apiApp: 'app-studentexam-api-swc'
   functionPlan: 'plan-notification-swc'
@@ -133,6 +150,7 @@ module monitoring 'modules/monitoring.bicep' = {
     workspaceName: names.logAnalytics
     apiComponentName: names.apiInsights
     notificationComponentName: names.notificationInsights
+    apiFunctionComponentName: names.apiFunctionInsights
   }
 }
 
@@ -207,6 +225,37 @@ module storage 'modules/storage.bicep' = {
 
 var corsOrigins = union([frontendBaseUrl], additionalCorsOrigins)
 
+module apiFunctionStorage 'modules/storage.bicep' = {
+  scope: rg
+  name: 'api-function-storage'
+  params: {
+    location: location
+    tags: tags
+    name: names.apiFunctionStorage
+  }
+}
+
+module apiFunctionApp 'modules/api-functionapp.bicep' = {
+  scope: rg
+  name: 'api-functionapp'
+  params: {
+    location: location
+    tags: tags
+    planName: names.apiFunctionPlan
+    appName: names.apiFunctionApp
+    storageAccountName: apiFunctionStorage.outputs.accountName
+    appInsightsConnectionString: monitoring.outputs.apiFunctionConnectionString
+    sqlConnectionStringSecretUri: keyVault.outputs.sqlConnectionSecretUri
+    internalApiKeySecretUri: keyVault.outputs.internalApiKeySecretUri
+    jwtKeySecretUri: keyVault.outputs.jwtKeySecretUri
+    notificationServiceBaseUrl: '${functionBaseUrl}/'
+    allowedCorsOrigins: corsOrigins
+    instanceMemoryMB: apiFunctionMemoryMB
+    maximumInstanceCount: apiFunctionMaximumInstanceCount
+    httpConcurrency: apiFunctionHttpConcurrency
+  }
+}
+
 module api 'modules/api.bicep' = {
   scope: rg
   name: 'api'
@@ -264,6 +313,7 @@ module rbac 'modules/rbac.bicep' = {
     serviceBusNamespaceName: names.serviceBus
     apiPrincipalId: api.outputs.principalId
     functionPrincipalId: functionApp.outputs.principalId
+    apiFunctionPrincipalId: apiFunctionApp.outputs.principalId
   }
 }
 
@@ -282,6 +332,9 @@ module alerts 'modules/alerts.bicep' = {
 output resourceGroup string = rg.name
 output apiUrl string = api.outputs.defaultHostName
 output apiName string = names.apiApp
+output apiFunctionUrl string = apiFunctionApp.outputs.defaultHostName
+output apiFunctionName string = apiFunctionApp.outputs.name
+output apiFunctionStorageName string = apiFunctionStorage.outputs.accountName
 output functionUrl string = functionApp.outputs.defaultHostName
 output functionName string = names.functionApp
 output frontendUrl string = frontend.outputs.defaultHostName
