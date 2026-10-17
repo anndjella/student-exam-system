@@ -10,7 +10,7 @@ namespace Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql(@"
+            var viewSql = @"
             CREATE OR ALTER VIEW dbo.vw_StudentStats
             AS
             SELECT
@@ -41,7 +41,10 @@ namespace Infrastructure.Migrations
             LEFT JOIN dbo.Subject s
                 ON s.ID = e.SubjectID
             GROUP BY st.ID;
-            ");
+            ";
+
+            // CREATE VIEW needs its own batch, including inside idempotent IF guards.
+            migrationBuilder.Sql($"EXEC(N'{viewSql.Replace("'", "''")}');");
         }
 
         /// <inheritdoc />

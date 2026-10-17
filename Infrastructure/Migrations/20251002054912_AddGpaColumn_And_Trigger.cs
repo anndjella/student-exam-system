@@ -14,7 +14,7 @@ namespace Infrastructure.Migrations
                 name: "GPA", table: "Student",
                 type: "decimal(4,2)", nullable: true);
 
-            migrationBuilder.Sql(@"
+            var triggerSql = @"
                 CREATE OR ALTER TRIGGER dbo.trg_Exam_UpdateGpa
 ON dbo.Exam
 AFTER INSERT, UPDATE, DELETE
@@ -42,7 +42,10 @@ BEGIN
     WHERE s.ID IN (SELECT StudentID FROM affected);
 END
 
-                ");
+                ";
+
+            // CREATE TRIGGER needs its own batch, including inside idempotent IF guards.
+            migrationBuilder.Sql($"EXEC(N'{triggerSql.Replace("'", "''")}');");
 
         }
 
