@@ -30,8 +30,7 @@ public static class DependencyInjection
     {
         // EnableRetryOnFailure: the SQL Database is serverless and auto-pauses when idle (infra/modules/sql.bicep).
         // The first connection after a pause can fail with error 40613 ("Database is not currently
-        // available") while it resumes. Without a retry here, that exception is unhandled during the
-        // startup migration and crashes the whole worker process.
+        // available") while it resumes. Retry transient connection failures during requests.
         services.AddDbContext<AppDbContext>(opt =>
             opt.UseSqlServer(
                 configuration.GetConnectionString("DefaultConnection"),

@@ -135,14 +135,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Schema is kept current on startup. Demo/reference data is NEVER seeded here:
-// use the dedicated, explicit tools/StudentExam.DbSeeder CLI instead.
-if (builder.Configuration.GetValue("Database:MigrateOnStartup", true))
-{
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
-}
+// Database migrations run once in CI/CD before application deployment.
+// For local development use dotnet ef database update explicitly.
 
 app.UseRouting();
 
