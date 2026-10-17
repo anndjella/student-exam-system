@@ -254,13 +254,16 @@ jobs:
             echo "::error::Missing apiFunctionName output. Deploy the updated Bicep infrastructure first."
             exit 1
           fi
-          HOST_NAME=$(az functionapp show \
+          # Read ARM directly: functionapp show can return null fields for Flex apps.
+          HOST_NAME=$(az resource show \
             --resource-group "$AZURE_RESOURCE_GROUP" --name "$APP_NAME" \
-            --query defaultHostName -o tsv)
+            --resource-type Microsoft.Web/sites --api-version 2024-04-01 \
+            --query properties.defaultHostName -o tsv)
           if [[ "$HOST_NAME" != *.azurewebsites.net ]]; then
             echo "::error::Could not resolve the API Function App hostname."
             exit 1
           fi
+          echo "Resolved API Function App: $APP_NAME ($HOST_NAME)"
           echo "app_name=$APP_NAME" >> "$GITHUB_OUTPUT"
           echo "base_url=https://$HOST_NAME" >> "$GITHUB_OUTPUT"
 
