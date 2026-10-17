@@ -1,9 +1,6 @@
-﻿using Application.Common.Errors;
+using Application.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
-using System.Text;
 
 namespace Api.Auth
 {
@@ -11,24 +8,13 @@ namespace Api.Auth
     {
         public static IServiceCollection AddJwtAuth(this IServiceCollection services, IConfiguration cfg)
         {
-            var key = cfg["Jwt:Key"] ?? throw new AppException(AppErrorCode.Conflict,"Missing Jwt:Key");
-            var issuer = cfg["Jwt:Issuer"];
-            var audience = cfg["Jwt:Audience"];
+            // same parameters as the Functions host (Application/Auth/JwtValidation.cs)
+            var parameters = JwtValidation.CreateParameters(cfg);
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
-                        ValidateIssuer = !string.IsNullOrWhiteSpace(issuer),
-                        ValidIssuer = issuer,
-                        ValidateAudience = !string.IsNullOrWhiteSpace(audience),
-                        ValidAudience = audience,
-                        ValidateLifetime = true,
-                        ClockSkew = TimeSpan.FromMinutes(1)
-                    };
+                    options.TokenValidationParameters = parameters;
 
                     options.Events = new JwtBearerEvents
                     {
@@ -44,9 +30,7 @@ namespace Api.Auth
                                 type = "https://errors.yourdomain.com/forbidden",
                                 title = "Forbidden",
                                 status = 403,
-                                detail = mustChange
-                                    ? "You must change your password before accessing this resource."
-                                    : "You do not have permission to access this resource."
+                                detail = JwtValidation.ForbiddenDetail(mustChange)
                             };
 
                             await context.Response.WriteAsJsonAsync(payload);

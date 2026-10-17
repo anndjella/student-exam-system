@@ -1,0 +1,35 @@
+@baseUrl = http://localhost:7072
+@username = realUsername
+@password = realPass
+@token = token
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+### Change password (also allowed with a first-login token)
+POST {{baseUrl}}/api/auth/change-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "currentPassword": "{{password}}",
+  "newPassword": "ReplaceWithNewPassword2"
+}
+
+### Log in again after changing the password, then replace token above
+GET {{baseUrl}}/api/me
+Authorization: Bearer {{token}}
+
+### Student service or teacher
+GET {{baseUrl}}/api/students?skip=0&take=20
+Authorization: Bearer {{token}}
+
+### Invalid query value should return 400 for an authorized user
+GET {{baseUrl}}/api/students?skip=abc
+Authorization: Bearer {{token}}

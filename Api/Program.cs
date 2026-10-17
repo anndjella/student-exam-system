@@ -1,7 +1,4 @@
 using Api.Auth;
-using Api.Clients;
-using Api.Health;
-using Api.Http;
 using Api.Middleware;
 using Application.Common.Abstractions;
 using Application.Auth;
@@ -50,83 +47,18 @@ if (allowedCorsOrigins.Length == 0)
         "Missing Cors:AllowedOrigins configuration. Configure at least one trusted frontend origin.");
 }
 
-// EnableRetryOnFailure: the SQL Database is serverless and auto-pauses when idle (infra/modules/sql.bicep).
-// The first connection after a pause can fail with error 40613 ("Database is not currently
-// available") while it resumes. Without a retry here, that exception is unhandled during the
-// startup migration below and crashes the whole worker process.
-builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions => sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 6,
-            maxRetryDelay: TimeSpan.FromSeconds(15),
-            errorNumbersToAdd: null)));
+// Services, repositories, validators, DbContext, notification client and health checks
+// are shared with the Functions host (Infrastructure/DependencyInjection.cs).
+builder.Services.AddStudentExamCore(builder.Configuration);
 
-// Validation
+// MVC runs FluentValidation automatically before each action
 builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateStudentValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<UpdateStudentValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateEnrollmentsValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateTermValidator>();
 
 builder.Services.AddControllers();
-
-// DI
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-builder.Services.AddScoped<IPersonRepository, PersonRepository>();
-builder.Services.AddScoped<IStudentRepository, StudentRepository>();
-builder.Services.AddScoped<IStudentService, StudentService>();
-builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
-builder.Services.AddScoped<ITeacherService, TeacherService>();
-builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
-builder.Services.AddScoped<ISubjectService, SubjectService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
-builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
-builder.Services.AddScoped<ITeachingAssignmentRepository, TeachingAssignmentRepository>();
-builder.Services.AddScoped<ITeachingAssignmentService, TeachingAssignmentService>();
-builder.Services.AddScoped<ITermRepository, TermRepository>();
-builder.Services.AddScoped<ITermService, TermService>();
-builder.Services.AddScoped<IRegistrationRepository, RegistrationRepository>();
-builder.Services.AddScoped<IRegistrationService, RegistrationService>();
-builder.Services.AddScoped<IExamRepository, ExamRepository>();
-builder.Services.AddScoped<IExamService, ExamService>();
-builder.Services.AddScoped<IMeService, MeService>();
-builder.Services.AddScoped<INotificationCandidateReader, NotificationCandidateReader>();
-builder.Services.AddTransient<InternalServiceResilienceHandler>();
-builder.Services.AddHttpClient<INotificationService, NotificationServiceClient>((services, client) =>
-{
-    var configuration = services.GetRequiredService<IConfiguration>();
-    var baseUrl = configuration["Services:NotificationService"]
-        ?? throw new InvalidOperationException("Missing Services:NotificationService configuration.");
-    var apiKey = configuration["ServiceAuthentication:ApiKey"]
-        ?? throw new InvalidOperationException("Missing ServiceAuthentication:ApiKey configuration.");
-
-    client.BaseAddress = new Uri(baseUrl);
-    client.Timeout = Timeout.InfiniteTimeSpan;
-    client.DefaultRequestHeaders.Add("X-Internal-Api-Key", apiKey);
-})
-.AddHttpMessageHandler<InternalServiceResilienceHandler>();
-
-builder.Services.AddHealthChecks()
-    .AddCheck<DatabaseHealthCheck>(
-        "database",
-        tags: ["ready"],
-        timeout: TimeSpan.FromSeconds(3))
-    .AddCheck<NotificationServiceHealthCheck>(
-        "notification-service",
-        tags: ["ready"],
-        timeout: TimeSpan.FromSeconds(3));
-
-builder.Services.AddScoped<TokenService>();
-builder.Services.AddScoped<AuthService>();
 
 // Authorization requirements/handler
 builder.Services.AddScoped<MustChangePasswordClearedRequirement>();
 builder.Services.AddSingleton<IAuthorizationHandler, MustChangePasswordClearedHandler>();
-builder.Services.AddSingleton<IClock, Clock>();
 
 // Middleware
 builder.Services.AddTransient<ExceptionHandlingMiddleware>();
@@ -203,14 +135,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Schema is kept current on startup. Demo/reference data is NEVER seeded here:
-// use the dedicated, explicit tools/StudentExam.DbSeeder CLI instead.
-if (builder.Configuration.GetValue("Database:MigrateOnStartup", true))
-{
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
-}
+// Database migrations run once in CI/CD before application deployment.
+// For local development use dotnet ef database update explicitly.
 
 app.UseRouting();
 

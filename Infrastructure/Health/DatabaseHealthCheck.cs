@@ -1,7 +1,10 @@
 using Infrastructure.Data;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Api.Health;
+namespace Infrastructure.Health;
 
 public sealed class DatabaseHealthCheck : IHealthCheck
 {

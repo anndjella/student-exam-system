@@ -1,6 +1,14 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Api.Http;
+namespace Infrastructure.Http;
 
 public sealed class InternalServiceResilienceHandler : DelegatingHandler
 {

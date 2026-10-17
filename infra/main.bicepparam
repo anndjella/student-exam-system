@@ -4,6 +4,11 @@ param location = 'swedencentral'
 param resourceGroupName = 'rg-studentexam-swc'
 param apiPlanSku = 'F1'
 
+// HTTP API Functions backend, separate from App Service and Notification Service.
+param apiFunctionMemoryMB = 2048
+param apiFunctionMaximumInstanceCount = 40
+param apiFunctionHttpConcurrency = 16
+
 param sqlAdminLogin = 'studentexamadmin'
 
 param sqlAadAdminObjectId = readEnvironmentVariable('SQL_ADMIN_GROUP_OBJECT_ID', '')
