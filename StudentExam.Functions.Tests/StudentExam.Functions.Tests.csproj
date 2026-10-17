@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\StudentExam.Functions\StudentExam.Functions.csproj" />
+    <ProjectReference Include="..\Api\Api.csproj" />
   </ItemGroup>
 
 </Project>

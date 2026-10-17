@@ -71,6 +71,10 @@ public sealed class FunctionEndpoint
 
             return await action(req.HttpContext.User);
         }
+        catch (QueryBindingException ex)
+        {
+            return ValidationProblem(req, new() { [ex.ParameterName] = [ex.Message] });
+        }
         catch (Exception ex)
         {
             return Problem(ex);

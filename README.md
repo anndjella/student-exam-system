@@ -241,6 +241,20 @@ http://localhost:5000
 ---
 # Infrastructure
 
+## Parallel HTTP Functions backend
+
+`StudentExam.Functions` implements the same 59 controller routes using the shared
+Application and Infrastructure services. The existing App Service API remains
+available for comparison. JWT roles, the password-change policy, validator rule
+sets and internal service-key checks are enforced by the Functions endpoints.
+
+Run the Functions project with Azure Functions Core Tools or Visual Studio's
+Functions debugger. Configure its local settings using
+`StudentExam.Functions/local.settings.example.json`; keep real credentials out
+of source control. `StudentExam.Functions/endpoints.http` contains Visual Studio
+HTTP request examples with placeholders. After changing the initial password,
+log in again to obtain a token with the updated password-change claim.
+
 All Azure resources (App Service, Azure SQL, Service Bus, Key Vault, Communication Services,
 Application Insights and the Notification Service function app) are described as Bicep under
 infra/.
