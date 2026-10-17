@@ -20,6 +20,8 @@ concurrency:
 
 env:
   AZURE_WEBAPP_NAME: app-studentexam-api-swc
+  AZURE_RESOURCE_GROUP: rg-studentexam-swc
+  INFRA_DEPLOYMENT_NAME: studentexam-infra
 
 jobs:
   changes:
@@ -163,8 +165,25 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Publish Functions for Linux
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: >
+          dotnet publish StudentExam.Functions/StudentExam.Functions.csproj
+          --configuration Release --runtime linux-x64 --self-contained false
+          --output ./publish-functions
+
+      - name: Upload Functions artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@v7
+        with:
+          name: student-exam-functions
+          path: ./publish-functions
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+
   deploy:
-    name: Deploy API to Azure
+    name: Deploy both API backends to Azure
     if: needs.changes.outputs.code == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/master'
     needs: [changes, build-and-test]
     runs-on: ubuntu-latest
@@ -201,12 +220,49 @@ jobs:
             exit 1
           fi
 
+      - name: Download Functions artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: student-exam-functions
+          path: ./publish-functions
+
+      - name: Check Functions package
+        run: |
+          set -euo pipefail
+          test -f ./publish-functions/host.json
+          test -f ./publish-functions/functions.metadata
+          test -f ./publish-functions/worker.config.json
+          test -f ./publish-functions/StudentExam.Functions.dll
+          test -d ./publish-functions/.azurefunctions
+          test ! -f ./publish-functions/local.settings.json
+
       - name: Sign in to Azure
         uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Resolve API Function App from infrastructure
+        id: functions-target
+        run: |
+          set -euo pipefail
+          APP_NAME=$(az deployment sub show \
+            --name "$INFRA_DEPLOYMENT_NAME" \
+            --query properties.outputs.apiFunctionName.value -o tsv)
+          if [[ ! "$APP_NAME" =~ ^[a-zA-Z0-9-]+$ ]]; then
+            echo "::error::Missing apiFunctionName output. Deploy the updated Bicep infrastructure first."
+            exit 1
+          fi
+          HOST_NAME=$(az functionapp show \
+            --resource-group "$AZURE_RESOURCE_GROUP" --name "$APP_NAME" \
+            --query defaultHostName -o tsv)
+          if [[ "$HOST_NAME" != *.azurewebsites.net ]]; then
+            echo "::error::Could not resolve the API Function App hostname."
+            exit 1
+          fi
+          echo "app_name=$APP_NAME" >> "$GITHUB_OUTPUT"
+          echo "base_url=https://$HOST_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Download database migration script
         uses: actions/download-artifact@v8
@@ -235,6 +291,20 @@ jobs:
       - name: Smoke test
         id: smoke
         run: bash .github/scripts/smoke-test.sh "$API_BASE_URL"
+
+      - name: Deploy Functions API
+        id: deploy-functions
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ steps.functions-target.outputs.app_name }}
+          package: ./publish-functions
+          remote-build: false
+
+      - name: Smoke test Functions API
+        id: smoke-functions
+        env:
+          FUNCTIONS_BASE_URL: ${{ steps.functions-target.outputs.base_url }}
+        run: bash .github/scripts/smoke-test.sh "$FUNCTIONS_BASE_URL"
 
       - name: Find previous good release
         id: prev
