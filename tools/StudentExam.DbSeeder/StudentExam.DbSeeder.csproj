@@ -13,9 +13,9 @@
   <ItemGroup>
     <!-- Enables "Authentication=Active Directory Default" connection strings for Azure SQL. -->
     <PackageReference Include="Azure.Identity" Version="1.21.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.20" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.20" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="9.0.20" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.22" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.22" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="9.0.22" />
   </ItemGroup>
 
   <ItemGroup>
